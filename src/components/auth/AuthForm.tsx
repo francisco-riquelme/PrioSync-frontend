@@ -18,13 +18,15 @@ export default function AuthForm() {
 
   const handleLogin = (event: React.FormEvent<HTMLFormElement>) => {
     event.preventDefault();
+    // Por ahora, solo mostramos en consola que capturamos los datos.
+    // La validación real se hará en una tarea futura.
     console.log('Datos de inicio de sesión enviados:', { email, password });
     // Aquí iría la lógica para llamar a tu API de inicio de sesión
   };
 
   const handleGoogleLogin = () => {
     console.log('Iniciar sesión con Google');
-    // Añadir lógica para iniciar sesión con Google aquí
+    // La lógica de Google se implementará en su propia tarea.
   }
 
   return (
