@@ -1,6 +1,7 @@
 'use client';
 
 import React, { useState } from 'react';
+import { useRouter, usePathname } from 'next/navigation';
 import {
   Box,
   Drawer,
@@ -35,18 +36,24 @@ interface LayoutProps {
 }
 
 const menuItems = [
-  { text: 'Dashboard', icon: <DashboardIcon />, active: true },
-  { text: 'Calendario', icon: <CalendarIcon />, active: false },
-  { text: 'Cursos', icon: <SchoolIcon />, active: false },
-  { text: 'Suscripción', icon: <StarIcon />, active: false },
-  { text: 'Perfil', icon: <PersonIcon />, active: false },
+  { text: 'Dashboard', icon: <DashboardIcon />, path: '/' },
+  { text: 'Calendario', icon: <CalendarIcon />, path: '/calendar' },
+  { text: 'Cursos', icon: <SchoolIcon />, path: '/courses' },
+  { text: 'Suscripción', icon: <StarIcon />, path: '/subscription' },
+  { text: 'Perfil', icon: <PersonIcon />, path: '/profile' },
 ];
 
 export default function DashboardLayout({ children }: LayoutProps) {
   const [mobileOpen, setMobileOpen] = useState(false);
+  const router = useRouter();
+  const pathname = usePathname();
 
   const handleDrawerToggle = () => {
     setMobileOpen(!mobileOpen);
+  };
+
+  const handleNavigation = (path: string) => {
+    router.push(path);
   };
 
   const drawer = (
@@ -69,37 +76,41 @@ export default function DashboardLayout({ children }: LayoutProps) {
 
       {/* Menú de navegación */}
       <List sx={{ px: 1, pt: 2 }}>
-        {menuItems.map((item) => (
-          <ListItem key={item.text} disablePadding sx={{ mb: 0.5 }}>
-            <ListItemButton
-              sx={{
-                borderRadius: 2,
-                backgroundColor: item.active ? 'primary.main' : 'transparent',
-                color: item.active ? 'white' : 'text.primary',
-                '&:hover': {
-                  backgroundColor: item.active ? 'primary.dark' : 'secondary.main',
-                },
-                mx: 1,
-              }}
-            >
-              <ListItemIcon
+        {menuItems.map((item) => {
+          const isActive = pathname === item.path;
+          return (
+            <ListItem key={item.text} disablePadding sx={{ mb: 0.5 }}>
+              <ListItemButton
+                onClick={() => handleNavigation(item.path)}
                 sx={{
-                  color: item.active ? 'white' : 'text.secondary',
-                  minWidth: 36,
+                  borderRadius: 2,
+                  backgroundColor: isActive ? 'primary.main' : 'transparent',
+                  color: isActive ? 'white' : 'text.primary',
+                  '&:hover': {
+                    backgroundColor: isActive ? 'primary.dark' : 'secondary.main',
+                  },
+                  mx: 1,
                 }}
               >
-                {item.icon}
-              </ListItemIcon>
-              <ListItemText
-                primary={item.text}
-                primaryTypographyProps={{
-                  fontSize: '0.95rem',
-                  fontWeight: item.active ? 500 : 400,
-                }}
-              />
-            </ListItemButton>
-          </ListItem>
-        ))}
+                <ListItemIcon
+                  sx={{
+                    color: isActive ? 'white' : 'text.secondary',
+                    minWidth: 36,
+                  }}
+                >
+                  {item.icon}
+                </ListItemIcon>
+                <ListItemText
+                  primary={item.text}
+                  primaryTypographyProps={{
+                    fontSize: '0.95rem',
+                    fontWeight: isActive ? 500 : 400,
+                  }}
+                />
+              </ListItemButton>
+            </ListItem>
+          );
+        })}
       </List>
 
       {/* Cerrar sesión */}
