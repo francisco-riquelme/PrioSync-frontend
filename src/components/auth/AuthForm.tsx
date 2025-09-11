@@ -28,6 +28,10 @@ export default function AuthForm() {
     console.log('Iniciar sesión con Google');
     // La lógica de Google se implementará en su propia tarea.
   }
+  const handleForgotPassword = () => {
+    // Aquí puedes redirigir o mostrar un modal, según tu flujo
+    console.log('Redirigir a recuperación de contraseña');
+  };
 
   return (
     <div className="w-full max-w-md p-8 space-y-6 bg-gray-800 rounded-lg shadow-lg">
@@ -84,9 +88,13 @@ export default function AuthForm() {
         </div>
 
         <div className="text-right text-sm">
-          <a href="#" className="font-medium text-indigo-400 hover:text-indigo-300">
+          <button
+            type="button"
+            onClick={handleForgotPassword}
+            className="font-medium text-indigo-400 hover:text-indigo-300 underline focus:outline-none"
+          >
             ¿Olvidaste tu contraseña?
-          </a>
+          </button>
         </div>
 
         <button
