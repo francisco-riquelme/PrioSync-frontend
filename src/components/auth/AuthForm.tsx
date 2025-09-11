@@ -33,20 +33,6 @@ export default function AuthForm() {
         <p className="text-gray-400">Tu asistente de tiempo inteligente</p>
       </div>
 
-      <button
-        onClick={handleGoogleLogin}
-        className="w-full inline-flex justify-center items-center gap-3 py-2 px-4 border border-gray-600 rounded-md shadow-sm bg-gray-700 text-sm font-medium text-white hover:bg-gray-600 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-offset-gray-800 focus:ring-white"
-      >
-        <GoogleIcon />
-        Continuar con Google
-      </button>
-
-      <div className="flex items-center">
-        <div className="flex-grow bg-gray-600 h-px"></div>
-        <span className="flex-shrink px-4 text-sm text-gray-400">O</span>
-        <div className="flex-grow bg-gray-600 h-px"></div>
-      </div>
-
       <form onSubmit={handleLogin} className="space-y-6">
         <div>
           <label htmlFor="email" className="block text-sm font-medium text-gray-300">
@@ -95,6 +81,15 @@ export default function AuthForm() {
           className="w-full inline-flex justify-center rounded-md border border-transparent bg-indigo-600 py-2 px-4 text-sm font-medium text-white shadow-sm hover:bg-indigo-700 focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:ring-offset-2 focus:ring-offset-gray-800"
         >
           Iniciar Sesión
+        </button>
+
+        <button
+          onClick={handleGoogleLogin}
+          type="button"
+          className="w-full inline-flex justify-center items-center gap-3 py-2 px-4 border border-gray-600 rounded-md shadow-sm bg-gray-700 text-sm font-medium text-white hover:bg-gray-600 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-offset-gray-800 focus:ring-white"
+        >
+          <GoogleIcon />
+          Continuar con Google
         </button>
       </form>
     </div>
