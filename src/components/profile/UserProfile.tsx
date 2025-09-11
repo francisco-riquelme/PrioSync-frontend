@@ -230,13 +230,7 @@ export default function UserProfile() {
                           {activity.title}
                         </Typography>
                       }
-                      secondary={
-                        <Box>
-                          <Typography variant="body2" color="text.secondary">
-                            {activity.subtitle}
-                          </Typography>
-                        </Box>
-                      }
+                      secondary={activity.subtitle}
                     />
                     <Typography variant="body2" color="text.secondary">
                       {activity.date}

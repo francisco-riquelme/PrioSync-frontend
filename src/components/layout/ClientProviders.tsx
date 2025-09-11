@@ -1,25 +1,17 @@
 'use client';
 
-import { ThemeProvider, CssBaseline } from '@mui/material';
-import theme from '../../theme/theme';
-import { CacheProvider } from '@emotion/react';
-import createEmotionCache from '../../theme/createEmotionCache';
-import { useEffect, useState } from 'react';
-
-const clientSideEmotionCache = createEmotionCache();
+import { ThemeProvider } from '@mui/material/styles';
+import CssBaseline from '@mui/material/CssBaseline';
+import theme from '@/theme/theme';
+import { UserProvider } from '@/contexts/UserContext';
 
 export default function ClientProviders({ children }: { children: React.ReactNode }) {
-  const [mounted, setMounted] = useState(false);
-  useEffect(() => {
-    setMounted(true);
-  }, []);
-  if (!mounted) return null;
   return (
-    <CacheProvider value={clientSideEmotionCache}>
-      <ThemeProvider theme={theme}>
-        <CssBaseline />
+    <ThemeProvider theme={theme}>
+      <CssBaseline />
+      <UserProvider>
         {children}
-      </ThemeProvider>
-    </CacheProvider>
+      </UserProvider>
+    </ThemeProvider>
   );
 }

@@ -1,6 +1,6 @@
 'use client';
 
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { useRouter, usePathname } from 'next/navigation';
 import {
   Box,
@@ -45,8 +45,13 @@ const menuItems = [
 
 export default function DashboardLayout({ children }: LayoutProps) {
   const [mobileOpen, setMobileOpen] = useState(false);
+  const [mounted, setMounted] = useState(false);
   const router = useRouter();
   const pathname = usePathname();
+
+  useEffect(() => {
+    setMounted(true);
+  }, []);
 
   const handleDrawerToggle = () => {
     setMobileOpen(!mobileOpen);
@@ -143,6 +148,11 @@ export default function DashboardLayout({ children }: LayoutProps) {
       </Box>
     </div>
   );
+
+  if (!mounted) {
+    // Evita el render hasta que estés seguro de estar en el cliente
+    return null;
+  }
 
   return (
     <Box sx={{ display: 'flex' }}>
