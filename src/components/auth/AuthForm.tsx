@@ -1,97 +1,122 @@
 // src/components/auth/AuthForm.tsx
 "use client";
 
-import { useState } from 'react';
+import React, { useState } from 'react';
 import GoogleIcon from './GoogleIcon';
+import Box from '@mui/material/Box';
+import Paper from '@mui/material/Paper';
+import Typography from '@mui/material/Typography';
+import Tabs from '@mui/material/Tabs';
+import Tab from '@mui/material/Tab';
+import Button from '@mui/material/Button';
+import TextField from '@mui/material/TextField';
+import Divider from '@mui/material/Divider';
 
 export default function AuthForm() {
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
+  const [tab, setTab] = useState(0);
 
   const handleLogin = (event: React.FormEvent<HTMLFormElement>) => {
     event.preventDefault();
-    // Por ahora, solo mostramos en consola que capturamos los datos.
-    // La validación real se hará en una tarea futura.
     console.log('Datos de inicio de sesión enviados:', { email, password });
-    // Aquí iría la lógica para llamar a tu API de inicio de sesión
   };
 
   const handleGoogleLogin = () => {
     console.log('Iniciar sesión con Google');
-    // La lógica de Google se implementará en su propia tarea.
   };
 
   const handleForgotPassword = () => {
-    // Aquí puedes redirigir o mostrar un modal, según tu flujo
     console.log('Redirigir a recuperación de contraseña');
   };
 
+  const handleTabChange = (_: React.SyntheticEvent, newValue: number) => {
+    setTab(newValue);
+  };
+
   return (
-    <div className="w-full max-w-md p-8 space-y-6 bg-gray-800 rounded-lg shadow-lg">
-      <div className="text-center">
-        <h1 className="text-3xl font-bold text-white">PrioSync</h1>
-        <p className="text-gray-400">Tu asistente de tiempo inteligente</p>
-      </div>
-
-      <form onSubmit={handleLogin} className="space-y-6">
-        <div>
-          <label htmlFor="email" className="block text-sm font-medium text-gray-300">
-            Correo Electrónico
-          </label>
-          <input
-            id="email"
-            name="email"
+    <Box sx={{ minHeight: '100vh', bgcolor: '#e3edfa', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
+      <Paper elevation={6} sx={{ p: 4, width: 380, borderRadius: 4, display: 'flex', flexDirection: 'column', gap: 3 }}>
+        <Box textAlign="center">
+          <Typography variant="h4" fontWeight={700} color="#3b82f6" gutterBottom>
+            PrioSync
+          </Typography>
+          <Typography variant="subtitle1" color="text.secondary">
+            Tu asistente de tiempo inteligente
+          </Typography>
+        </Box>
+        <Tabs value={tab} onChange={handleTabChange} centered sx={{ mb: 1 }}>
+          <Tab label="Iniciar Sesión" />
+          <Tab label="Registrarse" />
+        </Tabs>
+        <Box component="form" onSubmit={handleLogin} sx={{ display: 'flex', flexDirection: 'column', gap: 2 }}>
+          <TextField
+            label="Correo Electrónico"
             type="email"
-            autoComplete="email"
             value={email}
-            onChange={(e) => setEmail(e.target.value)}
+            onChange={e => setEmail(e.target.value)}
             required
-            className="mt-1 block w-full rounded-md border-gray-600 bg-gray-700 text-white shadow-sm focus:border-indigo-500 focus:ring-indigo-500 sm:text-sm p-2"
+            fullWidth
+            size="small"
+            autoComplete="email"
           />
-        </div>
-
-        <div>
-          <label htmlFor="password" className="block text-sm font-medium text-gray-300">
-            Contraseña
-          </label>
-          <input
-            id="password"
-            name="password"
+          <TextField
+            label="Contraseña"
             type="password"
-            autoComplete="current-password"
             value={password}
-            onChange={(e) => setPassword(e.target.value)}
+            onChange={e => setPassword(e.target.value)}
             required
-            className="mt-1 block w-full rounded-md border-gray-600 bg-gray-700 text-white shadow-sm focus:border-indigo-500 focus:ring-indigo-500 sm:text-sm p-2"
+            fullWidth
+            size="small"
+            autoComplete="current-password"
           />
-        </div>
-
-        <div className="text-right text-sm">
-          <button
-            type="button"
-            onClick={handleForgotPassword}
-            className="font-medium text-indigo-400 hover:text-indigo-300 underline focus:outline-none"
+          <Box textAlign="right">
+            <Button
+              onClick={handleForgotPassword}
+              sx={{ textTransform: 'none', color: '#3b82f6', fontWeight: 500 }}
+              size="small"
+            >
+              ¿Olvidaste tu contraseña?
+            </Button>
+          </Box>
+          <Button
+            type="submit"
+            variant="contained"
+            sx={{
+              textTransform: 'none',
+              bgcolor: '#3b82f6',
+              fontWeight: 600,
+              borderRadius: 2,
+              py: 1.2,
+              fontSize: 16,
+              boxShadow: 1,
+              '&:hover': { bgcolor: '#2563eb' },
+            }}
+            fullWidth
           >
-            ¿Olvidaste tu contraseña?
-          </button>
-        </div>
-
-        <button
-          type="submit"
-          className="w-full inline-flex justify-center rounded-md border border-transparent bg-indigo-600 py-2 px-4 text-sm font-medium text-white shadow-sm hover:bg-indigo-700 focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:ring-offset-2 focus:ring-offset-gray-800"
-        >
-          Iniciar Sesión
-        </button>
-
-        <button
-          onClick={handleGoogleLogin}
-          type="button"
-          className="w-full inline-flex justify-center items-center gap-3 py-2 px-4 border border-gray-600 rounded-md shadow-sm bg-gray-700 text-sm font-medium text-white hover:bg-gray-600 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-offset-gray-800 focus:ring-white"
-        >
-          <GoogleIcon />
-          Continuar con Google
-        </button>
-      </form>
-    </div>
+            Iniciar Sesión
+          </Button>
+          <Divider sx={{ my: 1 }}>O</Divider>
+          <Button
+            onClick={handleGoogleLogin}
+            variant="outlined"
+            startIcon={<GoogleIcon />}
+            sx={{
+              textTransform: 'none',
+              bgcolor: '#fff',
+              color: '#222',
+              borderColor: '#e0e0e0',
+              fontWeight: 500,
+              mb: 1,
+              '&:hover': { bgcolor: '#f5f5f5', borderColor: '#bdbdbd' },
+            }}
+            fullWidth
+          >
+            Continuar con Google
+          </Button>
+        </Box>
+      
+      </Paper>
+    </Box>
   );
 }
