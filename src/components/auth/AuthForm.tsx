@@ -35,7 +35,7 @@ export default function AuthForm() {
   };
 
   return (
-    <Box sx={{ minHeight: '100vh', bgcolor: '#e3edfa', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
+    <Box sx={{ minHeight: '100vh', bgcolor: (theme) => theme.palette.background.default, display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
       <Paper elevation={6} sx={{ p: 4, width: 380, borderRadius: 4, display: 'flex', flexDirection: 'column', gap: 3 }}>
         <Box textAlign="center">
           <Typography variant="h4" fontWeight={700} color="#3b82f6" gutterBottom>
