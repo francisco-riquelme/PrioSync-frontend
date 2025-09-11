@@ -20,17 +20,11 @@ import {
   DialogTitle,
   DialogContent,
   DialogActions,
-  CircularProgress,
-  Paper,
 } from '@mui/material';
 import {
   Edit as EditIcon,
   Security as SecurityIcon,
-  School as SchoolIcon,
-  Assignment as AssignmentIcon,
-  TrendingUp as TrendingUpIcon,
 } from '@mui/icons-material';
-import { useProfile, useActivities, useCourses } from '@/hooks/useUserData';
 
 interface TabPanelProps {
   children?: React.ReactNode;
@@ -57,136 +51,41 @@ function TabPanel(props: TabPanelProps) {
 export default function UserProfile() {
   const [tabValue, setTabValue] = useState(0);
   const [openPasswordDialog, setOpenPasswordDialog] = useState(false);
-  
-  // Usar los hooks para obtener datos
-  const { profile, loading, changePassword } = useProfile();
-  const { activities } = useActivities();
-  const { courses, totalProgress } = useCourses();
 
   const handleTabChange = (event: React.SyntheticEvent, newValue: number) => {
     setTabValue(newValue);
   };
 
-  const handlePasswordChange = async () => {
-    try {
-      const result = await changePassword();
-      if (result.success) {
-        setOpenPasswordDialog(false);
-        // Mostrar mensaje de éxito
-      }
-    } catch (error) {
-      console.error('Error changing password:', error);
+  const activityHistory = [
+    {
+      title: 'Completado: Gestión de Proyectos',
+      subtitle: 'Curso Completo - Proyecto',
+      date: '01/09/2025'
+    },
+    {
+      title: 'HTML y CSS',
+      subtitle: 'Desarrollo de Software - Módulo',
+      date: '28/08/2025'
+    },
+    {
+      title: 'Evaluación Módulo 1',
+      subtitle: 'Cálculo Avanzado - Evaluación (100%)',
+      date: '25/08/2025'
+    },
+    {
+      title: 'Introducción a Derivadas',
+      subtitle: 'Cálculo Avanzado - Módulo',
+      date: '23/08/2025'
     }
-  };
-
-  if (loading || !profile) {
-    return (
-      <Box sx={{ display: 'flex', justifyContent: 'center', alignItems: 'center', height: '50vh' }}>
-        <CircularProgress />
-      </Box>
-    );
-  }
+  ];
 
   return (
     <Box>
-      {/* Header del perfil con información principal */}
-      <Card sx={{ mb: 3, background: 'linear-gradient(135deg, #667eea 0%, #764ba2 100%)' }}>
-        <CardContent sx={{ p: 4 }}>
-          <Box sx={{ display: 'flex', alignItems: 'center', gap: 3 }}>
-            <Avatar
-              sx={{
-                width: 80,
-                height: 80,
-                backgroundColor: 'white',
-                color: 'primary.main',
-                fontSize: '2rem',
-                fontWeight: 'bold'
-              }}
-            >
-              {profile.name?.charAt(0) || '?'}
-            </Avatar>
-            <Box sx={{ flex: 1 }}>
-              <Typography variant="h4" sx={{ fontWeight: 600, color: 'white', mb: 1 }}>
-                {profile.name}
-              </Typography>
-              <Typography variant="body1" sx={{ color: 'rgba(255, 255, 255, 0.9)', mb: 2 }}>
-                {profile.email}
-              </Typography>
-              <Box sx={{ display: 'flex', gap: 2 }}>
-                <Chip 
-                  label={profile.subscription} 
-                  sx={{ 
-                    backgroundColor: 'rgba(255, 255, 255, 0.2)', 
-                    color: 'white',
-                    fontWeight: 500
-                  }} 
-                />
-                <Chip 
-                  label={`Usuario desde: ${new Date(profile.createdAt).toLocaleDateString('es-ES', { 
-                    year: 'numeric', 
-                    month: 'long'
-                  })}`} 
-                  sx={{ 
-                    backgroundColor: 'rgba(255, 255, 255, 0.2)', 
-                    color: 'white',
-                    fontWeight: 500
-                  }} 
-                />
-              </Box>
-            </Box>
-            <Button
-              variant="contained"
-              startIcon={<EditIcon />}
-              sx={{
-                backgroundColor: 'rgba(255, 255, 255, 0.2)',
-                color: 'white',
-                '&:hover': {
-                  backgroundColor: 'rgba(255, 255, 255, 0.3)',
-                }
-              }}
-            >
-              Editar Perfil
-            </Button>
-          </Box>
-        </CardContent>
-      </Card>
-
-      {/* Estadísticas rápidas */}
-      <Box
-        sx={{
-          display: 'grid',
-          gridTemplateColumns: { xs: '1fr', md: 'repeat(3, 1fr)' },
-          gap: 3,
-          mb: 3,
-        }}
-      >
-        <Paper sx={{ p: 3, textAlign: 'center' }}>
-          <SchoolIcon sx={{ fontSize: 40, color: 'primary.main', mb: 1 }} />
-          <Typography variant="h4" sx={{ fontWeight: 600, mb: 1 }}>
-            {courses.length}
-          </Typography>
-          <Typography variant="body2" color="text.secondary">
-            Cursos Activos
-          </Typography>
-        </Paper>
-        <Paper sx={{ p: 3, textAlign: 'center' }}>
-          <TrendingUpIcon sx={{ fontSize: 40, color: 'success.main', mb: 1 }} />
-          <Typography variant="h4" sx={{ fontWeight: 600, mb: 1 }}>
-            {totalProgress}%
-          </Typography>
-          <Typography variant="body2" color="text.secondary">
-            Progreso Promedio
-          </Typography>
-        </Paper>
-        <Paper sx={{ p: 3, textAlign: 'center' }}>
-          <AssignmentIcon sx={{ fontSize: 40, color: 'warning.main', mb: 1 }} />
-          <Typography variant="h4" sx={{ fontWeight: 600, mb: 1 }}>
-            {activities.length}
-          </Typography>
-          <Typography variant="body2" color="text.secondary">
-            Actividades Completadas
-          </Typography>
-        </Paper>
+      {/* Header del perfil */}
+      <Box sx={{ mb: 3 }}>
+        <Typography variant="h4" sx={{ fontWeight: 600, mb: 1, color: 'text.primary' }}>
+          Mi Perfil
+        </Typography>
       </Box>
 
       {/* Tabs */}
@@ -202,117 +101,85 @@ export default function UserProfile() {
         <Box
           sx={{
             display: 'grid',
-            gridTemplateColumns: { xs: '1fr', md: '2fr 1fr' },
+            gridTemplateColumns: { xs: '1fr', md: '1fr 1fr' },
             gap: 3,
           }}
         >
-          {/* Información Detallada del Usuario */}
+          {/* Información del Usuario */}
           <Card>
             <CardContent>
-              <Typography variant="h6" gutterBottom sx={{ fontWeight: 600, mb: 3 }}>
+              <Typography variant="h6" gutterBottom sx={{ fontWeight: 600 }}>
                 Información Personal
               </Typography>
               
-              <Box sx={{ display: 'grid', gap: 3 }}>
-                {/* Datos básicos */}
+              <Box sx={{ display: 'flex', alignItems: 'center', mb: 3 }}>
+                <Avatar
+                  sx={{
+                    width: 80,
+                    height: 80,
+                    backgroundColor: 'error.main',
+                    fontSize: '2rem',
+                    mr: 2,
+                  }}
+                >
+                  FR
+                </Avatar>
                 <Box>
-                  <Typography variant="subtitle2" color="text.secondary" gutterBottom>
-                    Nombre Completo
+                  <Typography variant="h6" sx={{ fontWeight: 600 }}>
+                    Francisco Riquelme
                   </Typography>
-                  <Box sx={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
-                    <Typography variant="body1" sx={{ fontWeight: 500 }}>
-                      {profile.name}
-                    </Typography>
-                    <Button size="small" startIcon={<EditIcon />}>Editar</Button>
-                  </Box>
-                  <Divider sx={{ mt: 2 }} />
-                </Box>
-
-                <Box>
-                  <Typography variant="subtitle2" color="text.secondary" gutterBottom>
-                    Correo Electrónico
+                  <Typography variant="body2" color="text.secondary">
+                    francisco.riquelme@duocuc.cl
                   </Typography>
-                  <Box sx={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
-                    <Typography variant="body1" sx={{ fontWeight: 500 }}>
-                      {profile.email}
-                    </Typography>
-                    <Button size="small" startIcon={<EditIcon />}>Editar</Button>
-                  </Box>
-                  <Divider sx={{ mt: 2 }} />
-                </Box>
-
-                <Box>
-                  <Typography variant="subtitle2" color="text.secondary" gutterBottom>
-                    Plan de Suscripción
-                  </Typography>
-                  <Box sx={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
-                    <Chip 
-                      label={profile.subscription} 
-                      color={profile.subscription === 'Plan Premium' ? 'primary' : 'default'}
-                      variant="outlined"
-                    />
-                    <Button size="small">Cambiar Plan</Button>
-                  </Box>
-                  <Divider sx={{ mt: 2 }} />
-                </Box>
-
-                <Box>
-                  <Typography variant="subtitle2" color="text.secondary" gutterBottom>
-                    Miembro desde
-                  </Typography>
-                  <Typography variant="body1" sx={{ fontWeight: 500 }}>
-                    {new Date(profile.createdAt).toLocaleDateString('es-ES', { 
-                      year: 'numeric', 
-                      month: 'long',
-                      day: 'numeric'
-                    })}
-                  </Typography>
-                  <Divider sx={{ mt: 2 }} />
-                </Box>
-
-                <Box>
-                  <Typography variant="subtitle2" color="text.secondary" gutterBottom>
-                    Última actualización
-                  </Typography>
-                  <Typography variant="body1" sx={{ fontWeight: 500 }}>
-                    {new Date(profile.updatedAt).toLocaleDateString('es-ES', { 
-                      year: 'numeric', 
-                      month: 'long',
-                      day: 'numeric'
-                    })}
-                  </Typography>
+                  <Button
+                    startIcon={<EditIcon />}
+                    size="small"
+                    sx={{ mt: 1, textTransform: 'none' }}
+                  >
+                    Editar Información
+                  </Button>
                 </Box>
               </Box>
             </CardContent>
           </Card>
 
-          {/* Panel de Seguridad */}
+          {/* Suscripción */}
           <Card>
             <CardContent>
               <Typography variant="h6" gutterBottom sx={{ fontWeight: 600 }}>
-                Seguridad
+                Suscripción Actual
               </Typography>
               
-              <Typography variant="body2" color="text.secondary" sx={{ mb: 3 }}>
-                Mantén tu cuenta segura actualizando tu contraseña regularmente.
-              </Typography>
-              
-              <Button
-                variant="outlined"
-                fullWidth
-                startIcon={<SecurityIcon />}
-                onClick={() => setOpenPasswordDialog(true)}
+              <Chip
+                label="Plan Gratuito"
+                color="primary"
                 sx={{ mb: 2 }}
-              >
+              />
+              
+              <Typography variant="h6" gutterBottom sx={{ fontWeight: 600, mt: 3 }}>
                 Cambiar Contraseña
-              </Button>
-
+              </Typography>
+              
+              <Typography variant="body2" color="text.secondary" sx={{ mb: 2 }}>
+                Contraseña Actual
+              </Typography>
+              
+              <Typography variant="body2" color="text.secondary" sx={{ mb: 2 }}>
+                Nueva Contraseña
+              </Typography>
+              
               <Button
-                variant="outlined"
+                variant="contained"
                 fullWidth
-                color="error"
+                onClick={() => setOpenPasswordDialog(true)}
+                sx={{
+                  backgroundColor: 'primary.main',
+                  '&:hover': {
+                    backgroundColor: 'primary.dark',
+                  },
+                }}
               >
-                Eliminar Cuenta
+                Actualizar Contraseña
               </Button>
             </CardContent>
           </Card>
@@ -323,35 +190,59 @@ export default function UserProfile() {
       <TabPanel value={tabValue} index={1}>
         <Card>
           <CardContent>
-            <Typography variant="h6" gutterBottom sx={{ fontWeight: 600 }}>
-              Historial de Actividades
+            <Box sx={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', mb: 2 }}>
+              <Typography variant="h6" sx={{ fontWeight: 600 }}>
+                Cambiar Contraseña
+              </Typography>
+              <Button
+                variant="contained"
+                sx={{
+                  backgroundColor: 'primary.main',
+                  '&:hover': {
+                    backgroundColor: 'primary.dark',
+                  },
+                }}
+              >
+                Actualizar Contraseña
+              </Button>
+            </Box>
+
+            <Typography variant="h6" gutterBottom sx={{ fontWeight: 600, mt: 4 }}>
+              Historial de Actividad
             </Typography>
-            
+
+            <Box sx={{ display: 'flex', gap: 2, mb: 3 }}>
+              <Button variant="outlined" size="small">
+                Todas
+              </Button>
+              <Button variant="text" size="small">
+                Tareas
+              </Button>
+            </Box>
+
             <List>
-              {activities.map((activity, index) => (
-                <React.Fragment key={activity.id}>
+              {activityHistory.map((activity, index) => (
+                <React.Fragment key={index}>
                   <ListItem sx={{ px: 0 }}>
                     <ListItemText
-                      primary={activity.title}
+                      primary={
+                        <Typography variant="body1" sx={{ fontWeight: 500 }}>
+                          {activity.title}
+                        </Typography>
+                      }
                       secondary={
                         <Box>
                           <Typography variant="body2" color="text.secondary">
                             {activity.subtitle}
                           </Typography>
-                          <Typography variant="caption" color="text.secondary">
-                            {activity.date}
-                          </Typography>
                         </Box>
                       }
                     />
-                    <Chip
-                      label={activity.type}
-                      size="small"
-                      color="primary"
-                      variant="outlined"
-                    />
+                    <Typography variant="body2" color="text.secondary">
+                      {activity.date}
+                    </Typography>
                   </ListItem>
-                  {index < activities.length - 1 && <Divider />}
+                  {index < activityHistory.length - 1 && <Divider />}
                 </React.Fragment>
               ))}
             </List>
@@ -360,12 +251,7 @@ export default function UserProfile() {
       </TabPanel>
 
       {/* Dialog para cambiar contraseña */}
-      <Dialog 
-        open={openPasswordDialog} 
-        onClose={() => setOpenPasswordDialog(false)} 
-        maxWidth="sm" 
-        fullWidth
-      >
+      <Dialog open={openPasswordDialog} onClose={() => setOpenPasswordDialog(false)} maxWidth="sm" fullWidth>
         <DialogTitle>
           <Box sx={{ display: 'flex', alignItems: 'center', gap: 1 }}>
             <SecurityIcon />
@@ -373,40 +259,44 @@ export default function UserProfile() {
           </Box>
         </DialogTitle>
         <DialogContent>
-          <TextField
-            autoFocus
-            margin="dense"
-            label="Contraseña Actual"
-            type="password"
-            fullWidth
-            variant="outlined"
-            sx={{ mb: 2 }}
-          />
-          <TextField
-            margin="dense"
-            label="Nueva Contraseña"
-            type="password"
-            fullWidth
-            variant="outlined"
-            sx={{ mb: 2 }}
-          />
-          <TextField
-            margin="dense"
-            label="Confirmar Nueva Contraseña"
-            type="password"
-            fullWidth
-            variant="outlined"
-          />
+          <Box sx={{ pt: 2 }}>
+            <TextField
+              fullWidth
+              label="Contraseña Actual"
+              type="password"
+              variant="outlined"
+              sx={{ mb: 2 }}
+            />
+            <TextField
+              fullWidth
+              label="Nueva Contraseña"
+              type="password"
+              variant="outlined"
+              sx={{ mb: 2 }}
+            />
+            <TextField
+              fullWidth
+              label="Confirmar Nueva Contraseña"
+              type="password"
+              variant="outlined"
+            />
+          </Box>
         </DialogContent>
         <DialogActions>
           <Button onClick={() => setOpenPasswordDialog(false)}>
             Cancelar
           </Button>
-          <Button 
-            onClick={handlePasswordChange} 
+          <Button
             variant="contained"
+            onClick={() => setOpenPasswordDialog(false)}
+            sx={{
+              backgroundColor: 'primary.main',
+              '&:hover': {
+                backgroundColor: 'primary.dark',
+              },
+            }}
           >
-            Actualizar Contraseña
+            Actualizar
           </Button>
         </DialogActions>
       </Dialog>

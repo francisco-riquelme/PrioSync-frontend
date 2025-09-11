@@ -189,9 +189,7 @@ export default function Dashboard() {
               sx={{
                 backgroundColor: 'secondary.light',
                 p: 2,
-                borderRadius: 2,
-                borderLeft: 4,
-                borderLeftColor: 'primary.main',
+                borderRadius: 2
               }}
             >
               <Typography

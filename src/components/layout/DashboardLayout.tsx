@@ -28,7 +28,6 @@ import {
   Notifications as NotificationsIcon,
   Menu as MenuIcon,
 } from '@mui/icons-material';
-import { useAuth } from '@/hooks/useUserData';
 
 const drawerWidth = 240;
 
@@ -38,24 +37,27 @@ interface LayoutProps {
 
 const menuItems = [
   { text: 'Dashboard', icon: <DashboardIcon />, path: '/' },
-  { text: 'Calendario', icon: <CalendarIcon />, path: '/calendario' },
-  { text: 'Cursos', icon: <SchoolIcon />, path: '/cursos' },
-  { text: 'Suscripción', icon: <StarIcon />, path: '/suscripcion' },
-  { text: 'Perfil', icon: <PersonIcon />, path: '/perfil' },
+  { text: 'Calendario', icon: <CalendarIcon />, path: '/calendar' },
+  { text: 'Cursos', icon: <SchoolIcon />, path: '/courses' },
+  { text: 'Suscripción', icon: <StarIcon />, path: '/subscription' },
+  { text: 'Perfil', icon: <PersonIcon />, path: '/profile' },
 ];
 
 export default function DashboardLayout({ children }: LayoutProps) {
   const [mobileOpen, setMobileOpen] = useState(false);
   const router = useRouter();
   const pathname = usePathname();
-  const { user } = useAuth();
 
   const handleDrawerToggle = () => {
     setMobileOpen(!mobileOpen);
   };
 
+  const allowedPaths = menuItems.map(item => item.path);
+
   const handleNavigation = (path: string) => {
-    router.push(path);
+    if (allowedPaths.includes(path)) {
+      router.push(path);
+    }
   };
 
   const drawer = (
@@ -177,7 +179,7 @@ export default function DashboardLayout({ children }: LayoutProps) {
           {/* Perfil de usuario */}
           <Box sx={{ display: 'flex', alignItems: 'center', gap: 1 }}>
             <Typography variant="body2" sx={{ display: { xs: 'none', sm: 'block' } }}>
-              {user?.name?.split(' ')[0] || 'Usuario'}
+              Francisco
             </Typography>
             <Avatar
               sx={{
@@ -187,7 +189,7 @@ export default function DashboardLayout({ children }: LayoutProps) {
                 fontSize: '0.9rem',
               }}
             >
-              {user?.avatar || 'U'}
+              FR
             </Avatar>
           </Box>
         </Toolbar>
