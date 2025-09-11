@@ -73,7 +73,7 @@ export default function AuthForm() {
           <Box textAlign="right">
             <Button
               onClick={handleForgotPassword}
-              sx={{ textTransform: 'none', color: (theme) => theme.palette.primary.main, fontWeight: 500 }}
+              sx={{ textTransform: 'none', color: '#3b82f6', fontWeight: 500 }}
               size="small"
             >
               ¿Olvidaste tu contraseña?
