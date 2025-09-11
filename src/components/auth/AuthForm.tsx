@@ -11,15 +11,47 @@ import Tab from '@mui/material/Tab';
 import Button from '@mui/material/Button';
 import TextField from '@mui/material/TextField';
 import Divider from '@mui/material/Divider';
+import Alert from '@mui/material/Alert';
 
 export default function AuthForm() {
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
   const [tab, setTab] = useState(0);
+  const [error, setError] = useState('');
 
   const handleLogin = (event: React.FormEvent<HTMLFormElement>) => {
     event.preventDefault();
+    setError('');
+
+    // Validación básica
+    if (!email || !email.includes('@')) {
+      setError('Por favor ingresa un correo electrónico válido');
+      return;
+    }
+
+    if (password.length < 6) {
+      setError('La contraseña debe tener al menos 6 caracteres');
+      return;
+    }
+
+    // Simulación de error de credenciales incorrectas
+    // En una implementación real, esto vendría del servidor
+    if (email !== 'usuario@ejemplo.com' || password !== '123456') {
+      setError('Credenciales incorrectas. Verifica tu correo y contraseña.');
+      return;
+    }
+
     console.log('Datos de inicio de sesión enviados:', { email, password });
+  };
+
+  const handleEmailChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+    setEmail(e.target.value);
+    if (error) setError(''); // Limpiar error al escribir
+  };
+
+  const handlePasswordChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+    setPassword(e.target.value);
+    if (error) setError(''); // Limpiar error al escribir
   };
 
   const handleGoogleLogin = () => {
@@ -50,25 +82,32 @@ export default function AuthForm() {
           <Tab label="Registrarse" />
         </Tabs>
         <Box component="form" onSubmit={handleLogin} sx={{ display: 'flex', flexDirection: 'column', gap: 2 }}>
+          {error && (
+            <Alert severity="error" sx={{ mb: 1 }}>
+              {error}
+            </Alert>
+          )}
           <TextField
             label="Correo Electrónico"
             type="email"
             value={email}
-            onChange={e => setEmail(e.target.value)}
+            onChange={handleEmailChange}
             required
             fullWidth
             size="small"
             autoComplete="email"
+            error={!!error && !email.includes('@')}
           />
           <TextField
             label="Contraseña"
             type="password"
             value={password}
-            onChange={e => setPassword(e.target.value)}
+            onChange={handlePasswordChange}
             required
             fullWidth
             size="small"
             autoComplete="current-password"
+            error={!!error && password.length < 6}
           />
           <Box textAlign="right">
             <Button
