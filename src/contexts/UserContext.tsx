@@ -227,11 +227,11 @@ export const UserProvider = ({ children }: { children: ReactNode }) => {
       // Generar id y date solo en el cliente para evitar SSR mismatch
       let id = '';
       let date = '';
-      if (typeof window !== 'undefined') {
+        if (typeof window !== 'undefined') {
         id = `activity_${Date.now()}`;
         date = new Date().toLocaleDateString('es-ES');
       } else {
-        id = `activity_${Math.floor(Math.random() * 1000000000)}`;
+        id = '';
         date = '';
       }
 
