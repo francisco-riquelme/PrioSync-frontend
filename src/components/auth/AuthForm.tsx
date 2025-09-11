@@ -38,7 +38,7 @@ export default function AuthForm() {
     <Box sx={{ minHeight: '100vh', bgcolor: '#e3edfa', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
       <Paper elevation={6} sx={{ p: 4, width: 380, borderRadius: 4, display: 'flex', flexDirection: 'column', gap: 3 }}>
         <Box textAlign="center">
-          <Typography variant="h4" fontWeight={700} color="primary.main" gutterBottom>
+          <Typography variant="h4" fontWeight={700} color="#3b82f6" gutterBottom>
             PrioSync
           </Typography>
           <Typography variant="subtitle1" color="text.secondary">
