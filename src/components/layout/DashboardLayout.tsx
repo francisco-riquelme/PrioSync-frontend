@@ -52,8 +52,12 @@ export default function DashboardLayout({ children }: LayoutProps) {
     setMobileOpen(!mobileOpen);
   };
 
+  const allowedPaths = menuItems.map(item => item.path);
+
   const handleNavigation = (path: string) => {
-    router.push(path);
+    if (allowedPaths.includes(path)) {
+      router.push(path);
+    }
   };
 
   const drawer = (

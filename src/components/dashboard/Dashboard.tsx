@@ -1,6 +1,7 @@
 'use client';
 
-import React from 'react';
+import React, { useState } from 'react';
+import { useRouter } from 'next/navigation';
 import {
   Box,
   Card,
@@ -10,18 +11,40 @@ import {
   Button,
   Avatar,
   Chip,
+  CircularProgress,
 } from '@mui/material';
-// import {
-//   Psychology as PsychologyIcon,
-// } from '@mui/icons-material';
+import { Person as PersonIcon } from '@mui/icons-material';
+import { useDashboard } from '@/hooks/useUserData';
 
 export default function Dashboard() {
-  const progressData = [
-    { subject: 'Cálculo Avanzado', progress: 85 },
-    { subject: 'Desarrollo de Software', progress: 65 },
-    { subject: 'Inteligencia Artificial', progress: 78 },
-    { subject: 'Gestión de Proyectos', progress: 72 },
-  ];
+  const router = useRouter();
+  const { dashboardData, generateAIAdvice } = useDashboard();
+  const [aiAdvice, setAiAdvice] = useState<string>('**Evalúa tu conocimiento activamente sin consultar tus apuntes para identificar lagunas y reforzar el aprendizaje.**');
+  const [loadingAdvice, setLoadingAdvice] = useState(false);
+
+  const handleGenerateAdvice = async () => {
+    setLoadingAdvice(true);
+    try {
+      const advice = await generateAIAdvice();
+      setAiAdvice(`**${advice}**`);
+    } catch (error) {
+      console.error('Error generating advice:', error);
+    } finally {
+      setLoadingAdvice(false);
+    }
+  };
+
+  const navigateToProfile = () => {
+    router.push('/perfil');
+  };
+
+  if (!dashboardData.user.name) {
+    return (
+      <Box sx={{ display: 'flex', justifyContent: 'center', alignItems: 'center', height: '50vh' }}>
+        <CircularProgress />
+      </Box>
+    );
+  }
 
   return (
     <Box>
@@ -35,45 +58,57 @@ export default function Dashboard() {
         }}
       >
         {/* Saludo personalizado */}
-        <Card sx={{ p: 2, backgroundColor: 'secondary.light' }}>
-          <CardContent>
-            <Typography variant="h5" gutterBottom sx={{ fontWeight: 600 }}>
-              ¡Hola, Francisco!
-            </Typography>
-            <Typography
-              variant="body1"
-              sx={{ 
-                fontStyle: 'italic',
-                color: 'text.secondary',
-                mb: 2 
-              }}
-            >
-              &ldquo;Con cada esfuerzo, forjas tu destino.&rdquo;
-            </Typography>
-            <Box sx={{ display: 'flex', alignItems: 'center', gap: 1 }}>
-              <Avatar
-                sx={{
-                  width: 24,
-                  height: 24,
-                  backgroundColor: 'primary.main',
-                  fontSize: '0.75rem',
-                }}
-              >
-                IA
-              </Avatar>
-              <Chip
-                label="Generado con IA"
-                size="small"
-                sx={{
-                  backgroundColor: 'white',
-                  color: 'primary.main',
-                  fontSize: '0.75rem',
-                }}
-              />
-            </Box>
-          </CardContent>
-        </Card>
-
+          <Card sx={{ p: 2, backgroundColor: 'secondary.light' }}>
+            <CardContent>
+              <Box sx={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start' }}>
+                <Box sx={{ flex: 1 }}>
+                  <Typography variant="h5" gutterBottom sx={{ fontWeight: 600 }}>
+                    {dashboardData.user.greeting}
+                  </Typography>
+                  <Typography
+                    variant="body1"
+                    sx={{ 
+                      fontStyle: 'italic',
+                      color: 'text.secondary',
+                      mb: 2 
+                    }}
+                  >
+                    &ldquo;Con cada esfuerzo, forjas tu destino.&rdquo;
+                  </Typography>
+                </Box>
+                <Button
+                  variant="outlined"
+                  size="small"
+                  startIcon={<PersonIcon />}
+                  onClick={navigateToProfile}
+                  sx={{ ml: 2 }}
+                >
+                  Ver Perfil
+                </Button>
+              </Box>
+              <Box sx={{ display: 'flex', alignItems: 'center', gap: 1 }}>
+                <Avatar
+                  sx={{
+                    width: 24,
+                    height: 24,
+                    backgroundColor: 'primary.main',
+                    fontSize: '0.75rem',
+                  }}
+                >
+                  IA
+                </Avatar>
+                <Chip
+                  label="Generado con IA"
+                  size="small"
+                  sx={{
+                    backgroundColor: 'white',
+                    color: 'primary.main',
+                    fontSize: '0.75rem',
+                  }}
+                />
+              </Box>
+            </CardContent>
+          </Card>
         {/* Progreso de cursos */}
         <Card>
           <CardContent>
@@ -81,11 +116,11 @@ export default function Dashboard() {
               Progreso de Cursos
             </Typography>
             <Box sx={{ mt: 2 }}>
-              {progressData.map((course, index) => (
-                <Box key={index} sx={{ mb: 2 }}>
+              {dashboardData.courses.list.map((course) => (
+                <Box key={course.courseId} sx={{ mb: 2 }}>
                   <Box sx={{ display: 'flex', justifyContent: 'space-between', mb: 0.5 }}>
                     <Typography variant="body2" color="text.secondary">
-                      {course.subject}
+                      {course.courseName}
                     </Typography>
                     <Typography variant="body2" color="text.secondary">
                       {course.progress}%
@@ -129,6 +164,8 @@ export default function Dashboard() {
             <Button
               variant="contained"
               fullWidth
+              onClick={handleGenerateAdvice}
+              disabled={loadingAdvice}
               sx={{
                 mb: 2,
                 py: 1.5,
@@ -138,7 +175,14 @@ export default function Dashboard() {
                 },
               }}
             >
-              Dame un consejo
+              {loadingAdvice ? (
+                <Box sx={{ display: 'flex', alignItems: 'center', gap: 1 }}>
+                  <CircularProgress size={16} color="inherit" />
+                  Generando...
+                </Box>
+              ) : (
+                'Dame un consejo'
+              )}
             </Button>
 
             <Box
@@ -156,8 +200,7 @@ export default function Dashboard() {
                   lineHeight: 1.6,
                 }}
               >
-                **Evalúa tu conocimiento activamente sin consultar tus 
-                apuntes para identificar lagunas y reforzar el aprendizaje.**
+                {aiAdvice}
               </Typography>
             </Box>
           </CardContent>
