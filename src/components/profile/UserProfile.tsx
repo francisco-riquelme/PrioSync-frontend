@@ -83,7 +83,7 @@ export default function UserProfile() {
     <Box>
       {/* Header del perfil */}
       <Box sx={{ mb: 3 }}>
-        <Typography variant="h4" sx={{ fontWeight: 600, mb: 1 }}>
+        <Typography variant="h4" sx={{ fontWeight: 600, mb: 1, color: 'text.primary' }}>
           Mi Perfil
         </Typography>
       </Box>

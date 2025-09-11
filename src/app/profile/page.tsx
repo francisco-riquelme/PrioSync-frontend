@@ -1,18 +1,15 @@
 'use client';
 
-import { ThemeProvider } from '@mui/material/styles';
-import CssBaseline from '@mui/material/CssBaseline';
-import { theme } from '../../theme/theme';
+import ClientProviders from '../../components/layout/ClientProviders';
 import DashboardLayout from '../../components/layout/DashboardLayout';
 import UserProfile from '../../components/profile/UserProfile';
 
 export default function ProfilePage() {
   return (
-    <ThemeProvider theme={theme}>
-      <CssBaseline />
+    <ClientProviders>
       <DashboardLayout>
         <UserProfile />
       </DashboardLayout>
-    </ThemeProvider>
+    </ClientProviders>
   );
 }
