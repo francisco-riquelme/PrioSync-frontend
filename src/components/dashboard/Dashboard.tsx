@@ -108,7 +108,8 @@ export default function Dashboard() {
                 />
               </Box>
             </CardContent>
-          </Card>        {/* Progreso de cursos */}
+          </Card>
+        {/* Progreso de cursos */}
         <Card>
           <CardContent>
             <Typography variant="h6" gutterBottom sx={{ fontWeight: 600 }}>
