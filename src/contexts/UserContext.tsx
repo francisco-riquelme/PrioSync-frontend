@@ -220,23 +220,34 @@ export const UserProvider = ({ children }: { children: ReactNode }) => {
   const addActivity = async (activity: Omit<Activity, 'id' | 'date'>): Promise<void> => {
     setLoading(true);
     setError(null);
-    
+
     try {
       await new Promise(resolve => setTimeout(resolve, 300));
-      
+
+      // Generar id y date solo en el cliente para evitar SSR mismatch
+      let id = '';
+      let date = '';
+        if (typeof window !== 'undefined') {
+        id = `activity_${Date.now()}`;
+        date = new Date().toLocaleDateString('es-ES');
+      } else {
+        id = '';
+        date = '';
+      }
+
       const newActivity: Activity = {
         ...activity,
-        id: `activity_${Date.now()}`,
-        date: new Date().toLocaleDateString('es-ES')
+        id,
+        date
       };
-      
+
       setUserData(prev => {
         if (!prev) return null;
-        
+
         return {
           ...prev,
           activities: [newActivity, ...prev.activities],
-          updatedAt: new Date().toISOString()
+          updatedAt: typeof window !== 'undefined' ? new Date().toISOString() : prev.updatedAt
         };
       });
     } catch (err) {

@@ -221,7 +221,11 @@ export const useDashboard = () => {
     // Simular procesamiento de IA
     await new Promise((resolve) => setTimeout(resolve, 800));
 
-    const randomAdvice = advices[Math.floor(Math.random() * advices.length)];
+    // Usar Math.random solo en el cliente
+    let randomAdvice = advices[0];
+    if (typeof window !== 'undefined') {
+      randomAdvice = advices[Math.floor(Math.random() * advices.length)];
+    }
     return randomAdvice;
   }, []);
 
