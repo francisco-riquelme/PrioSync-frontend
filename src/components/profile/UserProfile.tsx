@@ -103,7 +103,7 @@ export default function UserProfile() {
                 fontWeight: 'bold'
               }}
             >
-              {profile.name.charAt(0)}
+              {profile.name?.charAt(0) || '?'}
             </Avatar>
             <Box sx={{ flex: 1 }}>
               <Typography variant="h4" sx={{ fontWeight: 600, color: 'white', mb: 1 }}>
