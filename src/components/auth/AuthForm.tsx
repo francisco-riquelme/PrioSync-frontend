@@ -13,6 +13,20 @@ import TextField from '@mui/material/TextField';
 import Divider from '@mui/material/Divider';
 import Alert from '@mui/material/Alert';
 
+// Configuración de validación
+const VALIDATION_CONFIG = {
+  PASSWORD_MIN_LENGTH: 6,
+  EMAIL_REQUIRED: true,
+  PASSWORD_REQUIRED: true
+} as const;
+
+// Mensajes de error
+const ERROR_MESSAGES = {
+  INVALID_EMAIL: 'Por favor ingresa un correo electrónico válido',
+  PASSWORD_TOO_SHORT: `La contraseña debe tener al menos ${VALIDATION_CONFIG.PASSWORD_MIN_LENGTH} caracteres`,
+  INVALID_CREDENTIALS: 'Credenciales incorrectas. Verifica tu correo y contraseña.'
+} as const;
+
 export default function AuthForm() {
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
@@ -45,13 +59,13 @@ export default function AuthForm() {
     setFieldErrors({ email: false, password: false });
 
     if (!email || !isValidEmail(email)) {
-      setError('Por favor ingresa un correo electrónico válido');
+      setError(ERROR_MESSAGES.INVALID_EMAIL);
       setFieldErrors({ email: true, password: false });
       return;
     }
 
-    if (password.length < 6) {
-      setError('La contraseña debe tener al menos 6 caracteres');
+    if (password.length < VALIDATION_CONFIG.PASSWORD_MIN_LENGTH) {
+      setError(ERROR_MESSAGES.PASSWORD_TOO_SHORT);
       setFieldErrors({ email: false, password: true });
       return;
     }
@@ -59,7 +73,7 @@ export default function AuthForm() {
     // Simulación configurable: falla el login solo si la variable de entorno lo indica
     const simulateFailure = process.env.NEXT_PUBLIC_SIMULATE_LOGIN_FAILURE === "true";
     if (simulateFailure) {
-      setError('Credenciales incorrectas. Verifica tu correo y contraseña.');
+      setError(ERROR_MESSAGES.INVALID_CREDENTIALS);
       setFieldErrors({ email: true, password: true });
       return;
     } else {
