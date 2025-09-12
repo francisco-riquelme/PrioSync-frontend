@@ -103,7 +103,7 @@ export default function UserProfile() {
                 fontWeight: 'bold'
               }}
             >
-              {profile.name.charAt(0)}
+              {profile.name.charAt(0) || '?'} 
             </Avatar>
             <Box sx={{ flex: 1 }}>
               <Typography variant="h4" sx={{ fontWeight: 600, color: 'white', mb: 1 }}>
@@ -113,14 +113,6 @@ export default function UserProfile() {
                 {profile.email}
               </Typography>
               <Box sx={{ display: 'flex', gap: 2 }}>
-                <Chip 
-                  label={profile.subscription} 
-                  sx={{ 
-                    backgroundColor: 'rgba(255, 255, 255, 0.2)', 
-                    color: 'white',
-                    fontWeight: 500
-                  }} 
-                />
                 <Chip 
                   label={`Usuario desde: ${new Date(profile.createdAt).toLocaleDateString('es-ES', { 
                     year: 'numeric', 
@@ -237,21 +229,6 @@ export default function UserProfile() {
                       {profile.email}
                     </Typography>
                     <Button size="small" startIcon={<EditIcon />}>Editar</Button>
-                  </Box>
-                  <Divider sx={{ mt: 2 }} />
-                </Box>
-
-                <Box>
-                  <Typography variant="subtitle2" color="text.secondary" gutterBottom>
-                    Plan de Suscripción
-                  </Typography>
-                  <Box sx={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
-                    <Chip 
-                      label={profile.subscription} 
-                      color={profile.subscription === 'Plan Premium' ? 'primary' : 'default'}
-                      variant="outlined"
-                    />
-                    <Button size="small">Cambiar Plan</Button>
                   </Box>
                   <Divider sx={{ mt: 2 }} />
                 </Box>

@@ -241,7 +241,6 @@ export const useDashboard = () => {
       recent: activities.slice(0, 5),
       stats,
     },
-    subscription: userData?.subscription || "Plan Gratuito",
   };
 
   return {

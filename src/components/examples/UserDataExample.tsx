@@ -61,7 +61,6 @@ export default function UserDataExample() {
           <Typography>Nombre: {userData?.name}</Typography>
           <Typography>Email: {userData?.email}</Typography>
           <Typography>Avatar: {userData?.avatar}</Typography>
-          <Typography>Suscripción: {userData?.subscription}</Typography>
           <Typography>Creado: {userData?.createdAt}</Typography>
           <Typography>Actualizado: {userData?.updatedAt}</Typography>
         </CardContent>
@@ -149,11 +148,11 @@ export default function UserDataExample() {
           <Button 
             variant="contained" 
             onClick={() => updateUser({ 
-              subscription: 'Plan Premium',
+              name: 'Francisco Riquelme Updated',
               updatedAt: new Date().toISOString()
             })}
           >
-            Actualizar a Plan Premium
+            Actualizar Nombre de Usuario
           </Button>
         </CardContent>
       </Card>

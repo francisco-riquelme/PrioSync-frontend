@@ -22,7 +22,6 @@ import {
   Dashboard as DashboardIcon,
   CalendarToday as CalendarIcon,
   School as SchoolIcon,
-  Star as StarIcon,
   Person as PersonIcon,
   Logout as LogoutIcon,
   Notifications as NotificationsIcon,
@@ -40,7 +39,6 @@ const menuItems = [
   { text: 'Dashboard', icon: <DashboardIcon />, path: '/' },
   { text: 'Calendario', icon: <CalendarIcon />, path: '/calendario' },
   { text: 'Cursos', icon: <SchoolIcon />, path: '/cursos' },
-  { text: 'Suscripción', icon: <StarIcon />, path: '/suscripcion' },
   { text: 'Perfil', icon: <PersonIcon />, path: '/perfil' },
 ];
 
