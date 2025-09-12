@@ -18,40 +18,55 @@ export default function AuthForm() {
   const [password, setPassword] = useState('');
   const [tab, setTab] = useState(0);
   const [error, setError] = useState('');
+  const [fieldErrors, setFieldErrors] = useState({
+    email: false,
+    password: false
+  });
+
+  const isValidEmail = (email: string): boolean => {
+    const emailRegex = /^[a-zA-Z0-9._%+-]+@[a-zA-Z0-9.-]+\.[a-zA-Z]{2,}$/;
+    return emailRegex.test(email);
+  };
 
   const handleLogin = (event: React.FormEvent<HTMLFormElement>) => {
     event.preventDefault();
     setError('');
+    setFieldErrors({ email: false, password: false });
 
-    // Validación básica
-    if (!email || !email.includes('@')) {
+    if (!email || !isValidEmail(email)) {
       setError('Por favor ingresa un correo electrónico válido');
+      setFieldErrors({ email: true, password: false });
       return;
     }
 
     if (password.length < 6) {
       setError('La contraseña debe tener al menos 6 caracteres');
+      setFieldErrors({ email: false, password: true });
       return;
     }
 
-    // Simulación de error de credenciales incorrectas
-    // En una implementación real, esto vendría del servidor
-    if (email !== 'usuario@ejemplo.com' || password !== '123456') {
-      setError('Credenciales incorrectas. Verifica tu correo y contraseña.');
-      return;
-    }
-
-    console.log('Datos de inicio de sesión enviados:', { email, password });
+    // Simulación: siempre falla el login para demostración
+    setError('Credenciales incorrectas. Verifica tu correo y contraseña.');
+    setFieldErrors({ email: true, password: true });
+    return;
+    // Si se quiere simular un login exitoso, comentar las líneas anteriores y descomenta la siguiente:
+    // console.log('Datos de inicio de sesión enviados:', { email, password });
   };
 
   const handleEmailChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     setEmail(e.target.value);
-    if (error) setError(''); // Limpiar error al escribir
+    if (error) {
+      setError('');
+      setFieldErrors({ email: false, password: false });
+    }
   };
 
   const handlePasswordChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     setPassword(e.target.value);
-    if (error) setError(''); // Limpiar error al escribir
+    if (error) {
+      setError('');
+      setFieldErrors({ email: false, password: false });
+    }
   };
 
   const handleGoogleLogin = () => {
@@ -96,7 +111,7 @@ export default function AuthForm() {
             fullWidth
             size="small"
             autoComplete="email"
-            error={!!error && !email.includes('@')}
+            error={fieldErrors.email}
           />
           <TextField
             label="Contraseña"
@@ -107,7 +122,7 @@ export default function AuthForm() {
             fullWidth
             size="small"
             autoComplete="current-password"
-            error={!!error && password.length < 6}
+            error={fieldErrors.password}
           />
           <Box textAlign="right">
             <Button
