@@ -87,7 +87,7 @@ export default function AuthForm() {
       return;
     } else {
       // Simula un login exitoso (aquí se podría redirigir o limpiar el formulario)
-      console.log('Datos de inicio de sesión enviados:', { email, password });
+      console.log('Datos de inicio de sesión enviados:', { email });
       setEmail('');
       setPassword('');
       setError('');
@@ -102,14 +102,12 @@ export default function AuthForm() {
       setFieldErrors({ email: false, password: false });
     }
   };
-  const handleEmailChange = (e: React.ChangeEvent<HTMLInputElement>) => {
-    setEmail(e.target.value);
+  const handleInputChange = (setter: React.Dispatch<React.SetStateAction<string>>) => (e: React.ChangeEvent<HTMLInputElement>) => {
+    setter(e.target.value);
     clearErrors();
   };
-  const handlePasswordChange = (e: React.ChangeEvent<HTMLInputElement>) => {
-    setPassword(e.target.value);
-    clearErrors();
-  };
+  const handleEmailChange = handleInputChange(setEmail);
+  const handlePasswordChange = handleInputChange(setPassword);
 
   const handleGoogleLogin = () => {
     console.log('Iniciar sesión con Google');
