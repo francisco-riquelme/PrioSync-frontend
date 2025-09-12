@@ -24,7 +24,18 @@ export default function AuthForm() {
   });
 
   const isValidEmail = (email: string): boolean => {
-    const emailRegex = /^[a-zA-Z0-9._%+-]+@[a-zA-Z0-9.-]+\.[a-zA-Z]{2,}$/;
+    // Primero usa la validación nativa del navegador
+    const tempInput = document.createElement('input');
+    tempInput.type = 'email';
+    tempInput.value = email;
+    
+    // Si el navegador lo considera válido, es válido
+    if (tempInput.validity.valid) {
+      return true;
+    }
+    
+    // Como respaldo, usa una regex más robusta (RFC 5322 simplificada)
+    const emailRegex = /^[a-zA-Z0-9.!#$%&'*+/=?^_`{|}~-]+@[a-zA-Z0-9](?:[a-zA-Z0-9-]{0,61}[a-zA-Z0-9])?(?:\.[a-zA-Z0-9](?:[a-zA-Z0-9-]{0,61}[a-zA-Z0-9])?)*$/;
     return emailRegex.test(email);
   };
 
