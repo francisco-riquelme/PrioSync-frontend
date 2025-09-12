@@ -1,7 +1,7 @@
 "use client";
 
 import { useUser } from "@/contexts/UserContext";
-import { useState, useCallback } from "react";
+import { useState, useCallback, useMemo } from "react";
 
 // Hook para autenticación (preparado para AWS Cognito)
 export const useAuth = () => {
@@ -103,7 +103,10 @@ export const useCourses = () => {
 export const useActivities = () => {
   const { userData, addActivity } = useUser();
 
-  const activities = userData?.activities || [];
+  const activities = useMemo(
+    () => userData?.activities || [],
+    [userData?.activities]
+  );
 
   const addNewActivity = useCallback(
     async (
@@ -223,7 +226,7 @@ export const useDashboard = () => {
 
     // Usar Math.random solo en el cliente
     let randomAdvice = advices[0];
-    if (typeof window !== 'undefined') {
+    if (typeof window !== "undefined") {
       randomAdvice = advices[Math.floor(Math.random() * advices.length)];
     }
     return randomAdvice;
@@ -245,7 +248,6 @@ export const useDashboard = () => {
       recent: activities.slice(0, 5),
       stats,
     },
-    subscription: userData?.subscription || "Plan Gratuito",
   };
 
   return {

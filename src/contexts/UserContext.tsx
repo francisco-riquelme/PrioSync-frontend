@@ -8,7 +8,6 @@ export interface UserData {
   name: string;
   email: string;
   avatar: string;
-  subscription: string;
   courses: CourseProgress[];
   activities: Activity[];
   createdAt: string;
@@ -49,7 +48,6 @@ const getDefaultUserData = (): UserData => ({
   name: 'Francisco Riquelme',
   email: 'francisco.riquelme@duocuc.cl',
   avatar: 'FR',
-  subscription: 'Plan Gratuito',
   courses: [
     {
       courseId: 'calculo-avanzado',
