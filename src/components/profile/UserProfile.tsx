@@ -10,7 +10,6 @@ import {
   Button,
   Tabs,
   Tab,
-  Chip,
   List,
   ListItem,
   ListItemText,
@@ -143,20 +142,10 @@ export default function UserProfile() {
             </CardContent>
           </Card>
 
-          {/* Suscripción */}
+          {/* Cambiar Contraseña */}
           <Card>
             <CardContent>
               <Typography variant="h6" gutterBottom sx={{ fontWeight: 600 }}>
-                Suscripción Actual
-              </Typography>
-              
-              <Chip
-                label="Plan Gratuito"
-                color="primary"
-                sx={{ mb: 2 }}
-              />
-              
-              <Typography variant="h6" gutterBottom sx={{ fontWeight: 600, mt: 3 }}>
                 Cambiar Contraseña
               </Typography>
               
