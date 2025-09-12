@@ -45,12 +45,21 @@ export default function AuthForm() {
       return;
     }
 
-    // Simulación: siempre falla el login para demostración
-    setError('Credenciales incorrectas. Verifica tu correo y contraseña.');
-    setFieldErrors({ email: true, password: true });
-    return;
-    // Si se quiere simular un login exitoso, comentar las líneas anteriores y descomenta la siguiente:
-    // console.log('Datos de inicio de sesión enviados:', { email, password });
+    // Simulación configurable: falla el login solo si la variable de entorno lo indica
+    const simulateFailure = process.env.NEXT_PUBLIC_SIMULATE_LOGIN_FAILURE === "true";
+    if (simulateFailure) {
+      setError('Credenciales incorrectas. Verifica tu correo y contraseña.');
+      setFieldErrors({ email: true, password: true });
+      return;
+    } else {
+      // Simula un login exitoso (aquí se podría redirigir o limpiar el formulario)
+      console.log('Datos de inicio de sesión enviados:', { email, password });
+      setEmail('');
+      setPassword('');
+      setError('');
+      setFieldErrors({ email: false, password: false });
+      // Aquí se podría agregar lógica adicional, como redireccionar al usuario
+    }
   };
 
   const handleEmailChange = (e: React.ChangeEvent<HTMLInputElement>) => {
