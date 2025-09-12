@@ -37,15 +37,24 @@ export default function AuthForm() {
     password: false
   });
 
+  // Crear una instancia reutilizable del input para validación
+  const emailInputRef = React.useRef<HTMLInputElement | null>(null);
+
+  React.useEffect(() => {
+    // Crear el input una sola vez al montar el componente
+    emailInputRef.current = document.createElement('input');
+    emailInputRef.current.type = 'email';
+  }, []);
+
   const isValidEmail = (email: string): boolean => {
-    // Primero usa la validación nativa del navegador
-    const tempInput = document.createElement('input');
-    tempInput.type = 'email';
-    tempInput.value = email;
+    if (!email) return false;
     
-    // Si el navegador lo considera válido, es válido
-    if (tempInput.validity.valid) {
-      return true;
+    // Usar la instancia reutilizable para validación nativa
+    if (emailInputRef.current) {
+      emailInputRef.current.value = email;
+      if (emailInputRef.current.validity.valid) {
+        return true;
+      }
     }
     
     // Como respaldo, usa una regex más robusta (RFC 5322 simplificada)
@@ -70,8 +79,8 @@ export default function AuthForm() {
       return;
     }
 
-    // Simulación configurable: falla el login solo si la variable de entorno lo indica
-    const simulateFailure = process.env.NEXT_PUBLIC_SIMULATE_LOGIN_FAILURE === "true";
+    // Simulación de fallo de login solo en desarrollo
+    const simulateFailure = process.env.NODE_ENV === "development";
     if (simulateFailure) {
       setError(ERROR_MESSAGES.INVALID_CREDENTIALS);
       setFieldErrors({ email: true, password: true });
@@ -87,20 +96,19 @@ export default function AuthForm() {
     }
   };
 
-  const handleEmailChange = (e: React.ChangeEvent<HTMLInputElement>) => {
-    setEmail(e.target.value);
+  const clearErrors = () => {
     if (error) {
       setError('');
       setFieldErrors({ email: false, password: false });
     }
   };
-
+  const handleEmailChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+    setEmail(e.target.value);
+    clearErrors();
+  };
   const handlePasswordChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     setPassword(e.target.value);
-    if (error) {
-      setError('');
-      setFieldErrors({ email: false, password: false });
-    }
+    clearErrors();
   };
 
   const handleGoogleLogin = () => {
