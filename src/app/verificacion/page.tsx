@@ -12,7 +12,6 @@ import {
   CircularProgress,
   Card,
   CardContent,
-  IconButton,
   InputAdornment,
 } from '@mui/material';
 import {
@@ -24,16 +23,6 @@ import {
   Error,
   Help,
 } from '@mui/icons-material';
-
-interface VerificationData {
-  email: string;
-  code: string;
-}
-
-interface VerificationResponse {
-  success: boolean;
-  message: string;
-}
 
 interface User {
   id: number;
@@ -104,7 +93,7 @@ export default function VerificationPage() {
       } else {
         setError('Código incorrecto. Inténtalo de nuevo.');
       }
-    } catch (err) {
+    } catch {
       setError('Error al verificar el código. Inténtalo de nuevo.');
     } finally {
       setLoading(false);
