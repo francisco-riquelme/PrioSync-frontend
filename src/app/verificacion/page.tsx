@@ -35,6 +35,19 @@ interface VerificationResponse {
   message: string;
 }
 
+interface User {
+  id: number;
+  email: string;
+  verificationCode: string;
+  createdAt: string;
+  expiresAt: string;
+  isVerified: boolean;
+}
+
+interface VerificationDatabase {
+  users: User[];
+}
+
 export default function VerificationPage() {
   const router = useRouter();
   const [email, setEmail] = useState('');
@@ -78,9 +91,9 @@ export default function VerificationPage() {
 
       // Verificar contra la base de datos JSON
       const response = await fetch('/data/verification-codes.json');
-      const data = await response.json();
+      const data: VerificationDatabase = await response.json();
       
-      const user = data.users.find((u: any) => u.email === email);
+      const user = data.users.find((u: User) => u.email === email);
       
       if (user && user.verificationCode === code) {
         setSuccess('¡Código verificado correctamente! Redirigiendo al dashboard...');
