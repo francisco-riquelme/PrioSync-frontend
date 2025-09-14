@@ -1,7 +1,7 @@
 // src/components/auth/AuthForm.tsx
 "use client";
 
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import GoogleIcon from './GoogleIcon';
 import Box from '@mui/material/Box';
 import Paper from '@mui/material/Paper';
@@ -28,6 +28,7 @@ const ERROR_MESSAGES = {
 } as const;
 
 export default function AuthForm() {
+  const [mounted, setMounted] = useState(false);
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
   const [tab, setTab] = useState(0);
@@ -37,27 +38,14 @@ export default function AuthForm() {
     password: false
   });
 
-  // Crear una instancia reutilizable del input para validación
-  const emailInputRef = React.useRef<HTMLInputElement | null>(null);
-
-  React.useEffect(() => {
-    // Crear el input una sola vez al montar el componente
-    emailInputRef.current = document.createElement('input');
-    emailInputRef.current.type = 'email';
+  useEffect(() => {
+    setMounted(true);
   }, []);
 
   const isValidEmail = (email: string): boolean => {
     if (!email) return false;
     
-    // Usar la instancia reutilizable para validación nativa
-    if (emailInputRef.current) {
-      emailInputRef.current.value = email;
-      if (emailInputRef.current.validity.valid) {
-        return true;
-      }
-    }
-    
-    // Como respaldo, usa una regex más robusta (RFC 5322 simplificada)
+    // Usar regex robusta compatible con SSR (RFC 5322 simplificada)
     const emailRegex = /^[a-zA-Z0-9.!#$%&'*+/=?^_`{|}~-]+@[a-zA-Z0-9](?:[a-zA-Z0-9-]{0,61}[a-zA-Z0-9])?(?:\.[a-zA-Z0-9](?:[a-zA-Z0-9-]{0,61}[a-zA-Z0-9])?)*$/;
     return emailRegex.test(email);
   };
@@ -69,45 +57,35 @@ export default function AuthForm() {
 
     if (!email || !isValidEmail(email)) {
       setError(ERROR_MESSAGES.INVALID_EMAIL);
-      setFieldErrors({ email: true, password: false });
+      setFieldErrors(prev => ({ ...prev, email: true }));
       return;
     }
 
     if (password.length < VALIDATION_CONFIG.PASSWORD_MIN_LENGTH) {
       setError(ERROR_MESSAGES.PASSWORD_TOO_SHORT);
-      setFieldErrors({ email: false, password: true });
+      setFieldErrors(prev => ({ ...prev, password: true }));
       return;
     }
 
-    // Simulación de fallo de login solo en desarrollo
-    const simulateFailure = process.env.NODE_ENV === "development";
-    if (simulateFailure) {
-      setError(ERROR_MESSAGES.INVALID_CREDENTIALS);
-      setFieldErrors({ email: true, password: true });
-      return;
-    } else {
-      // Simula un login exitoso (aquí se podría redirigir o limpiar el formulario)
-      console.log('Datos de inicio de sesión enviados:', { email });
-      setEmail('');
-      setPassword('');
-      setError('');
-      setFieldErrors({ email: false, password: false });
-      // Aquí se podría agregar lógica adicional, como redireccionar al usuario
-    }
+    // Simulación simple de fallo para desarrollo
+    setError(ERROR_MESSAGES.INVALID_CREDENTIALS);
+    setFieldErrors({ email: true, password: true });
   };
 
   const clearErrors = () => {
-    if (error) {
-      setError('');
-      setFieldErrors({ email: false, password: false });
-    }
+    setError('');
+    setFieldErrors({ email: false, password: false });
   };
-  const handleInputChange = (setter: React.Dispatch<React.SetStateAction<string>>) => (e: React.ChangeEvent<HTMLInputElement>) => {
-    setter(e.target.value);
-    clearErrors();
+
+  const handleEmailChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+    setEmail(e.target.value);
+    if (error) clearErrors();
   };
-  const handleEmailChange = handleInputChange(setEmail);
-  const handlePasswordChange = handleInputChange(setPassword);
+
+  const handlePasswordChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+    setPassword(e.target.value);
+    if (error) clearErrors();
+  };
 
   const handleGoogleLogin = () => {
     console.log('Iniciar sesión con Google');
@@ -120,6 +98,10 @@ export default function AuthForm() {
   const handleTabChange = (_: React.SyntheticEvent, newValue: number) => {
     setTab(newValue);
   };
+
+  if (!mounted) {
+    return null;
+  }
 
   return (
     <Box sx={{ minHeight: '100vh', bgcolor: '#e3edfa', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
@@ -209,7 +191,6 @@ export default function AuthForm() {
             Continuar con Google
           </Button>
         </Box>
-      
       </Paper>
     </Box>
   );
