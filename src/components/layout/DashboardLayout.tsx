@@ -94,7 +94,7 @@ export default function DashboardLayout({ children }: LayoutProps) {
                   backgroundColor: isActive ? 'primary.main' : 'transparent',
                   color: isActive ? 'white' : 'text.primary',
                   '&:hover': {
-                    backgroundColor: isActive ? 'primary.dark' : 'secondary.main',
+                    backgroundColor: isActive ? 'primary.dark' : 'action.hover',
                   },
                   mx: 1,
                 }}
@@ -128,7 +128,7 @@ export default function DashboardLayout({ children }: LayoutProps) {
               borderRadius: 2,
               mx: 1,
               '&:hover': {
-                backgroundColor: 'secondary.main',
+                backgroundColor: 'action.hover',
               },
             }}
           >
