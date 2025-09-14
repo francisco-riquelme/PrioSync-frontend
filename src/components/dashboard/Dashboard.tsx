@@ -58,7 +58,7 @@ export default function Dashboard() {
         }}
       >
         {/* Saludo personalizado */}
-          <Card sx={{ p: 2, backgroundColor: 'secondary.light' }}>
+          <Card sx={{ p: 2, backgroundColor: 'background.default' }}>
             <CardContent>
               <Box sx={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start' }}>
                 <Box sx={{ flex: 1 }}>
@@ -187,7 +187,8 @@ export default function Dashboard() {
 
             <Box
               sx={{
-                backgroundColor: 'secondary.light',
+                backgroundColor: 'primary.light',
+                color: 'primary.contrastText',
                 p: 2,
                 borderRadius: 2
               }}
@@ -196,7 +197,6 @@ export default function Dashboard() {
                 variant="body2"
                 sx={{
                   fontStyle: 'italic',
-                  color: 'text.primary',
                   lineHeight: 1.6,
                 }}
               >
@@ -222,6 +222,6 @@ export default function Dashboard() {
           </CardContent>
         </Card>
       </Box>
-    </Box>
+    </Box>  
   );
 }
