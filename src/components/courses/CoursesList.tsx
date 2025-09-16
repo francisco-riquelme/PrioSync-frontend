@@ -161,7 +161,14 @@ export default function CoursesList() {
   return (
     <Box>
       {/* Header */}
-      <Typography variant="h4" sx={{ fontWeight: 700, mb: 3 }}>
+      <Typography 
+        variant="h4" 
+        sx={{ 
+          fontWeight: 700, 
+          mb: 3,
+          color: 'text.primary'
+        }}
+      >
         Cursos
       </Typography>
 
