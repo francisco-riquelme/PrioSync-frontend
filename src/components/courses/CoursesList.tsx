@@ -99,14 +99,23 @@ export default function CoursesList() {
   const [levelFilter, setLevelFilter] = useState('todos');
   const [durationFilter, setDurationFilter] = useState('todos');
 
+  // TODO: Backend Integration - Hook para obtener cursos del usuario con progreso
+  // const { enrolledCourses, loading: enrolledLoading, error: enrolledError } = useEnrolledCourses();
+  
+  // TODO: Backend Integration - Hook para obtener todos los cursos disponibles
+  // const { allCourses, loading: coursesLoading, error: coursesError } = useAllCourses();
+
+  // TODO: Backend Integration - Hook para manejar inscripción a cursos
+  // const { enrollInCourse, loading: enrollLoading } = useEnrollCourse();
+
   // TODO: Backend Integration - Implementar hook para obtener cursos desde API
   // const { courses, loading, error } = useCourses();
   
   // Filtrar solo cursos activos
   const activeCourses = allCourses.filter(course => course.estado === 'activo');
 
-  // TODO: Backend Integration - Implementar búsqueda en el servidor
-  // La búsqueda debería enviarse como query parameter: GET /api/courses?search=term
+  // TODO: Backend Integration - Implementar filtros en el servidor
+  // Los filtros deberían enviarse como query parameters: GET /api/courses?search=term&level=basico&duration=short
   const filteredCourses = activeCourses.filter(course => {
     // Filtro de búsqueda
     if (searchTerm) {
@@ -136,6 +145,19 @@ export default function CoursesList() {
     // TODO: Backend Integration - Verificar que la ruta coincida con el backend
     // Posiblemente necesite ajustar según la estructura de rutas del API
     router.push(`/courses/${courseId}`);
+  };
+
+  // TODO: Backend Integration - Función para manejar inscripción
+  const handleEnrollCourse = async (courseId: number, event: React.MouseEvent) => {
+    event.stopPropagation(); // Evitar navegación cuando se hace clic en inscribirse
+    // try {
+    //   await enrollInCourse(courseId);
+    //   // Mostrar mensaje de éxito
+    //   // Refrescar datos o actualizar estado local
+    // } catch (error) {
+    //   console.error('Error al inscribirse:', error);
+    //   // Mostrar mensaje de error
+    // }
   };
 
   const formatDuration = (minutes: number) => {
@@ -220,6 +242,7 @@ export default function CoursesList() {
         <Button
           variant="contained"
           fullWidth
+          onClick={showEnrollButton ? (e) => handleEnrollCourse(course.id_curso, e) : undefined}
           sx={{
             textTransform: 'none',
             py: 1,
@@ -298,9 +321,18 @@ export default function CoursesList() {
         </FormControl>
       </Box>
 
-      {/* TODO: Backend Integration - Agregar estados de loading y error */}
-      {/* {loading && <CircularProgress />} */}
-      {/* {error && <Alert severity="error">Error al cargar cursos</Alert>} */}
+      {/* TODO: Backend Integration - Agregar estados de loading y error combinados */}
+      {/* {(coursesLoading || enrolledLoading) && (
+        <Box sx={{ display: 'flex', justifyContent: 'center', py: 4 }}>
+          <CircularProgress />
+        </Box>
+      )} */}
+      
+      {/* {(coursesError || enrolledError) && (
+        <Alert severity="error" sx={{ mb: 3 }}>
+          Error al cargar cursos. Por favor, intenta nuevamente.
+        </Alert>
+      )} */}
 
       {/* Mis Cursos */}
       {myCourses.length > 0 && (
@@ -371,6 +403,24 @@ export default function CoursesList() {
           No hay cursos disponibles en este momento
         </Typography>
       )} */}
+
+      {/* TODO: Backend Integration - Manejar estados de inscripción con loading overlay */}
+      {/* {enrollLoading && (
+        <Backdrop open={enrollLoading} sx={{ zIndex: (theme) => theme.zIndex.drawer + 1 }}>
+          <CircularProgress color="inherit" />
+        </Backdrop>
+      )} */}
+
+      {/* TODO: Backend Integration - Snackbar para mensajes de éxito/error */}
+      {/* <Snackbar
+        open={showMessage}
+        autoHideDuration={6000}
+        onClose={handleCloseMessage}
+      >
+        <Alert onClose={handleCloseMessage} severity={messageType}>
+          {message}
+        </Alert>
+      </Snackbar> */}
     </Box>
   );
 }
