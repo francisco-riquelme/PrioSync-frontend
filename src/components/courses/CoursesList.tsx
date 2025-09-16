@@ -1,6 +1,6 @@
 'use client';
 
-import React from 'react';
+import React, { useState } from 'react';
 import { useRouter } from 'next/navigation';
 import {
   Box,
@@ -10,7 +10,10 @@ import {
   CardContent,
   Button,
   Chip,
+  TextField,
+  InputAdornment,
 } from '@mui/material';
+import { Search as SearchIcon } from '@mui/icons-material';
 
 interface Course {
   id_curso: number;
@@ -74,12 +77,22 @@ const allCourses: Course[] = [
 
 export default function CoursesList() {
   const router = useRouter();
+  const [searchTerm, setSearchTerm] = useState('');
 
   // TODO: Backend Integration - Implementar hook para obtener cursos desde API
   // const { courses, loading, error } = useCourses();
   
   // Filtrar solo cursos activos
   const activeCourses = allCourses.filter(course => course.estado === 'activo');
+
+  // TODO: Backend Integration - Implementar búsqueda en el servidor
+  // La búsqueda debería enviarse como query parameter: GET /api/courses?search=term
+  const filteredCourses = activeCourses.filter(course => {
+    if (!searchTerm) return true;
+    const searchLower = searchTerm.toLowerCase();
+    return course.titulo.toLowerCase().includes(searchLower) ||
+           course.descripcion.toLowerCase().includes(searchLower);
+  });
 
   const handleCourseClick = (courseId: number) => {
     // TODO: Backend Integration - Verificar que la ruta coincida con el backend
@@ -172,6 +185,23 @@ export default function CoursesList() {
         Cursos
       </Typography>
 
+      {/* Búsqueda */}
+      <Box sx={{ mb: 4 }}>
+        <TextField
+          placeholder="Buscar cursos..."
+          value={searchTerm}
+          onChange={(e) => setSearchTerm(e.target.value)}
+          sx={{ minWidth: 300 }}
+          InputProps={{
+            startAdornment: (
+              <InputAdornment position="start">
+                <SearchIcon />
+              </InputAdornment>
+            ),
+          }}
+        />
+      </Box>
+
       {/* TODO: Backend Integration - Agregar estados de loading y error */}
       {/* {loading && <CircularProgress />} */}
       {/* {error && <Alert severity="error">Error al cargar cursos</Alert>} */}
@@ -184,10 +214,19 @@ export default function CoursesList() {
           gap: 3
         }}
       >
-        {activeCourses.map((course) => (
+        {filteredCourses.map((course) => (
           <CourseCard key={course.id_curso} course={course} />
         ))}
       </Box>
+
+      {/* Mensaje cuando no hay resultados */}
+      {filteredCourses.length === 0 && searchTerm && (
+        <Box sx={{ textAlign: 'center', py: 8 }}>
+          <Typography variant="h6" color="text.secondary">
+            No se encontraron cursos que coincidan con tu búsqueda
+          </Typography>
+        </Box>
+      )}
 
       {/* TODO: Backend Integration - Manejar caso cuando no hay cursos */}
       {/* {activeCourses.length === 0 && !loading && (
