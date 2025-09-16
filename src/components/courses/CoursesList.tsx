@@ -12,6 +12,10 @@ import {
   Chip,
   TextField,
   InputAdornment,
+  Select,
+  MenuItem,
+  FormControl,
+  InputLabel,
 } from '@mui/material';
 import { Search as SearchIcon } from '@mui/icons-material';
 
@@ -78,6 +82,8 @@ const allCourses: Course[] = [
 export default function CoursesList() {
   const router = useRouter();
   const [searchTerm, setSearchTerm] = useState('');
+  const [levelFilter, setLevelFilter] = useState('todos');
+  const [durationFilter, setDurationFilter] = useState('todos');
 
   // TODO: Backend Integration - Implementar hook para obtener cursos desde API
   // const { courses, loading, error } = useCourses();
@@ -88,10 +94,28 @@ export default function CoursesList() {
   // TODO: Backend Integration - Implementar búsqueda en el servidor
   // La búsqueda debería enviarse como query parameter: GET /api/courses?search=term
   const filteredCourses = activeCourses.filter(course => {
-    if (!searchTerm) return true;
-    const searchLower = searchTerm.toLowerCase();
-    return course.titulo.toLowerCase().includes(searchLower) ||
-           course.descripcion.toLowerCase().includes(searchLower);
+    // Filtro de búsqueda
+    if (searchTerm) {
+      const searchLower = searchTerm.toLowerCase();
+      const matchesSearch = course.titulo.toLowerCase().includes(searchLower) ||
+                           course.descripcion.toLowerCase().includes(searchLower);
+      if (!matchesSearch) return false;
+    }
+
+    // Filtro de nivel
+    if (levelFilter !== 'todos' && course.nivel_dificultad !== levelFilter) {
+      return false;
+    }
+
+    // Filtro de duración
+    if (durationFilter !== 'todos') {
+      const hours = Math.floor(course.duracion_estimada / 60);
+      if (durationFilter === 'corto' && hours > 20) return false;
+      if (durationFilter === 'medio' && (hours <= 20 || hours > 40)) return false;
+      if (durationFilter === 'largo' && hours <= 40) return false;
+    }
+
+    return true;
   });
 
   const handleCourseClick = (courseId: number) => {
@@ -185,8 +209,8 @@ export default function CoursesList() {
         Cursos
       </Typography>
 
-      {/* Búsqueda */}
-      <Box sx={{ mb: 4 }}>
+      {/* Filtros */}
+      <Box sx={{ display: 'flex', gap: 2, mb: 4, flexWrap: 'wrap' }}>
         <TextField
           placeholder="Buscar cursos..."
           value={searchTerm}
@@ -200,6 +224,34 @@ export default function CoursesList() {
             ),
           }}
         />
+        
+        <FormControl sx={{ minWidth: 120 }}>
+          <InputLabel>Nivel</InputLabel>
+          <Select
+            value={levelFilter}
+            label="Nivel"
+            onChange={(e) => setLevelFilter(e.target.value)}
+          >
+            <MenuItem value="todos">Todos</MenuItem>
+            <MenuItem value="basico">Básico</MenuItem>
+            <MenuItem value="intermedio">Intermedio</MenuItem>
+            <MenuItem value="avanzado">Avanzado</MenuItem>
+          </Select>
+        </FormControl>
+
+        <FormControl sx={{ minWidth: 120 }}>
+          <InputLabel>Duración</InputLabel>
+          <Select
+            value={durationFilter}
+            label="Duración"
+            onChange={(e) => setDurationFilter(e.target.value)}
+          >
+            <MenuItem value="todos">Todos</MenuItem>
+            <MenuItem value="corto">Corto (&lt;20h)</MenuItem>
+            <MenuItem value="medio">Medio (20-40h)</MenuItem>
+            <MenuItem value="largo">Largo (&gt;40h)</MenuItem>
+          </Select>
+        </FormControl>
       </Box>
 
       {/* TODO: Backend Integration - Agregar estados de loading y error */}
@@ -220,10 +272,10 @@ export default function CoursesList() {
       </Box>
 
       {/* Mensaje cuando no hay resultados */}
-      {filteredCourses.length === 0 && searchTerm && (
+      {filteredCourses.length === 0 && (searchTerm || levelFilter !== 'todos' || durationFilter !== 'todos') && (
         <Box sx={{ textAlign: 'center', py: 8 }}>
           <Typography variant="h6" color="text.secondary">
-            No se encontraron cursos que coincidan con tu búsqueda
+            No se encontraron cursos que coincidan con tus filtros
           </Typography>
         </Box>
       )}
