@@ -16,6 +16,7 @@ import {
   MenuItem,
   FormControl,
   InputLabel,
+  LinearProgress,
 } from '@mui/material';
 import { Search as SearchIcon } from '@mui/icons-material';
 
@@ -27,6 +28,9 @@ interface Course {
   duracion_estimada: number; // en minutos
   nivel_dificultad: 'basico' | 'intermedio' | 'avanzado';
   estado: 'activo' | 'inactivo';
+  // Campos adicionales para gestión de inscripción y progreso
+  isEnrolled?: boolean;
+  progress?: number;
 }
 
 // TODO: Backend Integration - Reemplazar con llamada a API para obtener cursos
@@ -40,6 +44,8 @@ const allCourses: Course[] = [
     duracion_estimada: 1800, // 30 horas
     nivel_dificultad: 'intermedio',
     estado: 'activo',
+    isEnrolled: true,
+    progress: 65,
   },
   {
     id_curso: 2,
@@ -49,6 +55,8 @@ const allCourses: Course[] = [
     duracion_estimada: 2400, // 40 horas
     nivel_dificultad: 'basico',
     estado: 'activo',
+    isEnrolled: true,
+    progress: 20,
   },
   {
     id_curso: 3,
@@ -58,6 +66,8 @@ const allCourses: Course[] = [
     duracion_estimada: 3600, // 60 horas
     nivel_dificultad: 'avanzado',
     estado: 'activo',
+    isEnrolled: false,
+    progress: 0,
   },
   {
     id_curso: 4,
@@ -67,6 +77,8 @@ const allCourses: Course[] = [
     duracion_estimada: 1200, // 20 horas
     nivel_dificultad: 'basico',
     estado: 'activo',
+    isEnrolled: false,
+    progress: 0,
   },
   {
     id_curso: 5,
@@ -76,6 +88,8 @@ const allCourses: Course[] = [
     duracion_estimada: 1800, // 30 horas
     nivel_dificultad: 'intermedio',
     estado: 'activo',
+    isEnrolled: false,
+    progress: 0,
   },
 ];
 
@@ -138,7 +152,7 @@ export default function CoursesList() {
     }
   };
 
-  const CourseCard = ({ course }: { course: Course }) => (
+  const CourseCard = ({ course, showEnrollButton = false }: { course: Course; showEnrollButton?: boolean }) => (
     <Card 
       sx={{ 
         cursor: 'pointer',
@@ -177,6 +191,32 @@ export default function CoursesList() {
           {course.descripcion}
         </Typography>
 
+        {course.isEnrolled && (
+          <Box sx={{ mb: 2 }}>
+            <Box sx={{ display: 'flex', justifyContent: 'space-between', mb: 0.5 }}>
+              <Typography variant="body2" color="text.secondary">
+                Progreso
+              </Typography>
+              <Typography variant="body2" color="text.secondary">
+                {course.progress}%
+              </Typography>
+            </Box>
+            <LinearProgress
+              variant="determinate"
+              value={course.progress || 0}
+              sx={{
+                height: 6,
+                borderRadius: 3,
+                backgroundColor: 'grey.200',
+                '& .MuiLinearProgress-bar': {
+                  borderRadius: 3,
+                  backgroundColor: 'primary.main',
+                },
+              }}
+            />
+          </Box>
+        )}
+
         <Button
           variant="contained"
           fullWidth
@@ -189,11 +229,15 @@ export default function CoursesList() {
             },
           }}
         >
-          Ver Curso
+          {showEnrollButton ? 'Inscribirse' : 'Continuar Aprendiendo'}
         </Button>
       </CardContent>
     </Card>
   );
+
+  // Separar cursos matriculados y disponibles
+  const myCourses = filteredCourses.filter(course => course.isEnrolled);
+  const availableCourses = filteredCourses.filter(course => !course.isEnrolled);
 
   return (
     <Box>
@@ -258,18 +302,59 @@ export default function CoursesList() {
       {/* {loading && <CircularProgress />} */}
       {/* {error && <Alert severity="error">Error al cargar cursos</Alert>} */}
 
-      {/* Lista de Cursos */}
-      <Box 
-        sx={{ 
-          display: 'grid',
-          gridTemplateColumns: { xs: '1fr', sm: '1fr 1fr', md: '1fr 1fr 1fr' },
-          gap: 3
-        }}
-      >
-        {filteredCourses.map((course) => (
-          <CourseCard key={course.id_curso} course={course} />
-        ))}
-      </Box>
+      {/* Mis Cursos */}
+      {myCourses.length > 0 && (
+        <Box sx={{ mb: 6 }}>
+          <Typography 
+            variant="h5" 
+            sx={{ 
+                fontWeight: 600, 
+                mb: 3,
+                color: 'text.secondary' 
+                }}
+          >
+            Mis Cursos
+          </Typography>
+          <Box 
+            sx={{ 
+              display: 'grid',
+              gridTemplateColumns: { xs: '1fr', sm: '1fr 1fr', md: '1fr 1fr 1fr' },
+              gap: 3
+            }}
+          >
+            {myCourses.map((course) => (
+              <CourseCard key={course.id_curso} course={course} />
+            ))}
+          </Box>
+        </Box>
+      )}
+
+      {/* Explorar Cursos */}
+      {availableCourses.length > 0 && (
+        <Box>
+          <Typography 
+          variant="h5" 
+          sx= {{ 
+            fontWeight: 600, 
+            mb: 3, 
+            color: 'text.secondary'
+            }}
+          >
+            Explorar Cursos
+          </Typography>
+          <Box 
+            sx={{ 
+              display: 'grid',
+              gridTemplateColumns: { xs: '1fr', sm: '1fr 1fr', md: '1fr 1fr 1fr' },
+              gap: 3
+            }}
+          >
+            {availableCourses.map((course) => (
+              <CourseCard key={course.id_curso} course={course} showEnrollButton />
+            ))}
+          </Box>
+        </Box>
+      )}
 
       {/* Mensaje cuando no hay resultados */}
       {filteredCourses.length === 0 && (searchTerm || levelFilter !== 'todos' || durationFilter !== 'todos') && (
