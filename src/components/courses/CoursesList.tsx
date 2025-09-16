@@ -84,7 +84,7 @@ export default function CoursesList() {
   const handleCourseClick = (courseId: number) => {
     // TODO: Backend Integration - Verificar que la ruta coincida con el backend
     // Posiblemente necesite ajustar según la estructura de rutas del API
-    router.push(`/cursos/${courseId}`);
+    router.push(`/courses/${courseId}`);
   };
 
   const formatDuration = (minutes: number) => {
