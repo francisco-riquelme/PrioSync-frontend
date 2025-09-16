@@ -22,6 +22,8 @@ interface Course {
   estado: 'activo' | 'inactivo';
 }
 
+// TODO: Backend Integration - Reemplazar con llamada a API para obtener cursos
+// GET /api/courses - Obtener lista de cursos activos
 const allCourses: Course[] = [
   {
     id_curso: 1,
@@ -73,10 +75,15 @@ const allCourses: Course[] = [
 export default function CoursesList() {
   const router = useRouter();
 
+  // TODO: Backend Integration - Implementar hook para obtener cursos desde API
+  // const { courses, loading, error } = useCourses();
+  
   // Filtrar solo cursos activos
   const activeCourses = allCourses.filter(course => course.estado === 'activo');
 
   const handleCourseClick = (courseId: number) => {
+    // TODO: Backend Integration - Verificar que la ruta coincida con el backend
+    // Posiblemente necesite ajustar según la estructura de rutas del API
     router.push(`/cursos/${courseId}`);
   };
 
@@ -158,6 +165,10 @@ export default function CoursesList() {
         Cursos
       </Typography>
 
+      {/* TODO: Backend Integration - Agregar estados de loading y error */}
+      {/* {loading && <CircularProgress />} */}
+      {/* {error && <Alert severity="error">Error al cargar cursos</Alert>} */}
+
       {/* Lista de Cursos */}
       <Box 
         sx={{ 
@@ -170,6 +181,13 @@ export default function CoursesList() {
           <CourseCard key={course.id_curso} course={course} />
         ))}
       </Box>
+
+      {/* TODO: Backend Integration - Manejar caso cuando no hay cursos */}
+      {/* {activeCourses.length === 0 && !loading && (
+        <Typography variant="body1" color="text.secondary" sx={{ textAlign: 'center', mt: 4 }}>
+          No hay cursos disponibles en este momento
+        </Typography>
+      )} */}
     </Box>
   );
 }
