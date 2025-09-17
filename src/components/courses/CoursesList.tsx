@@ -366,7 +366,7 @@ export default function CoursesList() {
         <Box>
           <Typography 
           variant="h5" 
-          sx= {{ 
+          sx={{ 
             fontWeight: 600, 
             mb: 3, 
             color: 'text.secondary'
