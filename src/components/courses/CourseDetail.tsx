@@ -15,11 +15,14 @@ import {
   ListItemIcon,
   ListItemText,
   Divider,
+  LinearProgress,
+  Chip,
 } from '@mui/material';
 import {
   ArrowBack as ArrowBackIcon,
   CheckCircle as CheckCircleIcon,
   PlayCircle as PlayCircleIcon,
+  Feedback as FeedbackIcon,
 } from '@mui/icons-material';
 
 interface CourseModule {
@@ -44,6 +47,7 @@ interface CourseData {
   nivel_dificultad: 'basico' | 'intermedio' | 'avanzado';
   estado: 'activo' | 'inactivo';
   modules: CourseModule[];
+  progress?: number;
 }
 
 // Datos de ejemplo - coinciden con el esquema de la base de datos
@@ -123,6 +127,7 @@ interface CourseDetailProps {
 export default function CourseDetail({ courseId }: CourseDetailProps) {
   const router = useRouter();
   const [expandedModule, setExpandedModule] = useState<string>('');
+  const [courseProgress, setCourseProgress] = useState<number>(0);
   const course = courseData[courseId];
 
   if (!course) {
@@ -142,6 +147,17 @@ export default function CourseDetail({ courseId }: CourseDetailProps) {
     );
   }
 
+  // Calcular progreso basado en lecciones completadas
+  const calculateProgress = () => {
+    const totalLessons = course.modules.reduce((total, module) => total + module.lessons.length, 0);
+    const completedLessons = course.modules.reduce((total, module) => 
+      total + module.lessons.filter(lesson => lesson.completed).length, 0
+    );
+    return totalLessons > 0 ? Math.round((completedLessons / totalLessons) * 100) : 0;
+  };
+
+  const actualProgress = courseProgress || calculateProgress();
+
   const handleBackClick = () => {
     router.push('/courses');
   };
@@ -153,6 +169,20 @@ export default function CourseDetail({ courseId }: CourseDetailProps) {
 
   const toggleModule = (moduleId: string) => {
     setExpandedModule(expandedModule === moduleId ? '' : moduleId);
+  };
+
+  const handleCompleteLesson = (moduleId: string, lessonId: string) => {
+    // Simular completar lección
+    const updatedData = { ...courseData };
+    const courseModule = updatedData[courseId].modules.find(m => m.id === moduleId);
+    if (courseModule) {
+      const lesson = courseModule.lessons.find(l => l.id === lessonId);
+      if (lesson) {
+        lesson.completed = true;
+        const newProgress = calculateProgress();
+        setCourseProgress(newProgress);
+      }
+    }
   };
 
   return (
@@ -195,6 +225,36 @@ export default function CourseDetail({ courseId }: CourseDetailProps) {
           <Typography variant="body2" color="text.secondary" sx={{ mb: 2 }}>
             <strong>Nivel:</strong> {course.nivel_dificultad}
           </Typography>
+
+          {/* Progreso del curso */}
+          <Box sx={{ mb: 2 }}>
+            <Box sx={{ display: 'flex', justifyContent: 'space-between', mb: 1 }}>
+              <Typography variant="body2" color="text.secondary">
+                {actualProgress}% completado
+              </Typography>
+              <Button
+                variant="outlined"
+                size="small"
+                startIcon={<FeedbackIcon />}
+                sx={{ textTransform: 'none' }}
+              >
+                Feedback del curso
+              </Button>
+            </Box>
+            <LinearProgress
+              variant="determinate"
+              value={actualProgress}
+              sx={{
+                height: 8,
+                borderRadius: 4,
+                backgroundColor: 'grey.200',
+                '& .MuiLinearProgress-bar': {
+                  borderRadius: 4,
+                  backgroundColor: 'primary.main',
+                },
+              }}
+            />
+          </Box>
         </Box>
       </Box>
 
@@ -203,7 +263,7 @@ export default function CourseDetail({ courseId }: CourseDetailProps) {
         Contenido del Curso
       </Typography>
 
-      {course.modules.map((module) => (
+      {course.modules.map((module, moduleIndex) => (
         <Card key={module.id} sx={{ mb: 2 }}>
           <CardContent>
             <Box 
@@ -257,14 +317,39 @@ export default function CourseDetail({ courseId }: CourseDetailProps) {
                         <Button
                           variant="contained"
                           size="small"
+                          onClick={(e) => {
+                            e.stopPropagation();
+                            handleCompleteLesson(module.id, lesson.id);
+                          }}
                           sx={{ textTransform: 'none' }}
                         >
-                          Iniciar
+                          Completar
                         </Button>
+                      )}
+                      {lesson.completed && (
+                        <Chip
+                          label="Feedback"
+                          size="small"
+                          variant="outlined"
+                          color="primary"
+                        />
                       )}
                     </ListItem>
                   ))}
                 </List>
+
+                {moduleIndex === 1 && (
+                  <Box sx={{ mt: 2, textAlign: 'center' }}>
+                    <Button
+                      variant="outlined"
+                      size="small"
+                      startIcon={<FeedbackIcon />}
+                      sx={{ textTransform: 'none' }}
+                    >
+                      Feedback del módulo
+                    </Button>
+                  </Box>
+                )}
               </>
             )}
           </CardContent>
