@@ -402,19 +402,17 @@ export default function CourseDetail({ courseId }: CourseDetailProps) {
                   ))}
                 </List>
 
-                {moduleIndex === 1 && (
-                  <Box sx={{ mt: 2, textAlign: 'center' }}>
-                    <Button
-                      variant="outlined"
-                      size="small"
-                      startIcon={<FeedbackIcon />}
-                      onClick={() => handleModuleFeedback(module.id)}
-                      sx={{ textTransform: 'none' }}
-                    >
-                      Feedback del módulo
-                    </Button>
-                  </Box>
-                )}
+                <Box sx={{ mt: 2, textAlign: 'center' }}>
+                  <Button
+                    variant="outlined"
+                    size="small"
+                    startIcon={<FeedbackIcon />}
+                    onClick={() => handleModuleFeedback(module.id)}
+                    sx={{ textTransform: 'none' }}
+                  >
+                    Feedback del módulo
+                  </Button>
+                </Box>
               </>
             )}
           </CardContent>
