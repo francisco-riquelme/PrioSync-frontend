@@ -1,6 +1,7 @@
 'use client';
 
 import React, { useState } from 'react';
+
 import { useRouter } from 'next/navigation';
 import {
   Box,
@@ -19,6 +20,8 @@ import {
   LinearProgress,
 } from '@mui/material';
 import { Search as SearchIcon } from '@mui/icons-material';
+=======
+
 
 interface Course {
   id_curso: number;
@@ -31,6 +34,7 @@ interface Course {
   // Campos adicionales para gestión de inscripción y progreso
   isEnrolled?: boolean;
   progress?: number;
+
 }
 
 // TODO: Backend Integration - Reemplazar con llamada a API para obtener cursos
