@@ -159,9 +159,13 @@ export default function CourseDetail({ courseId }: CourseDetailProps) {
   // TODO: Backend Integration - Obtener progreso real del usuario desde el backend
   // El progreso debería venir de userProgress en lugar de calcularse localmente
   const calculateProgress = () => {
-    const totalLessons = course.modules.reduce((total, module) => total + module.lessons.length, 0);
-    const completedLessons = course.modules.reduce((total, module) => 
-      total + module.lessons.filter(lesson => lesson.completed).length, 0
+    const { totalLessons, completedLessons } = course.modules.reduce(
+      (acc, module) => {
+        acc.totalLessons += module.lessons.length;
+        acc.completedLessons += module.lessons.filter(lesson => lesson.completed).length;
+        return acc;
+      },
+      { totalLessons: 0, completedLessons: 0 }
     );
     return totalLessons > 0 ? Math.round((completedLessons / totalLessons) * 100) : 0;
   };
