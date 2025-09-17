@@ -20,7 +20,6 @@ import {
   LinearProgress,
 } from '@mui/material';
 import { Search as SearchIcon } from '@mui/icons-material';
-=======
 
 
 interface Course {
