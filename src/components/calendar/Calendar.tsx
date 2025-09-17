@@ -14,11 +14,6 @@ import {
   Button,
   ButtonGroup,
   useTheme,
-  Dialog,
-  DialogTitle,
-  DialogContent,
-  DialogActions,
-  TextField,
   Chip,
 } from '@mui/material';
 import {
@@ -28,6 +23,11 @@ import {
   Add as AddIcon,
 } from '@mui/icons-material';
 import { useUser } from '@/contexts/UserContext';
+import { useStudySessions } from '@/hooks/useStudySessions';
+import { StudySession, PRIORITY_OPTIONS } from '@/types/studySession';
+import StudySessionForm from './StudySessionForm';
+import StudySessionDetails from './StudySessionDetails';
+import ConfirmDeleteDialog from './ConfirmDeleteDialog';
 
 // Configurar moment en español
 moment.locale('es');
@@ -41,95 +41,32 @@ interface CalendarEvent extends Event {
   end: Date;
   type: 'clase' | 'examen' | 'entrega' | 'personal';
   description?: string;
+  session?: StudySession; // Para eventos de sesiones de estudio
 }
 
 const Calendar: React.FC = () => {
   const theme = useTheme();
   const { userData } = useUser();
+  const {
+    sessions,
+    loading: sessionsLoading,
+    error: sessionsError,
+    createSession,
+    updateSession,
+    deleteSession,
+    updateSessionStatus
+  } = useStudySessions();
+
   const [view, setView] = useState<View>('month');
   const [date, setDate] = useState(new Date());
-  const [dialogOpen, setDialogOpen] = useState(false);
+  const [formDialogOpen, setFormDialogOpen] = useState(false);
+  const [detailsDialogOpen, setDetailsDialogOpen] = useState(false);
+  const [deleteConfirmOpen, setDeleteConfirmOpen] = useState(false);
   const [selectedSlot, setSelectedSlot] = useState<any>(null);
+  const [editingSession, setEditingSession] = useState<StudySession | null>(null);
+  const [selectedSession, setSelectedSession] = useState<StudySession | null>(null);
 
-  // Función para convertir actividades en eventos de calendario
-  const generateEventsFromUserData = (): CalendarEvent[] => {
-    const events: CalendarEvent[] = [];
-    
-    // Eventos académicos fijos basados en los cursos del usuario
-    if (userData?.courses) {
-      userData.courses.forEach(course => {
-        // Agregar clases semanales para cada curso
-        const startDate = new Date(2025, 8, 16); // 16 Sep 2025 (Lunes)
-        for (let week = 0; week < 12; week++) {
-          const classDate = new Date(startDate);
-          classDate.setDate(startDate.getDate() + (week * 7));
-          
-          events.push({
-            id: `${course.courseId}-clase-${week}`,
-            title: `Clase: ${course.courseName}`,
-            start: new Date(classDate.getFullYear(), classDate.getMonth(), classDate.getDate(), 10, 0),
-            end: new Date(classDate.getFullYear(), classDate.getMonth(), classDate.getDate(), 12, 0),
-            type: 'clase',
-            description: `Clase semanal de ${course.courseName}`
-          });
-        }
 
-        // Agregar examen final para cada curso
-        const examDate = new Date(2025, 10, 15 + Math.floor(Math.random() * 14)); // Nov 2025
-        events.push({
-          id: `${course.courseId}-examen`,
-          title: `Examen: ${course.courseName}`,
-          start: new Date(examDate.getFullYear(), examDate.getMonth(), examDate.getDate(), 14, 0),
-          end: new Date(examDate.getFullYear(), examDate.getMonth(), examDate.getDate(), 16, 0),
-          type: 'examen',
-          description: `Examen final de ${course.courseName}`
-        });
-
-        // Agregar entrega de proyecto
-        const projectDate = new Date(2025, 9, 20 + Math.floor(Math.random() * 20)); // Oct 2025
-        events.push({
-          id: `${course.courseId}-proyecto`,
-          title: `Entrega: Proyecto ${course.courseName}`,
-          start: new Date(projectDate.getFullYear(), projectDate.getMonth(), projectDate.getDate(), 23, 59),
-          end: new Date(projectDate.getFullYear(), projectDate.getMonth(), projectDate.getDate(), 23, 59),
-          type: 'entrega',
-          description: `Entrega de proyecto final de ${course.courseName}`
-        });
-      });
-    }
-
-    // Eventos adicionales específicos del calendario académico
-    const additionalEvents: CalendarEvent[] = [
-      {
-        id: 'reunion-equipo-1',
-        title: 'Reunión Equipo Capstone',
-        start: new Date(2025, 8, 18, 15, 0), // 18 Sep 2025, 15:00
-        end: new Date(2025, 8, 18, 16, 30),
-        type: 'personal',
-        description: 'Reunión semanal del equipo de desarrollo'
-      },
-      {
-        id: 'presentacion-avance',
-        title: 'Presentación Avance Capstone',
-        start: new Date(2025, 9, 5, 9, 0), // 5 Oct 2025, 9:00
-        end: new Date(2025, 9, 5, 11, 0),
-        type: 'examen',
-        description: 'Presentación del avance del proyecto capstone'
-      },
-      {
-        id: 'entrega-documentacion',
-        title: 'Entrega Documentación Técnica',
-        start: new Date(2025, 9, 15, 23, 59), // 15 Oct 2025, 23:59
-        end: new Date(2025, 9, 15, 23, 59),
-        type: 'entrega',
-        description: 'Entrega de documentación técnica del proyecto'
-      }
-    ];
-
-    return [...events, ...additionalEvents];
-  };
-
-  const events = useMemo(() => generateEventsFromUserData(), [userData]);
 
   // Estilos personalizados para el calendario
   const calendarStyle = useMemo(() => ({
@@ -166,15 +103,29 @@ const Calendar: React.FC = () => {
   }), [theme]);
 
   // Función para obtener el color según el tipo de evento
-  const getEventStyle = (event: CalendarEvent) => {
+  const getEventStyle = (event: any) => {
+    const calendarEvent = event as CalendarEvent;
     const colors = {
       clase: { backgroundColor: theme.palette.primary.main, color: 'white' },
       examen: { backgroundColor: '#ef4444', color: 'white' },
       entrega: { backgroundColor: '#f59e0b', color: 'white' },
       personal: { backgroundColor: '#10b981', color: 'white' },
     };
+
+    // Si es una sesión de estudio, usar color según prioridad
+    if (calendarEvent.session) {
+      const session = calendarEvent.session;
+      if (session.priority === 'high') {
+        return { style: { backgroundColor: '#ef4444', color: 'white' } };
+      } else if (session.priority === 'low') {
+        return { style: { backgroundColor: '#22c55e', color: 'white' } };
+      } else {
+        return { style: { backgroundColor: '#3b82f6', color: 'white' } };
+      }
+    }
+
     return {
-      style: colors[event.type] || colors.personal
+      style: colors[calendarEvent.type] || colors.personal
     };
   };
 
@@ -221,10 +172,14 @@ const Calendar: React.FC = () => {
         <Button
           variant="contained"
           startIcon={<AddIcon />}
-          onClick={() => setDialogOpen(true)}
+          onClick={() => {
+            setEditingSession(null);
+            setSelectedSlot(null);
+            setFormDialogOpen(true);
+          }}
           sx={{ ml: 1 }}
         >
-          Nuevo Evento
+          Nueva Sesión
         </Button>
       </Box>
     </Toolbar>
@@ -233,8 +188,73 @@ const Calendar: React.FC = () => {
   // Función para manejar la selección de slots
   const handleSelectSlot = (slotInfo: any) => {
     setSelectedSlot(slotInfo);
-    setDialogOpen(true);
+    setEditingSession(null);
+    setFormDialogOpen(true);
   };
+
+  // Función para manejar la selección de eventos
+  const handleSelectEvent = (event: any) => {
+    const calendarEvent = event as CalendarEvent;
+    // Si es una sesión de estudio, mostrar detalles
+    if (calendarEvent.session) {
+      setSelectedSession(calendarEvent.session);
+      setDetailsDialogOpen(true);
+    }
+  };
+
+  // Manejar edición desde detalles
+  const handleEdit = () => {
+    if (selectedSession) {
+      setEditingSession(selectedSession);
+      setDetailsDialogOpen(false);
+      setFormDialogOpen(true);
+    }
+  };
+
+  // Manejar eliminación desde detalles
+  const handleDelete = () => {
+    setDetailsDialogOpen(false);
+    setDeleteConfirmOpen(true);
+  };
+
+  // Confirmar eliminación
+  const handleConfirmDelete = async () => {
+    if (selectedSession) {
+      try {
+        await deleteSession(selectedSession.id);
+        setDeleteConfirmOpen(false);
+        setSelectedSession(null);
+      } catch (error) {
+        console.error('Error al eliminar sesión:', error);
+      }
+    }
+  };
+
+  // Cancelar eliminación
+  const handleCancelDelete = () => {
+    setDeleteConfirmOpen(false);
+  };
+
+  // Cerrar detalles
+  const handleDetailsClose = () => {
+    setDetailsDialogOpen(false);
+    setSelectedSession(null);
+  };
+
+  // Solo mostrar sesiones de estudio creadas por el usuario
+  const events = useMemo(() => {
+    const studySessionEvents: CalendarEvent[] = sessions.map(session => ({
+      id: session.id,
+      title: session.title,
+      start: session.startTime,
+      end: session.endTime,
+      type: 'personal', // Las sesiones de estudio son tipo personal
+      description: session.description,
+      session: session // Incluir la sesión completa para acceso posterior
+    }));
+
+    return studySessionEvents;
+  }, [sessions]);
 
   return (
     <Box>
@@ -285,7 +305,7 @@ const Calendar: React.FC = () => {
             size="small"
           />
           <Chip 
-            label="Personal" 
+            label="Personal/Estudio" 
             sx={{ 
               backgroundColor: '#10b981', 
               color: 'white',
@@ -311,6 +331,7 @@ const Calendar: React.FC = () => {
               toolbar: CustomToolbar,
             }}
             onSelectSlot={handleSelectSlot}
+            onSelectEvent={handleSelectEvent}
             selectable
             messages={{
               next: 'Siguiente',
@@ -330,42 +351,58 @@ const Calendar: React.FC = () => {
         </Box>
       </Paper>
 
-      {/* Dialog para crear nuevo evento */}
-      <Dialog 
-        open={dialogOpen} 
-        onClose={() => setDialogOpen(false)}
-        maxWidth="sm"
-        fullWidth
-      >
-        <DialogTitle>Nuevo Evento</DialogTitle>
-        <DialogContent>
-          <Typography variant="body2" color="text.secondary" sx={{ mb: 2 }}>
-            Funcionalidad de creación de eventos - Se integrará con la API
-          </Typography>
-          <TextField
-            autoFocus
-            margin="dense"
-            label="Título del evento"
-            fullWidth
-            variant="outlined"
-            sx={{ mb: 2 }}
-          />
-          <TextField
-            margin="dense"
-            label="Descripción"
-            fullWidth
-            multiline
-            rows={3}
-            variant="outlined"
-          />
-        </DialogContent>
-        <DialogActions>
-          <Button onClick={() => setDialogOpen(false)}>Cancelar</Button>
-          <Button variant="contained" onClick={() => setDialogOpen(false)}>
-            Crear Evento
-          </Button>
-        </DialogActions>
-      </Dialog>
+      {/* Formulario para crear/editar sesiones de estudio */}
+      <StudySessionForm
+        open={formDialogOpen}
+        onClose={() => {
+          setFormDialogOpen(false);
+          setEditingSession(null);
+          setSelectedSlot(null);
+        }}
+        onSubmit={async (formData) => {
+          try {
+            let success = false;
+            if (editingSession) {
+              const result = await updateSession(editingSession.id, formData);
+              success = result !== null;
+            } else {
+              const result = await createSession(formData);
+              success = result !== null;
+            }
+            
+            if (success) {
+              setFormDialogOpen(false);
+              setEditingSession(null);
+              setSelectedSlot(null);
+            }
+            
+            return success;
+          } catch (error) {
+            console.error('Error al guardar sesión:', error);
+            return false;
+          }
+        }}
+        editingSession={editingSession}
+        selectedSlot={selectedSlot}
+      />
+
+      {/* Detalles de sesión de estudio */}
+      <StudySessionDetails
+        open={detailsDialogOpen}
+        onClose={handleDetailsClose}
+        onEdit={handleEdit}
+        onDelete={handleDelete}
+        session={selectedSession}
+      />
+
+      {/* Confirmación de eliminación */}
+      <ConfirmDeleteDialog
+        open={deleteConfirmOpen}
+        onClose={handleCancelDelete}
+        onConfirm={handleConfirmDelete}
+        session={selectedSession}
+        loading={sessionsLoading}
+      />
     </Box>
   );
 };

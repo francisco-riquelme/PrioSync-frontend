@@ -7,7 +7,6 @@ declare module "react-big-calendar" {
     end: Date;
     allDay?: boolean;
     resource?: any;
-    [key: string]: any; // Permitir propiedades adicionales
   }
 
   export type View = "month" | "week" | "work_week" | "day" | "agenda";
@@ -22,9 +21,10 @@ declare module "react-big-calendar" {
     onView?: (view: View) => void;
     date?: Date;
     onNavigate?: (date: Date) => void;
-    eventPropGetter?: (event: any) => { style?: React.CSSProperties };
+    eventPropGetter?: (event: Event) => { style?: React.CSSProperties };
     components?: any;
     onSelectSlot?: (slotInfo: any) => void;
+    onSelectEvent?: (event: Event) => void;
     selectable?: boolean;
     messages?: any;
   }
