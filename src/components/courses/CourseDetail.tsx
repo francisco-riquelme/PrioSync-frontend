@@ -343,7 +343,9 @@ export default function CourseDetail({ courseId }: CourseDetailProps) {
               <Typography variant="h6" sx={{ fontWeight: 600, color: 'primary.main' }}>
                 {module.title}
               </Typography>
-              <IconButton>
+              <IconButton
+                aria-label={expandedModule === module.id ? 'Collapse module' : 'Expand module'}
+              >
                 <PlayCircleIcon />
               </IconButton>
             </Box>
