@@ -51,6 +51,8 @@ interface CourseData {
 }
 
 // Datos de ejemplo - coinciden con el esquema de la base de datos
+// TODO: Backend Integration - Reemplazar con llamada a API para obtener cursos detallados
+// GET /api/courses/[id] - Obtener datos completos del curso incluyendo módulos y lecciones
 const courseData: Record<string, CourseData> = {
   '1': {
     id_curso: 1,
@@ -128,8 +130,15 @@ export default function CourseDetail({ courseId }: CourseDetailProps) {
   const router = useRouter();
   const [expandedModule, setExpandedModule] = useState<string>('');
   const [courseProgress, setCourseProgress] = useState<number>(0);
+
+  // TODO: Backend Integration - Implementar hooks para obtener datos del curso
+  // const { course, loading: courseLoading, error: courseError } = useCourseDetail(courseId);
+  // const { userProgress, loading: progressLoading, updateLessonProgress } = useCourseProgress(courseId);
+  // const { submitFeedback, loading: feedbackLoading } = useCourseFeedback();
+
   const course = courseData[courseId];
 
+  // TODO: Backend Integration - Manejar estados de loading y error
   if (!course) {
     return (
       <Box sx={{ textAlign: 'center', py: 8 }}>
@@ -147,7 +156,8 @@ export default function CourseDetail({ courseId }: CourseDetailProps) {
     );
   }
 
-  // Calcular progreso basado en lecciones completadas
+  // TODO: Backend Integration - Obtener progreso real del usuario desde el backend
+  // El progreso debería venir de userProgress en lugar de calcularse localmente
   const calculateProgress = () => {
     const totalLessons = course.modules.reduce((total, module) => total + module.lessons.length, 0);
     const completedLessons = course.modules.reduce((total, module) => 
@@ -171,8 +181,18 @@ export default function CourseDetail({ courseId }: CourseDetailProps) {
     setExpandedModule(expandedModule === moduleId ? '' : moduleId);
   };
 
-  const handleCompleteLesson = (moduleId: string, lessonId: string) => {
-    // Simular completar lección
+  // TODO: Backend Integration - Implementar completar lección con API
+  const handleCompleteLesson = async (moduleId: string, lessonId: string) => {
+    // try {
+    //   await updateLessonProgress(moduleId, lessonId, true);
+    //   // Actualizar estado local optimísticamente o refrescar datos
+    //   // Mostrar notificación de éxito
+    // } catch (error) {
+    //   console.error('Error al completar lección:', error);
+    //   // Mostrar mensaje de error
+    // }
+
+    // SIMULACIÓN ACTUAL - Reemplazar con llamada a API
     const updatedData = { ...courseData };
     const courseModule = updatedData[courseId].modules.find(m => m.id === moduleId);
     if (courseModule) {
@@ -185,8 +205,47 @@ export default function CourseDetail({ courseId }: CourseDetailProps) {
     }
   };
 
+  // TODO: Backend Integration - Implementar envío de feedback
+  const handleCourseFeedback = async () => {
+    // try {
+    //   // Abrir modal de feedback o navegar a página de feedback
+    //   // await submitFeedback(courseId, feedbackData);
+    // } catch (error) {
+    //   console.error('Error al enviar feedback:', error);
+    // }
+  };
+
+  const handleModuleFeedback = async (moduleId: string) => {
+    // try {
+    //   // await submitFeedback(courseId, feedbackData, { moduleId });
+    // } catch (error) {
+    //   console.error('Error al enviar feedback del módulo:', error);
+    // }
+  };
+
+  const handleLessonFeedback = async (moduleId: string, lessonId: string) => {
+    // try {
+    //   // await submitFeedback(courseId, feedbackData, { moduleId, lessonId });
+    // } catch (error) {
+    //   console.error('Error al enviar feedback de la lección:', error);
+    // }
+  };
+
   return (
     <Box>
+      {/* TODO: Backend Integration - Agregar estados de loading */}
+      {/* {(courseLoading || progressLoading) && (
+        <Box sx={{ display: 'flex', justifyContent: 'center', py: 4 }}>
+          <CircularProgress />
+        </Box>
+      )} */}
+
+      {/* {courseError && (
+        <Alert severity="error" sx={{ mb: 3 }}>
+          Error al cargar el curso. Por favor, intenta nuevamente.
+        </Alert>
+      )} */}
+
       {/* Header con botón de regreso */}
       <Box sx={{ display: 'flex', alignItems: 'center', mb: 3 }}>
         <IconButton onClick={handleBackClick} sx={{ mr: 2 }}>
@@ -236,6 +295,7 @@ export default function CourseDetail({ courseId }: CourseDetailProps) {
                 variant="outlined"
                 size="small"
                 startIcon={<FeedbackIcon />}
+                onClick={handleCourseFeedback}
                 sx={{ textTransform: 'none' }}
               >
                 Feedback del curso
@@ -332,6 +392,10 @@ export default function CourseDetail({ courseId }: CourseDetailProps) {
                           size="small"
                           variant="outlined"
                           color="primary"
+                          onClick={(e) => {
+                            e.stopPropagation();
+                            handleLessonFeedback(module.id, lesson.id);
+                          }}
                         />
                       )}
                     </ListItem>
@@ -344,6 +408,7 @@ export default function CourseDetail({ courseId }: CourseDetailProps) {
                       variant="outlined"
                       size="small"
                       startIcon={<FeedbackIcon />}
+                      onClick={() => handleModuleFeedback(module.id)}
                       sx={{ textTransform: 'none' }}
                     >
                       Feedback del módulo
@@ -355,6 +420,24 @@ export default function CourseDetail({ courseId }: CourseDetailProps) {
           </CardContent>
         </Card>
       ))}
+
+      {/* TODO: Backend Integration - Loading overlay para acciones */}
+      {/* {feedbackLoading && (
+        <Backdrop open={feedbackLoading} sx={{ zIndex: (theme) => theme.zIndex.drawer + 1 }}>
+          <CircularProgress color="inherit" />
+        </Backdrop>
+      )} */}
+
+      {/* TODO: Backend Integration - Snackbar para notificaciones */}
+      {/* <Snackbar
+        open={showNotification}
+        autoHideDuration={6000}
+        onClose={handleCloseNotification}
+      >
+        <Alert onClose={handleCloseNotification} severity={notificationType}>
+          {notificationMessage}
+        </Alert>
+      </Snackbar> */}
     </Box>
   );
 }
