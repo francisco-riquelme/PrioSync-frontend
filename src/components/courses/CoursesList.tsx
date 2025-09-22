@@ -39,11 +39,20 @@ interface Course {
   progress?: number;
 }
 
+// TODO: Backend Integration - Configuración para desarrollo y testing
+const API_SIMULATION_CONFIG = {
+  COURSES_LOAD_DELAY: 100, // ms para simular carga de cursos
+  ENROLLMENT_DELAY: 1500,  // ms para simular proceso de inscripción
+  ENABLE_API_SIMULATION: true, // flag para habilitar/deshabilitar simulación
+} as const;
+
 // TODO: Backend Integration - Mover a contexto o hook personalizado
 // Esta función simulará la obtención de cursos desde el backend
 const getCourses = async (): Promise<Course[]> => {
   // Simulación de delay de API
-  await new Promise(resolve => setTimeout(resolve, 100));
+  if (API_SIMULATION_CONFIG.ENABLE_API_SIMULATION) {
+    await new Promise(resolve => setTimeout(resolve, API_SIMULATION_CONFIG.COURSES_LOAD_DELAY));
+  }
   
   // TODO: Backend Integration - Reemplazar con llamada real a API
   // const response = await fetch('/api/courses');
@@ -229,7 +238,9 @@ export default function CoursesList() {
       // const result = await response.json();
       
       // Simulación de llamada al backend
-      await new Promise(resolve => setTimeout(resolve, 1500));
+      if (API_SIMULATION_CONFIG.ENABLE_API_SIMULATION) {
+        await new Promise(resolve => setTimeout(resolve, API_SIMULATION_CONFIG.ENROLLMENT_DELAY));
+      }
       
       // Actualizar estado local como single source of truth
       setCourses(prevCourses =>
