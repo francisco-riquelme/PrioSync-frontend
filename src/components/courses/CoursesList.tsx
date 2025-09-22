@@ -220,8 +220,6 @@ export default function CoursesList() {
       // TODO: Backend Integration - Manejo de errores específicos
       // if (error.status === 409) {
       //   setMessage('Ya estás inscrito en este curso.');
-      // } else if (error.status === 402) {
-      //   setMessage('Este curso requiere pago. Serás redirigido a la página de pago.');
       // } else {
       //   setMessage('Error al inscribirse. Por favor, intenta nuevamente.');
       // }
