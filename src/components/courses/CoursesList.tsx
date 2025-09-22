@@ -269,8 +269,17 @@ export default function CoursesList() {
           alt={course.titulo}
           sx={{ backgroundColor: 'grey.200' }}
         />
-        <CardContent sx={{ flexGrow: 1, display: 'flex', flexDirection: 'column' }}>
-          <Box sx={{ display: 'flex', gap: 1, mb: 1 }}>
+        <CardContent 
+          sx={{ 
+            flexGrow: 1, 
+            display: 'grid',
+            gridTemplateRows: 'auto auto 1fr auto auto', // chips, título, descripción, progreso, botón
+            gap: 1,
+            alignContent: 'start',
+          }}
+        >
+          {/* Chips de nivel y duración */}
+          <Box sx={{ display: 'flex', gap: 1 }}>
             <Chip 
               label={course.nivel_dificultad} 
               size="small" 
@@ -284,28 +293,30 @@ export default function CoursesList() {
             />
           </Box>
           
-          <Typography variant="h6" sx={{ fontWeight: 600, mb: 1 }}>
+          {/* Título del curso */}
+          <Typography variant="h6" sx={{ fontWeight: 600 }}>
             {course.titulo}
           </Typography>
           
+          {/* Descripción con truncado flexible */}
           <Typography 
             variant="body2" 
             color="text.secondary" 
             sx={{ 
-              mb: 2,
-              height: '2.5em', // Altura fija para 2 líneas
               overflow: 'hidden',
               display: '-webkit-box',
               WebkitLineClamp: 2,
               WebkitBoxOrient: 'vertical',
-              lineHeight: 1.25,
+              lineHeight: 1.4,
+              alignSelf: 'start',
             }}
           >
             {course.descripcion}
           </Typography>
 
+          {/* Barra de progreso para cursos inscritos */}
           {course.isEnrolled && (
-            <Box sx={{ mb: 2 }}>
+            <Box>
               <Box sx={{ display: 'flex', justifyContent: 'space-between', mb: 0.5 }}>
                 <Typography variant="body2" color="text.secondary">
                   Progreso
@@ -330,36 +341,35 @@ export default function CoursesList() {
             </Box>
           )}
 
-          <Box sx={{ mt: 'auto' }}>
-            <Button
-              variant="contained"
-              fullWidth
-              onClick={showEnrollButton ? (e) => handleEnrollCourse(course.id_curso, e) : undefined}
-              disabled={isEnrolling}
-              sx={{
-                textTransform: 'none',
-                py: 1,
-                backgroundColor: 'primary.main',
-                '&:hover': {
-                  backgroundColor: 'primary.dark',
-                },
-                '&:disabled': {
-                  backgroundColor: 'grey.300',
-                },
-              }}
-            >
-              {isEnrolling ? (
-                <Box sx={{ display: 'flex', alignItems: 'center', gap: 1 }}>
-                  <CircularProgress size={20} color="inherit" />
-                  Inscribiendo...
-                </Box>
-              ) : showEnrollButton ? (
-                'Inscribirse'
-              ) : (
-                'Continuar Aprendiendo'
-              )}
-            </Button>
-          </Box>
+          {/* Botón de acción */}
+          <Button
+            variant="contained"
+            fullWidth
+            onClick={showEnrollButton ? (e) => handleEnrollCourse(course.id_curso, e) : undefined}
+            disabled={isEnrolling}
+            sx={{
+              textTransform: 'none',
+              py: 1,
+              backgroundColor: 'primary.main',
+              '&:hover': {
+                backgroundColor: 'primary.dark',
+              },
+              '&:disabled': {
+                backgroundColor: 'grey.300',
+              },
+            }}
+          >
+            {isEnrolling ? (
+              <Box sx={{ display: 'flex', alignItems: 'center', gap: 1 }}>
+                <CircularProgress size={20} color="inherit" />
+                Inscribiendo...
+              </Box>
+            ) : showEnrollButton ? (
+              'Inscribirse'
+            ) : (
+              'Continuar Aprendiendo'
+            )}
+          </Button>
         </CardContent>
       </Card>
     );
