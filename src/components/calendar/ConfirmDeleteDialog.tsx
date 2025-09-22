@@ -103,7 +103,7 @@ const ConfirmDeleteDialog: React.FC<ConfirmDeleteDialogProps> = ({
 
           {session.description && (
             <Typography variant="body2" color="text.secondary" sx={{ fontStyle: 'italic' }}>
-              "{session.description}"
+              &ldquo;{session.description}&rdquo;
             </Typography>
           )}
         </Box>

@@ -33,7 +33,7 @@ interface StudySessionFormProps {
   onClose: () => void;
   onSubmit: (sessionData: StudySessionFormData) => void;
   editingSession?: StudySession | null;
-  selectedSlot?: any;
+  selectedSlot?: { start: Date; end: Date; slots: Date[]; action: string } | null;
 }
 
 const StudySessionForm: React.FC<StudySessionFormProps> = ({
@@ -117,10 +117,10 @@ const StudySessionForm: React.FC<StudySessionFormProps> = ({
     }
   }, [editingSession, selectedSlot, open]);
 
-  const handleInputChange = (field: keyof StudySessionFormData, value: any) => {
-    setFormData(prev => ({ ...prev, [field]: value }));
-    setError(null);
-  };
+  const handleInputChange = (field: keyof StudySessionFormData, value: string | number | Date | boolean | string[]) => {
+      setFormData(prev => ({ ...prev, [field]: value }));
+      setError(null);
+    };
 
   const handleAddTag = () => {
     const tag = tagInput.trim();
@@ -166,7 +166,7 @@ const StudySessionForm: React.FC<StudySessionFormProps> = ({
     try {
       await onSubmit(formData);
       handleClose();
-    } catch (err) {
+    } catch {
       setError('Error al guardar la sesión de estudio');
     } finally {
       setLoading(false);
