@@ -1,6 +1,6 @@
 'use client';
 
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 
 import { useRouter } from 'next/navigation';
 import {
@@ -37,68 +37,76 @@ interface Course {
   // Campos adicionales para gestión de inscripción y progreso
   isEnrolled?: boolean;
   progress?: number;
-
 }
 
-// TODO: Backend Integration - Reemplazar con llamada a API para obtener cursos
-// GET /api/courses - Obtener lista de cursos activos
-const allCourses: Course[] = [
-  {
-    id_curso: 1,
-    titulo: 'Cálculo Avanzado',
-    descripcion: 'Curso completo de cálculo diferencial e integral',
-    imagen_portada: 'https://images.unsplash.com/photo-1635070041078-e363dbe005cb?w=400&h=250&fit=crop&auto=format',
-    duracion_estimada: 1800, // 30 horas
-    nivel_dificultad: 'intermedio',
-    estado: 'activo',
-    isEnrolled: true,
-    progress: 65,
-  },
-  {
-    id_curso: 2,
-    titulo: 'Desarrollo de Software',
-    descripcion: 'Fundamentos de programación y desarrollo de aplicaciones',
-    imagen_portada: 'https://images.unsplash.com/photo-1461749280684-dccba630e2f6?w=400&h=250&fit=crop&auto=format',
-    duracion_estimada: 2400, // 40 horas
-    nivel_dificultad: 'basico',
-    estado: 'activo',
-    isEnrolled: true,
-    progress: 20,
-  },
-  {
-    id_curso: 3,
-    titulo: 'Inteligencia Artificial',
-    descripcion: 'Introducción a machine learning y redes neuronales',
-    imagen_portada: 'https://images.unsplash.com/photo-1677442136019-21780ecad995?w=400&h=250&fit=crop&auto=format',
-    duracion_estimada: 3600, // 60 horas
-    nivel_dificultad: 'avanzado',
-    estado: 'activo',
-    isEnrolled: false,
-    progress: 0,
-  },
-  {
-    id_curso: 4,
-    titulo: 'Gestión de Proyectos',
-    descripcion: 'Metodologías ágiles y gestión efectiva de proyectos',
-    imagen_portada: 'https://images.unsplash.com/photo-1454165804606-c3d57bc86b40?w=400&h=250&fit=crop&auto=format',
-    duracion_estimada: 1200, // 20 horas
-    nivel_dificultad: 'basico',
-    estado: 'activo',
-    isEnrolled: false,
-    progress: 0,
-  },
-  {
-    id_curso: 5,
-    titulo: 'Diseño de UX/UI',
-    descripcion: 'Principios de diseño centrado en el usuario',
-    imagen_portada: 'https://images.unsplash.com/photo-1561070791-2526d30994b5?w=400&h=250&fit=crop&auto=format',
-    duracion_estimada: 1800, // 30 horas
-    nivel_dificultad: 'intermedio',
-    estado: 'activo',
-    isEnrolled: false,
-    progress: 0,
-  },
-];
+// TODO: Backend Integration - Mover a contexto o hook personalizado
+// Esta función simulará la obtención de cursos desde el backend
+const getCourses = async (): Promise<Course[]> => {
+  // Simulación de delay de API
+  await new Promise(resolve => setTimeout(resolve, 100));
+  
+  // TODO: Backend Integration - Reemplazar con llamada real a API
+  // const response = await fetch('/api/courses');
+  // return response.json();
+  
+  return [
+    {
+      id_curso: 1,
+      titulo: 'Cálculo Avanzado',
+      descripcion: 'Curso completo de cálculo diferencial e integral',
+      imagen_portada: 'https://images.unsplash.com/photo-1635070041078-e363dbe005cb?w=400&h=250&fit=crop&auto=format',
+      duracion_estimada: 1800, // 30 horas
+      nivel_dificultad: 'intermedio',
+      estado: 'activo',
+      isEnrolled: true,
+      progress: 65,
+    },
+    {
+      id_curso: 2,
+      titulo: 'Desarrollo de Software',
+      descripcion: 'Fundamentos de programación y desarrollo de aplicaciones',
+      imagen_portada: 'https://images.unsplash.com/photo-1461749280684-dccba630e2f6?w=400&h=250&fit=crop&auto=format',
+      duracion_estimada: 2400, // 40 horas
+      nivel_dificultad: 'basico',
+      estado: 'activo',
+      isEnrolled: true,
+      progress: 20,
+    },
+    {
+      id_curso: 3,
+      titulo: 'Inteligencia Artificial',
+      descripcion: 'Introducción a machine learning y redes neuronales',
+      imagen_portada: 'https://images.unsplash.com/photo-1677442136019-21780ecad995?w=400&h=250&fit=crop&auto=format',
+      duracion_estimada: 3600, // 60 horas
+      nivel_dificultad: 'avanzado',
+      estado: 'activo',
+      isEnrolled: false,
+      progress: 0,
+    },
+    {
+      id_curso: 4,
+      titulo: 'Gestión de Proyectos',
+      descripcion: 'Metodologías ágiles y gestión efectiva de proyectos',
+      imagen_portada: 'https://images.unsplash.com/photo-1454165804606-c3d57bc86b40?w=400&h=250&fit=crop&auto=format',
+      duracion_estimada: 1200, // 20 horas
+      nivel_dificultad: 'basico',
+      estado: 'activo',
+      isEnrolled: false,
+      progress: 0,
+    },
+    {
+      id_curso: 5,
+      titulo: 'Diseño de UX/UI',
+      descripcion: 'Principios de diseño centrado en el usuario',
+      imagen_portada: 'https://images.unsplash.com/photo-1561070791-2526d30994b5?w=400&h=250&fit=crop&auto=format',
+      duracion_estimada: 1800, // 30 horas
+      nivel_dificultad: 'intermedio',
+      estado: 'activo',
+      isEnrolled: false,
+      progress: 0,
+    },
+  ];
+};
 
 export default function CoursesList() {
   const router = useRouter();
@@ -106,25 +114,58 @@ export default function CoursesList() {
   const [levelFilter, setLevelFilter] = useState('todos');
   const [durationFilter, setDurationFilter] = useState('todos');
   
+  // Single source of truth para cursos
+  const [courses, setCourses] = useState<Course[]>([]);
+  const [loading, setLoading] = useState(true);
+  const [error, setError] = useState<string | null>(null);
+  
   // Estado para gestión de inscripciones
-  const [courses, setCourses] = useState<Course[]>(allCourses);
   const [enrollingCourseId, setEnrollingCourseId] = useState<number | null>(null);
   const [showMessage, setShowMessage] = useState(false);
   const [message, setMessage] = useState('');
   const [messageType, setMessageType] = useState<'success' | 'error'>('success');
 
-  // TODO: Backend Integration - Hook para obtener cursos del usuario con progreso
-  // const { enrolledCourses, loading: enrolledLoading, error: enrolledError } = useEnrolledCourses();
+  // TODO: User Context Integration - Reemplazar con useUser() hook
+  // const { user, updateCourseProgress, addActivity } = useUser();
   
-  // TODO: Backend Integration - Hook para obtener todos los cursos disponibles
-  // const { allCourses, loading: coursesLoading, error: coursesError } = useAllCourses();
-
-  // TODO: Backend Integration - Hook para manejar inscripción a cursos
+  // TODO: Backend Integration - Hooks especializados para diferentes operaciones
+  // const { enrolledCourses, loading: enrolledLoading, error: enrolledError } = useEnrolledCourses();
+  // const { availableCourses, loading: coursesLoading, error: coursesError } = useAvailableCourses();
   // const { enrollInCourse, loading: enrollLoading } = useEnrollCourse();
 
-  // TODO: Backend Integration - Implementar hook para obtener cursos desde API
-  // const { courses, loading, error } = useCourses();
-  
+  // Cargar cursos al montar el componente
+  useEffect(() => {
+    const loadCourses = async () => {
+      try {
+        setLoading(true);
+        setError(null);
+        
+        const coursesData = await getCourses();
+        setCourses(coursesData);
+        
+        // TODO: User Context Integration - Combinar con datos del usuario
+        // const userCourses = user.courses || [];
+        // const coursesWithProgress = coursesData.map(course => {
+        //   const userCourse = userCourses.find(uc => uc.courseId === course.id_curso);
+        //   return {
+        //     ...course,
+        //     isEnrolled: !!userCourse,
+        //     progress: userCourse?.progress || 0,
+        //   };
+        // });
+        // setCourses(coursesWithProgress);
+        
+      } catch (err) {
+        console.error('Error loading courses:', err);
+        setError('Error al cargar los cursos. Por favor, intenta nuevamente.');
+      } finally {
+        setLoading(false);
+      }
+    };
+
+    loadCourses();
+  }, []);
+
   // Filtrar solo cursos activos
   const activeCourses = courses.filter(course => course.estado === 'activo');
 
@@ -161,9 +202,9 @@ export default function CoursesList() {
     router.push(`/courses/${courseId}`);
   };
 
-  // TODO: Backend Integration - Función para manejar inscripción
+  // TODO: Backend Integration & User Context Integration - Función para manejar inscripción
   const handleEnrollCourse = async (courseId: number, event: React.MouseEvent) => {
-    event.stopPropagation(); // Evitar navegación cuando se hace clic en inscribirse
+    event.stopPropagation();
     
     try {
       setEnrollingCourseId(courseId);
@@ -190,7 +231,7 @@ export default function CoursesList() {
       // Simulación de llamada al backend
       await new Promise(resolve => setTimeout(resolve, 1500));
       
-      // Actualizar estado local - marcar curso como inscrito con progreso inicial
+      // Actualizar estado local como single source of truth
       setCourses(prevCourses =>
         prevCourses.map(course =>
           course.id_curso === courseId
@@ -199,29 +240,38 @@ export default function CoursesList() {
         )
       );
       
+      // TODO: User Context Integration - Actualizar contexto del usuario
+      // const courseData = courses.find(c => c.id_curso === courseId);
+      // if (courseData) {
+      //   await updateCourseProgress(courseId, 0);
+      //   await addActivity({
+      //     type: 'course_enrolled',
+      //     courseId: courseId,
+      //     courseName: courseData.titulo,
+      //     description: `Te inscribiste en el curso: ${courseData.titulo}`,
+      //   });
+      // }
+      
       // Mostrar mensaje de éxito
       const courseName = courses.find(c => c.id_curso === courseId)?.titulo || 'Curso';
       setMessage(`¡Te has inscrito exitosamente en "${courseName}"!`);
       setMessageType('success');
       setShowMessage(true);
       
-      // TODO: Backend Integration - Actualizar contexto de usuario o refrescar datos
-      // await refreshUserData(); // Refrescar datos del usuario desde el backend
-      // updateUserCourses(result.enrolledCourse); // Actualizar lista de cursos del usuario
-      
     } catch (error) {
       console.error('Error al inscribirse:', error);
       
-      // Mostrar mensaje de error
       setMessage('Hubo un error al inscribirse. Por favor, intenta nuevamente.');
       setMessageType('error');
       setShowMessage(true);
       
-      // TODO: Backend Integration - Manejo de errores específicos
+      // TODO: Backend Integration - Manejo de errores específicos del API
       // if (error.status === 409) {
       //   setMessage('Ya estás inscrito en este curso.');
-      // } else {
-      //   setMessage('Error al inscribirse. Por favor, intenta nuevamente.');
+      // } else if (error.status === 402) {
+      //   setMessage('Este curso requiere pago. Serás redirigido a la página de pago.');
+      // } else if (error.status === 403) {
+      //   setMessage('No tienes permisos para inscribirte en este curso.');
       // }
       
     } finally {
@@ -451,75 +501,95 @@ export default function CoursesList() {
         </Alert>
       )} */}
 
-      {/* Mis Cursos */}
-      {myCourses.length > 0 && (
-        <Box sx={{ mb: 6 }}>
-          <Typography 
-            variant="h5" 
-            sx={{ 
-                fontWeight: 600, 
-                mb: 3,
-                color: 'text.secondary' 
+      {/* Estados de loading y error */}
+      {loading && (
+        <Box sx={{ display: 'flex', justifyContent: 'center', py: 4 }}>
+          <CircularProgress />
+        </Box>
+      )}
+      
+      {error && (
+        <Alert severity="error" sx={{ mb: 3 }}>
+          {error}
+        </Alert>
+      )}
+
+      {/* Renderizar contenido solo si no hay loading ni error */}
+      {!loading && !error && (
+        <>
+          {/* Mis Cursos */}
+          {myCourses.length > 0 && (
+            <Box sx={{ mb: 6 }}>
+              <Typography 
+                variant="h5" 
+                sx={{ 
+                    fontWeight: 600, 
+                    mb: 3,
+                    color: 'text.secondary' 
+                    }}
+              >
+                Mis Cursos
+              </Typography>
+              <Box 
+                sx={{ 
+                  display: 'grid',
+                  gridTemplateColumns: { xs: '1fr', sm: '1fr 1fr', md: '1fr 1fr 1fr' },
+                  gap: 3
                 }}
-          >
-            Mis Cursos
-          </Typography>
-          <Box 
-            sx={{ 
-              display: 'grid',
-              gridTemplateColumns: { xs: '1fr', sm: '1fr 1fr', md: '1fr 1fr 1fr' },
-              gap: 3
-            }}
-          >
-            {myCourses.map((course) => (
-              <CourseCard key={course.id_curso} course={course} />
-            ))}
-          </Box>
-        </Box>
-      )}
+              >
+                {myCourses.map((course) => (
+                  <CourseCard key={course.id_curso} course={course} />
+                ))}
+              </Box>
+            </Box>
+          )}
 
-      {/* Explorar Cursos */}
-      {availableCourses.length > 0 && (
-        <Box>
-          <Typography 
-          variant="h5" 
-          sx={{ 
-            fontWeight: 600, 
-            mb: 3, 
-            color: 'text.secondary'
-            }}
-          >
-            Explorar Cursos
-          </Typography>
-          <Box 
-            sx={{ 
-              display: 'grid',
-              gridTemplateColumns: { xs: '1fr', sm: '1fr 1fr', md: '1fr 1fr 1fr' },
-              gap: 3
-            }}
-          >
-            {availableCourses.map((course) => (
-              <CourseCard key={course.id_curso} course={course} showEnrollButton />
-            ))}
-          </Box>
-        </Box>
-      )}
+          {/* Explorar Cursos */}
+          {availableCourses.length > 0 && (
+            <Box>
+              <Typography 
+              variant="h5" 
+              sx={{ 
+                fontWeight: 600, 
+                mb: 3, 
+                color: 'text.secondary'
+                }}
+              >
+                Explorar Cursos
+              </Typography>
+              <Box 
+                sx={{ 
+                  display: 'grid',
+                  gridTemplateColumns: { xs: '1fr', sm: '1fr 1fr', md: '1fr 1fr 1fr' },
+                  gap: 3
+                }}
+              >
+                {availableCourses.map((course) => (
+                  <CourseCard key={course.id_curso} course={course} showEnrollButton />
+                ))}
+              </Box>
+            </Box>
+          )}
 
-      {/* Mensaje cuando no hay resultados */}
-      {filteredCourses.length === 0 && (searchTerm || levelFilter !== 'todos' || durationFilter !== 'todos') && (
-        <Box sx={{ textAlign: 'center', py: 8 }}>
-          <Typography variant="h6" color="text.secondary">
-            No se encontraron cursos que coincidan con tus filtros
-          </Typography>
-        </Box>
-      )}
+          {/* Mensaje cuando no hay resultados */}
+          {filteredCourses.length === 0 && (searchTerm || levelFilter !== 'todos' || durationFilter !== 'todos') && (
+            <Box sx={{ textAlign: 'center', py: 8 }}>
+              <Typography variant="h6" color="text.secondary">
+                No se encontraron cursos que coincidan con tus filtros
+              </Typography>
+            </Box>
+          )}
 
-      {/* TODO: Backend Integration - Manejar caso cuando no hay cursos */}
-      {/* {activeCourses.length === 0 && !loading && (
-        <Typography variant="body1" color="text.secondary" sx={{ textAlign: 'center', mt: 4 }}>
-          No hay cursos disponibles en este momento
-        </Typography>
-      )} */}
+          {/* Mensaje cuando no hay cursos disponibles */}
+          {courses.length === 0 && (
+            <Box sx={{ textAlign: 'center', py: 8 }}>
+              <Typography variant="h6" color="text.secondary">
+                No hay cursos disponibles en este momento
+              </Typography>
+            </Box>
+          )}
+        </>
+      )}
 
       {/* TODO: Backend Integration - Manejar estados de inscripción con loading overlay */}
       {enrollingCourseId && (
