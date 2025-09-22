@@ -33,7 +33,7 @@ import ConfirmDeleteDialog from './ConfirmDeleteDialog';
 
 // Configurar moment en español
 moment.locale('es');
-const localizer = momentLocalizer(moment);
+const localizer = momentLocalizer(moment as unknown as moment.Moment);
 
 // Tipos para eventos
 interface CalendarEvent extends Event {
@@ -260,7 +260,7 @@ const Calendar: React.FC = () => {
     }
   };
 
-  // Manejar edición desde detalles
+  // Manejar edición desde detalles hheheheheheh
   const handleEdit = () => {
     if (selectedSession) {
       setEditingSession(selectedSession);
@@ -373,13 +373,12 @@ const Calendar: React.FC = () => {
           />
         </Box>
 
-        <Box sx={{ ...calendarStyle }}>
+        <Box sx={{ ...calendarStyle, height: 600 }}>
           <BigCalendar
             localizer={localizer}
             events={events}
             startAccessor="start"
             endAccessor="end"
-            style={{ height: 600 }}
             view={view}
             onView={setView}
             date={date}
@@ -403,7 +402,7 @@ const Calendar: React.FC = () => {
               time: 'Hora',
               event: 'Evento',
               noEventsInRange: 'No hay eventos en este rango',
-              showMore: (total: number) => `+ Ver más (${total})`,
+              showMore: '+ Ver más',
             }}
           />
         </Box>

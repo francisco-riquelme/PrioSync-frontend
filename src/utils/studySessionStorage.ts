@@ -16,7 +16,7 @@ export class StudySessionStorage {
 
       const sessions = JSON.parse(data);
       // Convertir strings de fecha a objetos Date
-      return sessions.map((session: any) => ({
+      return sessions.map((session: StudySession) => ({
         ...session,
         startTime: new Date(session.startTime),
         endTime: new Date(session.endTime),
