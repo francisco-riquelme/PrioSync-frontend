@@ -18,6 +18,10 @@ import {
   FormControl,
   InputLabel,
   LinearProgress,
+  Snackbar,
+  Alert,
+  CircularProgress,
+  Backdrop,
 } from '@mui/material';
 import { Search as SearchIcon } from '@mui/icons-material';
 
@@ -101,6 +105,13 @@ export default function CoursesList() {
   const [searchTerm, setSearchTerm] = useState('');
   const [levelFilter, setLevelFilter] = useState('todos');
   const [durationFilter, setDurationFilter] = useState('todos');
+  
+  // Estado para gestión de inscripciones
+  const [courses, setCourses] = useState<Course[]>(allCourses);
+  const [enrollingCourseId, setEnrollingCourseId] = useState<number | null>(null);
+  const [showMessage, setShowMessage] = useState(false);
+  const [message, setMessage] = useState('');
+  const [messageType, setMessageType] = useState<'success' | 'error'>('success');
 
   // TODO: Backend Integration - Hook para obtener cursos del usuario con progreso
   // const { enrolledCourses, loading: enrolledLoading, error: enrolledError } = useEnrolledCourses();
@@ -115,7 +126,7 @@ export default function CoursesList() {
   // const { courses, loading, error } = useCourses();
   
   // Filtrar solo cursos activos
-  const activeCourses = allCourses.filter(course => course.estado === 'activo');
+  const activeCourses = courses.filter(course => course.estado === 'activo');
 
   // TODO: Backend Integration - Implementar filtros en el servidor
   // Los filtros deberían enviarse como query parameters: GET /api/courses?search=term&level=basico&duration=short
@@ -153,14 +164,75 @@ export default function CoursesList() {
   // TODO: Backend Integration - Función para manejar inscripción
   const handleEnrollCourse = async (courseId: number, event: React.MouseEvent) => {
     event.stopPropagation(); // Evitar navegación cuando se hace clic en inscribirse
-    // try {
-    //   await enrollInCourse(courseId);
-    //   // Mostrar mensaje de éxito
-    //   // Refrescar datos o actualizar estado local
-    // } catch (error) {
-    //   console.error('Error al inscribirse:', error);
-    //   // Mostrar mensaje de error
-    // }
+    
+    try {
+      setEnrollingCourseId(courseId);
+      
+      // TODO: Backend Integration - Reemplazar con llamada real al API
+      // const response = await fetch(`/api/courses/${courseId}/enroll`, {
+      //   method: 'POST',
+      //   headers: {
+      //     'Content-Type': 'application/json',
+      //     'Authorization': `Bearer ${userToken}`,
+      //   },
+      //   body: JSON.stringify({
+      //     userId: user.id,
+      //     courseId: courseId,
+      //   }),
+      // });
+      
+      // if (!response.ok) {
+      //   throw new Error('Error al inscribirse al curso');
+      // }
+      
+      // const result = await response.json();
+      
+      // Simulación de llamada al backend
+      await new Promise(resolve => setTimeout(resolve, 1500));
+      
+      // Actualizar estado local - marcar curso como inscrito con progreso inicial
+      setCourses(prevCourses =>
+        prevCourses.map(course =>
+          course.id_curso === courseId
+            ? { ...course, isEnrolled: true, progress: 0 }
+            : course
+        )
+      );
+      
+      // Mostrar mensaje de éxito
+      const courseName = courses.find(c => c.id_curso === courseId)?.titulo || 'Curso';
+      setMessage(`¡Te has inscrito exitosamente en "${courseName}"!`);
+      setMessageType('success');
+      setShowMessage(true);
+      
+      // TODO: Backend Integration - Actualizar contexto de usuario o refrescar datos
+      // await refreshUserData(); // Refrescar datos del usuario desde el backend
+      // updateUserCourses(result.enrolledCourse); // Actualizar lista de cursos del usuario
+      
+    } catch (error) {
+      console.error('Error al inscribirse:', error);
+      
+      // Mostrar mensaje de error
+      setMessage('Hubo un error al inscribirse. Por favor, intenta nuevamente.');
+      setMessageType('error');
+      setShowMessage(true);
+      
+      // TODO: Backend Integration - Manejo de errores específicos
+      // if (error.status === 409) {
+      //   setMessage('Ya estás inscrito en este curso.');
+      // } else if (error.status === 402) {
+      //   setMessage('Este curso requiere pago. Serás redirigido a la página de pago.');
+      // } else {
+      //   setMessage('Error al inscribirse. Por favor, intenta nuevamente.');
+      // }
+      
+    } finally {
+      setEnrollingCourseId(null);
+    }
+  };
+
+  const handleCloseMessage = () => {
+    setShowMessage(false);
   };
 
   const formatDuration = (minutes: number) => {
@@ -177,89 +249,106 @@ export default function CoursesList() {
     }
   };
 
-  const CourseCard = ({ course, showEnrollButton = false }: { course: Course; showEnrollButton?: boolean }) => (
-    <Card 
-      sx={{ 
-        cursor: 'pointer',
-        '&:hover': { transform: 'translateY(-2px)', boxShadow: 3 },
-        transition: 'all 0.2s ease-in-out',
-      }}
-      onClick={() => handleCourseClick(course.id_curso)}
-    >
-      <CardMedia
-        component="img"
-        height="160"
-        image={course.imagen_portada}
-        alt={course.titulo}
-        sx={{ backgroundColor: 'grey.200' }}
-      />
-      <CardContent>
-        <Box sx={{ display: 'flex', gap: 1, mb: 1 }}>
-          <Chip 
-            label={course.nivel_dificultad} 
-            size="small" 
-            color={getLevelColor(course.nivel_dificultad)}
-            variant="outlined"
-          />
-          <Chip 
-            label={formatDuration(course.duracion_estimada)} 
-            size="small" 
-            variant="outlined"
-          />
-        </Box>
-        
-        <Typography variant="h6" sx={{ fontWeight: 600, mb: 1 }}>
-          {course.titulo}
-        </Typography>
-        
-        <Typography variant="body2" color="text.secondary" sx={{ mb: 2 }}>
-          {course.descripcion}
-        </Typography>
-
-        {course.isEnrolled && (
-          <Box sx={{ mb: 2 }}>
-            <Box sx={{ display: 'flex', justifyContent: 'space-between', mb: 0.5 }}>
-              <Typography variant="body2" color="text.secondary">
-                Progreso
-              </Typography>
-              <Typography variant="body2" color="text.secondary">
-                {course.progress}%
-              </Typography>
-            </Box>
-            <LinearProgress
-              variant="determinate"
-              value={course.progress || 0}
-              sx={{
-                height: 6,
-                borderRadius: 3,
-                backgroundColor: 'grey.200',
-                '& .MuiLinearProgress-bar': {
-                  borderRadius: 3,
-                  backgroundColor: 'primary.main',
-                },
-              }}
+  const CourseCard = ({ course, showEnrollButton = false }: { course: Course; showEnrollButton?: boolean }) => {
+    const isEnrolling = enrollingCourseId === course.id_curso;
+    
+    return (
+      <Card 
+        sx={{ 
+          cursor: 'pointer',
+          '&:hover': { transform: 'translateY(-2px)', boxShadow: 3 },
+          transition: 'all 0.2s ease-in-out',
+        }}
+        onClick={() => handleCourseClick(course.id_curso)}
+      >
+        <CardMedia
+          component="img"
+          height="160"
+          image={course.imagen_portada}
+          alt={course.titulo}
+          sx={{ backgroundColor: 'grey.200' }}
+        />
+        <CardContent>
+          <Box sx={{ display: 'flex', gap: 1, mb: 1 }}>
+            <Chip 
+              label={course.nivel_dificultad} 
+              size="small" 
+              color={getLevelColor(course.nivel_dificultad)}
+              variant="outlined"
+            />
+            <Chip 
+              label={formatDuration(course.duracion_estimada)} 
+              size="small" 
+              variant="outlined"
             />
           </Box>
-        )}
+          
+          <Typography variant="h6" sx={{ fontWeight: 600, mb: 1 }}>
+            {course.titulo}
+          </Typography>
+          
+          <Typography variant="body2" color="text.secondary" sx={{ mb: 2 }}>
+            {course.descripcion}
+          </Typography>
 
-        <Button
-          variant="contained"
-          fullWidth
-          onClick={showEnrollButton ? (e) => handleEnrollCourse(course.id_curso, e) : undefined}
-          sx={{
-            textTransform: 'none',
-            py: 1,
-            backgroundColor: 'primary.main',
-            '&:hover': {
-              backgroundColor: 'primary.dark',
-            },
-          }}
-        >
-          {showEnrollButton ? 'Inscribirse' : 'Continuar Aprendiendo'}
-        </Button>
-      </CardContent>
-    </Card>
-  );
+          {course.isEnrolled && (
+            <Box sx={{ mb: 2 }}>
+              <Box sx={{ display: 'flex', justifyContent: 'space-between', mb: 0.5 }}>
+                <Typography variant="body2" color="text.secondary">
+                  Progreso
+                </Typography>
+                <Typography variant="body2" color="text.secondary">
+                  {course.progress}%
+                </Typography>
+              </Box>
+              <LinearProgress
+                variant="determinate"
+                value={course.progress || 0}
+                sx={{
+                  height: 6,
+                  borderRadius: 3,
+                  backgroundColor: 'grey.200',
+                  '& .MuiLinearProgress-bar': {
+                    borderRadius: 3,
+                    backgroundColor: 'primary.main',
+                  },
+                }}
+              />
+            </Box>
+          )}
+
+          <Button
+            variant="contained"
+            fullWidth
+            onClick={showEnrollButton ? (e) => handleEnrollCourse(course.id_curso, e) : undefined}
+            disabled={isEnrolling}
+            sx={{
+              textTransform: 'none',
+              py: 1,
+              backgroundColor: 'primary.main',
+              '&:hover': {
+                backgroundColor: 'primary.dark',
+              },
+              '&:disabled': {
+                backgroundColor: 'grey.300',
+              },
+            }}
+          >
+            {isEnrolling ? (
+              <Box sx={{ display: 'flex', alignItems: 'center', gap: 1 }}>
+                <CircularProgress size={20} color="inherit" />
+                Inscribiendo...
+              </Box>
+            ) : showEnrollButton ? (
+              'Inscribirse'
+            ) : (
+              'Continuar Aprendiendo'
+            )}
+          </Button>
+        </CardContent>
+      </Card>
+    );
+  };
 
   // Separar cursos matriculados y disponibles
   const myCourses = filteredCourses.filter(course => course.isEnrolled);
@@ -408,22 +497,33 @@ export default function CoursesList() {
       )} */}
 
       {/* TODO: Backend Integration - Manejar estados de inscripción con loading overlay */}
-      {/* {enrollLoading && (
-        <Backdrop open={enrollLoading} sx={{ zIndex: (theme) => theme.zIndex.drawer + 1 }}>
-          <CircularProgress color="inherit" />
+      {enrollingCourseId && (
+        <Backdrop open={!!enrollingCourseId} sx={{ zIndex: (theme) => theme.zIndex.drawer + 1 }}>
+          <Box sx={{ display: 'flex', flexDirection: 'column', alignItems: 'center', gap: 2 }}>
+            <CircularProgress color="primary" size={60} />
+            <Typography variant="h6" color="white">
+              Procesando inscripción...
+            </Typography>
+          </Box>
         </Backdrop>
-      )} */}
+      )}
 
       {/* TODO: Backend Integration - Snackbar para mensajes de éxito/error */}
-      {/* <Snackbar
+      <Snackbar
         open={showMessage}
         autoHideDuration={6000}
         onClose={handleCloseMessage}
+        anchorOrigin={{ vertical: 'bottom', horizontal: 'center' }}
       >
-        <Alert onClose={handleCloseMessage} severity={messageType}>
+        <Alert 
+          onClose={handleCloseMessage} 
+          severity={messageType}
+          sx={{ width: '100%' }}
+          variant="filled"
+        >
           {message}
         </Alert>
-      </Snackbar> */}
+      </Snackbar>
     </Box>
   );
 }
