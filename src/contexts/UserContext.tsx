@@ -29,11 +29,20 @@ export interface Activity {
   type: 'course_completed' | 'module_completed' | 'evaluation_completed' | 'assignment_completed';
 }
 
+export interface AuthState {
+  isAuthenticated: boolean;
+  isLoading: boolean;
+}
+
 // Contexto
 interface UserContextType {
   userData: UserData | null;
   loading: boolean;
   error: string | null;
+  isAuthenticated: boolean;
+  isLoading: boolean;
+  login: (email: string, password: string) => Promise<void>;
+  logout: () => Promise<void>;
   updateUser: (updates: Partial<UserData>) => Promise<void>;
   updateCourseProgress: (courseId: string, progress: number) => Promise<void>;
   addActivity: (activity: Omit<Activity, 'id' | 'date'>) => Promise<void>;
@@ -108,35 +117,40 @@ const getDefaultUserData = (): UserData => ({
   updatedAt: new Date().toISOString()
 });
 
-// Provider
 export const UserProvider = ({ children }: { children: ReactNode }) => {
   const [userData, setUserData] = useState<UserData | null>(null);
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
+  const [isAuthenticated, setIsAuthenticated] = useState(false);
+  const [isLoading, setIsLoading] = useState(true);
 
   // Cargar datos al inicializar
   useEffect(() => {
     const loadUserData = () => {
-      setLoading(true);
+      setIsLoading(true);
       try {
+        const authToken = localStorage.getItem('priosync_auth_token');
         const savedData = localStorage.getItem('priosync_user_data');
-        if (savedData) {
+        
+        if (authToken && savedData) {
           const parsedData = JSON.parse(savedData);
           setUserData(parsedData);
-        } else {
-          // Primera vez - usar datos por defecto
+          setIsAuthenticated(true);
+        } else if (authToken) {
+          // Si el Token existe pero no hay datos de usuario - cargar por defecto
           const defaultData = getDefaultUserData();
           setUserData(defaultData);
+          setIsAuthenticated(true);
           localStorage.setItem('priosync_user_data', JSON.stringify(defaultData));
+        } else {
+          setIsAuthenticated(false);
         }
       } catch (err) {
         console.error('Error loading user data:', err);
         setError('Error al cargar datos del usuario');
-        // Fallback a datos por defecto
-        const defaultData = getDefaultUserData();
-        setUserData(defaultData);
+        setIsAuthenticated(false);
       } finally {
-        setLoading(false);
+        setIsLoading(false);
       }
     };
 
@@ -154,6 +168,57 @@ export const UserProvider = ({ children }: { children: ReactNode }) => {
       }
     }
   }, [userData]);
+
+  // Función para iniciar sesión
+  const login = async (email: string, password: string): Promise<void> => {
+    setIsLoading(true);
+    setError(null);
+
+    try {
+      // Simular llamada a API
+      await new Promise(resolve => setTimeout(resolve, 1000));
+      
+      // Autenticación simulada - en una app real, validar con el backend
+      if (email && password) {
+        const authToken = `token_${Date.now()}`;
+        localStorage.setItem('priosync_auth_token', authToken);
+        
+        const defaultData = getDefaultUserData();
+        setUserData(defaultData);
+        setIsAuthenticated(true);
+        localStorage.setItem('priosync_user_data', JSON.stringify(defaultData));
+      } else {
+        throw new Error('Credenciales inválidas');
+      }
+    } catch (err) {
+      console.error('Error al iniciar sesión:', err);
+      setError('Error al iniciar sesión');
+      setIsAuthenticated(false);
+    } finally {
+      setIsLoading(false);
+    }
+  };
+
+  // Función para cerrar sesión
+  const logout = async (): Promise<void> => {
+    setIsLoading(true);
+    
+    try {
+      // Simular llamada a API
+      await new Promise(resolve => setTimeout(resolve, 500));
+      
+      localStorage.removeItem('priosync_auth_token');
+      localStorage.removeItem('priosync_user_data');
+      setUserData(null);
+      setIsAuthenticated(false);
+      setError(null);
+    } catch (err) {
+      console.error('Error al cerrar sesión:', err);
+      setError('Error al cerrar sesión');
+    } finally {
+      setIsLoading(false);
+    }
+  };
 
   // Función para actualizar usuario
   const updateUser = async (updates: Partial<UserData>): Promise<void> => {
@@ -281,6 +346,10 @@ export const UserProvider = ({ children }: { children: ReactNode }) => {
     userData,
     loading,
     error,
+    isAuthenticated,
+    isLoading,
+    login,
+    logout,
     updateUser,
     updateCourseProgress,
     addActivity,
@@ -301,4 +370,20 @@ export const useUser = (): UserContextType => {
     throw new Error('useUser must be used within a UserProvider');
   }
   return context;
+};
+
+// Agregar hook useAuth
+export const useAuth = (): Pick<UserContextType, 'isAuthenticated' | 'isLoading' | 'login' | 'logout' | 'userData' | 'error'> => {
+  const context = useContext(UserContext);
+  if (context === undefined) {
+    throw new Error('useAuth debe usarse dentro de un UserProvider');
+  }
+  return {
+    isAuthenticated: context.isAuthenticated,
+    isLoading: context.isLoading,
+    login: context.login,
+    logout: context.logout,
+    userData: context.userData,
+    error: context.error
+  };
 };
