@@ -11,7 +11,7 @@ import {
 } from '@mui/material'
 import { useAuth } from '@/contexts/UserContext'
 
-export default function AdminUploadPage() {
+export default function AdminLayout() {
   const router = useRouter()
   const { userData, isLoading } = useAuth()
   const [isAuthorized, setIsAuthorized] = useState(false)
