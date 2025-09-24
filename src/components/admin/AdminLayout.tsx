@@ -9,20 +9,18 @@ import {
   CircularProgress,
   Alert
 } from '@mui/material'
-import { useAuth } from '@/contexts/UserContext'
 
 export default function AdminLayout() {
   const router = useRouter()
-  const { userData, isLoading } = useAuth()
+  const [mounted, setMounted] = useState(false)
   const [isAuthorized, setIsAuthorized] = useState(false)
   const [checking, setChecking] = useState(true)
 
   useEffect(() => {
-    const checkAdminAccess = () => {
-      // Verificar variable de entorno
+    const checkAdminAccess = async () => {
+      // Verificar variable de entorno del lado del cliente
       const isAdminMode = process.env.NEXT_PUBLIC_IS_ADMIN_MODE === 'true'
       
-      // Verificar si la variable de entorno permite acceso
       if (isAdminMode) {
         setIsAuthorized(true)
       } else {
@@ -31,23 +29,25 @@ export default function AdminLayout() {
       }
       
       setChecking(false)
+      setMounted(true)
     }
 
-    if (!isLoading) {
-      checkAdminAccess()
-    }
-  }, [isLoading, router])
+    checkAdminAccess()
+  }, [router])
 
-  if (isLoading || checking) {
+  // Evitar renderizar contenido hasta que la hidratación esté completa
+  if (!mounted) {
+    return null
+  }
+
+  // Mostrar loading durante la verificación de permisos
+  if (checking) {
     return (
-      <Box 
-        display="flex" 
-        justifyContent="center" 
-        alignItems="center" 
-        minHeight="100vh"
-      >
-        <CircularProgress />
-      </Box>
+      <Container maxWidth="md" sx={{ py: 4 }}>
+        <Box sx={{ display: 'flex', justifyContent: 'center', alignItems: 'center', height: '50vh' }}>
+          <CircularProgress />
+        </Box>
+      </Container>
     )
   }
 
