@@ -19,7 +19,8 @@ export interface VideoMetadata {
   uploadedAt: string;
 }
 
-export interface TranscriptionRequest {
+// Representa el estado/registro de una transcripción en progreso o completada
+export interface TranscriptionJobStatus {
   id: string;
   videoMetadata: VideoMetadata;
   status: 'pending' | 'processing' | 'completed' | 'failed';
@@ -30,12 +31,15 @@ export interface TranscriptionRequest {
   updatedAt: string;
 }
 
+// Respuesta de la API al crear/consultar transcripción
 export interface TranscriptionResponse {
   success: boolean;
   requestId: string;
   message: string;
   videoMetadata: VideoMetadata;
+  status?: 'pending' | 'processing' | 'completed' | 'failed';
   progress?: number;
+  transcriptionText?: string;
 }
 
 // Datos del formulario para subir video
@@ -74,7 +78,7 @@ export interface CourseOption {
 // Configuraciones predefinidas
 export const VIDEO_CONFIG = {
   MAX_FILE_SIZE: 100 * 1024 * 1024, // 100MB
-  ALLOWED_TYPES: ['video/mp4', 'video/avi', 'video/mov', 'video/quicktime'],
+  ALLOWED_TYPES: ['video/mp4', 'video/avi', 'video/mov', 'video/quicktime'] as const,
   MAX_DURATION: 3600, // 1 hora en segundos
 } as const;
 
