@@ -93,18 +93,22 @@ async function processVideoForTranscription(
   // Simular procesamiento asíncrono
   // En producción, aquí se llamaría al LLM/AI SDK
   setTimeout(async () => {
-    const job = transcriptionJobs.get(requestId);
-    if (job) {
-      // Simular transcripción completada
-      const simulatedTranscription = generateSimulatedTranscription(metadata.title);
-      
-      job.status = 'completed';
-      job.progress = 100;
-      job.transcriptionText = simulatedTranscription;
-      job.updatedAt = new Date().toISOString();
-      
-      transcriptionJobs.set(requestId, job);
-      console.log(`Transcripción completada para ${requestId}`);
+    try {
+      const job = transcriptionJobs.get(requestId);
+      if (job) {
+        // Simular transcripción completada
+        const simulatedTranscription = generateSimulatedTranscription(metadata.title);
+        
+        job.status = 'completed';
+        job.progress = 100;
+        job.transcriptionText = simulatedTranscription;
+        job.updatedAt = new Date().toISOString();
+        
+        transcriptionJobs.set(requestId, job);
+        console.log(`Transcripción completada para ${requestId}`);
+      }
+    } catch (error) {
+      console.error(`Error procesando transcripción para ${requestId}:`, error);
     }
   }, 5000); // Simular 5 segundos de procesamiento
 
