@@ -128,9 +128,9 @@ async function testCompleteTranscriptionFlow() {
     
     if (finalStatus.data.transcriptionText) {
       console.log('\nTranscripción generada:');
-      console.log('=' .repeat(50));
+      console.log('='.repeat(50));
       console.log(finalStatus.data.transcriptionText.substring(0, 300) + '...');
-      console.log('=' .repeat(50));
+      console.log('='.repeat(50));
     }
 
     // Paso 4: Listar todas las transcripciones
