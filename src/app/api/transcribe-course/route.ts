@@ -68,7 +68,7 @@ async function processVideoForTranscription(
   metadata: VideoMetadata
 ): Promise<{ success: boolean; message: string; requestId: string; transcriptionText?: string }> {
   
-  const requestId = `transcribe_${Date.now()}_${Math.random().toString(36).substr(2, 9)}`;
+  const requestId = `transcribe_${Date.now()}_${Math.random().toString(36).slice(2, 11)}`;
   
   // Crear job de transcripción inicial
   const transcriptionJob: TranscriptionJobStatus = {
