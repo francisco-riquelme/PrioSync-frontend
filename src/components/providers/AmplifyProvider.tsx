@@ -1,7 +1,7 @@
 'use client';
 
 import { useEffect, useState } from 'react';
-import { AmplifyOutputsType, initializeQueries, ClientManager } from "@/utils/commons/queries";
+import { AmplifyOutputsType, initializeQueries } from "@/utils/commons/queries";
 import amplifyOutputs from "../../../amplify_outputs.json";
 import { MainSchema, MainTypes } from "@/utils/api/schema";
 
@@ -16,10 +16,7 @@ export default function AmplifyProvider({ children }: AmplifyProviderProps) {
   useEffect(() => {
     const initializeAmplify = async () => {
       try {
-        // Initialize the Amplify client
-        await ClientManager.getInstance("default").getClient<MainTypes>();
-
-        // Initialize query factories
+        // initializeQueries handles both Amplify configuration and client initialization
         await initializeQueries<typeof MainSchema, MainTypes>({
           amplifyOutputs: amplifyOutputs as unknown as AmplifyOutputsType,
           schema: MainSchema,
@@ -39,7 +36,6 @@ export default function AmplifyProvider({ children }: AmplifyProviderProps) {
     initializeAmplify();
   }, []);
 
-  // Show loading state while initializing
   if (!isInitialized && !error) {
     return (
       <div className="flex items-center justify-center min-h-screen">
@@ -51,7 +47,6 @@ export default function AmplifyProvider({ children }: AmplifyProviderProps) {
     );
   }
 
-  // Show error state if initialization failed
   if (error) {
     return (
       <div className="flex items-center justify-center min-h-screen">
@@ -69,6 +64,5 @@ export default function AmplifyProvider({ children }: AmplifyProviderProps) {
     );
   }
 
-  // Render children only after successful initialization
   return <>{children}</>;
 }

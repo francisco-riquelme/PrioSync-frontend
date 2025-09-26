@@ -8,12 +8,7 @@ export const getGlobalAmplifyOutputs = ClientManager.getGlobalAmplifyOutputs;
 export const getIdentifierFields = ClientManager.getIdentifierFields;
 
 // Instance method convenience utilities - now from helpers
-export {
-  getQueryFactories,
-  getExistingQueryFactories,
-  areEntitiesInitialized,
-  getAllQueryFactories,
-} from "./helpers";
+export { getQueryFactories } from "./helpers";
 
 // QueryFactory is internal - users should use ClientManager methods
 
