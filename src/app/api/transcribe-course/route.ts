@@ -100,7 +100,7 @@ async function processVideoForTranscription(
     metadata
   });
 
-  console.log('🚀 Iniciando processVideoForTranscription:', {
+  console.log('Iniciando processVideoForTranscription:', {
     requestId,
     title: metadata.title,
     courseId: metadata.courseId
@@ -108,22 +108,22 @@ async function processVideoForTranscription(
 
   try {
     // Verificar que tenemos la API key de Google
-    console.log('🔑 Verificando API Key...');
+    console.log('Verificando API Key...');
     console.log('API Key existe:', !!process.env.GOOGLE_GENERATIVE_AI_API_KEY);
     console.log('API Key preview:', process.env.GOOGLE_GENERATIVE_AI_API_KEY?.substring(0, 20) + '...');
     
     if (!process.env.GOOGLE_GENERATIVE_AI_API_KEY) {
-      console.error('❌ GOOGLE_GENERATIVE_AI_API_KEY no está configurada');
+      console.error('GOOGLE_GENERATIVE_AI_API_KEY no está configurada');
       throw new Error('GOOGLE_GENERATIVE_AI_API_KEY no está configurada en las variables de entorno');
     }
-    console.log('✅ API Key encontrada');
+    console.log('API Key encontrada');
 
     // Actualizar progreso: preparando archivo
     transcriptionJob.progress = 25;
     transcriptionJob.updatedAt = new Date().toISOString();
     transcriptionJobs.set(requestId, transcriptionJob);
 
-    console.log(`📁 Archivo recibido. Tipo: ${file.type}, Tamaño: ${file.size} bytes`);
+    console.log(`Archivo recibido. Tipo: ${file.type}, Tamaño: ${file.size} bytes`);
 
     // Actualizar progreso: enviando a Gemini
     transcriptionJob.progress = 50;
@@ -131,11 +131,11 @@ async function processVideoForTranscription(
     transcriptionJobs.set(requestId, transcriptionJob);
 
     // Configurar el modelo de Google Gemini 2.5 Flash
-    console.log('🤖 Configurando modelo Gemini 2.5 Flash...');
+    console.log('Configurando modelo Gemini 2.5 Flash...');
     const model = google('gemini-2.5-flash');
-    console.log('✅ Modelo Gemini 2.5 Flash configurado');
+    console.log('Modelo Gemini 2.5 Flash configurado');
 
-    console.log('🎯 Iniciando generación de transcripción con Gemini...');
+    console.log('Iniciando generación de transcripción con Gemini...');
     
     try {
       // Realizar una llamada simple a Gemini para probar conectividad
@@ -144,8 +144,8 @@ async function processVideoForTranscription(
         prompt: `Como profesor universitario, genera una transcripción realista de una clase de "${metadata.title}" para el curso "${metadata.courseName}". La clase debe incluir introducción, desarrollo del tema y conclusión. Aproximadamente 300-500 palabras con estilo natural de profesor explicando conceptos.`,
       });
 
-      console.log('✅ Transcripción generada exitosamente con Gemini');
-      console.log(`📝 Longitud: ${transcriptionText.length} caracteres`);
+      console.log('Transcripción generada exitosamente con Gemini');
+      console.log(`Longitud: ${transcriptionText.length} caracteres`);
 
       // Actualizar job con transcripción completada
       transcriptionJob.status = 'completed';
@@ -154,7 +154,7 @@ async function processVideoForTranscription(
       transcriptionJob.updatedAt = new Date().toISOString();
       transcriptionJobs.set(requestId, transcriptionJob);
 
-      console.log('🎉 Proceso completado exitosamente');
+      console.log('Proceso completado exitosamente');
 
       return {
         success: true,
@@ -164,7 +164,7 @@ async function processVideoForTranscription(
       };
 
     } catch (geminiError) {
-      console.error('❌ Error específico de Gemini:', geminiError);
+      console.error('Error específico de Gemini:', geminiError);
       
       // Si la llamada a Gemini falla, usar transcripción de respaldo
       const fallbackTranscription = `Bienvenidos a esta clase de ${metadata.title}.
@@ -203,7 +203,7 @@ Perfecto. Nos vemos en la próxima sesión. Que tengan un excelente día.
 
 [Fin de la transcripción]`;
 
-      console.log('⚠️ Usando transcripción de respaldo debido a error de Gemini');
+      console.log('Usando transcripción de respaldo debido a error de Gemini');
       
       // Actualizar job con transcripción de respaldo
       transcriptionJob.status = 'completed';
