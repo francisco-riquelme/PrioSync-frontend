@@ -1,0 +1,2309 @@
+{
+  "auth": {
+    "user_pool_id": "us-east-1_g8QVtVlT3",
+    "aws_region": "us-east-1",
+    "user_pool_client_id": "40orcutntjp54sln37mtmht3or",
+    "identity_pool_id": "us-east-1:6e88cfb7-7853-417a-9f24-417f96b8d278",
+    "mfa_methods": [],
+    "standard_required_attributes": [
+      "email"
+    ],
+    "username_attributes": [
+      "email"
+    ],
+    "user_verification_types": [
+      "email"
+    ],
+    "groups": [],
+    "mfa_configuration": "NONE",
+    "password_policy": {
+      "min_length": 8,
+      "require_lowercase": true,
+      "require_numbers": true,
+      "require_symbols": true,
+      "require_uppercase": true
+    },
+    "unauthenticated_identities_enabled": true
+  },
+  "data": {
+    "url": "https://jlmscpxgwrcpxcw3dor3qzoqta.appsync-api.us-east-1.amazonaws.com/graphql",
+    "aws_region": "us-east-1",
+    "api_key": "da2-kapwodydfza6zawyhtr4x5k7aa",
+    "default_authorization_type": "API_KEY",
+    "authorization_types": [
+      "AMAZON_COGNITO_USER_POOLS",
+      "AWS_IAM"
+    ],
+    "model_introspection": {
+      "version": 1,
+      "models": {
+        "Usuario": {
+          "name": "Usuario",
+          "fields": {
+            "usuarioId": {
+              "name": "usuarioId",
+              "isArray": false,
+              "type": "ID",
+              "isRequired": true,
+              "attributes": []
+            },
+            "email": {
+              "name": "email",
+              "isArray": false,
+              "type": "AWSEmail",
+              "isRequired": true,
+              "attributes": []
+            },
+            "nombre": {
+              "name": "nombre",
+              "isArray": false,
+              "type": "String",
+              "isRequired": true,
+              "attributes": []
+            },
+            "apellido": {
+              "name": "apellido",
+              "isArray": false,
+              "type": "String",
+              "isRequired": false,
+              "attributes": []
+            },
+            "ultimo_login": {
+              "name": "ultimo_login",
+              "isArray": false,
+              "type": "AWSDateTime",
+              "isRequired": false,
+              "attributes": []
+            },
+            "isValid": {
+              "name": "isValid",
+              "isArray": false,
+              "type": "Boolean",
+              "isRequired": false,
+              "attributes": []
+            },
+            "createdAt": {
+              "name": "createdAt",
+              "isArray": false,
+              "type": "AWSDateTime",
+              "isRequired": false,
+              "attributes": []
+            },
+            "InscripcionesCurso": {
+              "name": "InscripcionesCurso",
+              "isArray": true,
+              "type": {
+                "model": "InscripcionCurso"
+              },
+              "isRequired": false,
+              "attributes": [],
+              "isArrayNullable": true,
+              "association": {
+                "connectionType": "HAS_MANY",
+                "associatedWith": [
+                  "usuarioId"
+                ]
+              }
+            },
+            "SesionesDeEstudio": {
+              "name": "SesionesDeEstudio",
+              "isArray": true,
+              "type": {
+                "model": "SesionEstudio"
+              },
+              "isRequired": false,
+              "attributes": [],
+              "isArrayNullable": true,
+              "association": {
+                "connectionType": "HAS_MANY",
+                "associatedWith": [
+                  "usuarioId"
+                ]
+              }
+            },
+            "Respuestas": {
+              "name": "Respuestas",
+              "isArray": true,
+              "type": {
+                "model": "Respuesta"
+              },
+              "isRequired": false,
+              "attributes": [],
+              "isArrayNullable": true,
+              "association": {
+                "connectionType": "HAS_MANY",
+                "associatedWith": [
+                  "usuarioId"
+                ]
+              }
+            },
+            "ProgresoMateriales": {
+              "name": "ProgresoMateriales",
+              "isArray": true,
+              "type": {
+                "model": "ProgresoMaterial"
+              },
+              "isRequired": false,
+              "attributes": [],
+              "isArrayNullable": true,
+              "association": {
+                "connectionType": "HAS_MANY",
+                "associatedWith": [
+                  "usuarioId"
+                ]
+              }
+            },
+            "ProgresoCuestionarios": {
+              "name": "ProgresoCuestionarios",
+              "isArray": true,
+              "type": {
+                "model": "ProgresoCuestionario"
+              },
+              "isRequired": false,
+              "attributes": [],
+              "isArrayNullable": true,
+              "association": {
+                "connectionType": "HAS_MANY",
+                "associatedWith": [
+                  "usuarioId"
+                ]
+              }
+            },
+            "Evaluaciones": {
+              "name": "Evaluaciones",
+              "isArray": true,
+              "type": {
+                "model": "EvaluacionCurso"
+              },
+              "isRequired": false,
+              "attributes": [],
+              "isArrayNullable": true,
+              "association": {
+                "connectionType": "HAS_MANY",
+                "associatedWith": [
+                  "usuarioId"
+                ]
+              }
+            },
+            "updatedAt": {
+              "name": "updatedAt",
+              "isArray": false,
+              "type": "AWSDateTime",
+              "isRequired": false,
+              "attributes": [],
+              "isReadOnly": true
+            }
+          },
+          "syncable": true,
+          "pluralName": "Usuarios",
+          "attributes": [
+            {
+              "type": "model",
+              "properties": {}
+            },
+            {
+              "type": "key",
+              "properties": {
+                "fields": [
+                  "usuarioId"
+                ]
+              }
+            },
+            {
+              "type": "key",
+              "properties": {
+                "name": "usuariosByEmailAndCreatedAt",
+                "queryField": "UsersByEmail",
+                "fields": [
+                  "email",
+                  "createdAt"
+                ]
+              }
+            },
+            {
+              "type": "auth",
+              "properties": {
+                "rules": [
+                  {
+                    "allow": "public",
+                    "provider": "apiKey",
+                    "operations": [
+                      "create",
+                      "update",
+                      "delete",
+                      "read"
+                    ]
+                  },
+                  {
+                    "allow": "private",
+                    "operations": [
+                      "create",
+                      "update",
+                      "delete",
+                      "read"
+                    ]
+                  },
+                  {
+                    "allow": "public",
+                    "provider": "iam",
+                    "operations": [
+                      "create",
+                      "update",
+                      "delete",
+                      "read"
+                    ]
+                  }
+                ]
+              }
+            }
+          ],
+          "primaryKeyInfo": {
+            "isCustomPrimaryKey": true,
+            "primaryKeyFieldName": "usuarioId",
+            "sortKeyFieldNames": []
+          }
+        },
+        "Curso": {
+          "name": "Curso",
+          "fields": {
+            "cursoId": {
+              "name": "cursoId",
+              "isArray": false,
+              "type": "ID",
+              "isRequired": true,
+              "attributes": []
+            },
+            "titulo": {
+              "name": "titulo",
+              "isArray": false,
+              "type": "String",
+              "isRequired": true,
+              "attributes": []
+            },
+            "descripcion": {
+              "name": "descripcion",
+              "isArray": false,
+              "type": "String",
+              "isRequired": false,
+              "attributes": []
+            },
+            "imagen_portada": {
+              "name": "imagen_portada",
+              "isArray": false,
+              "type": "AWSURL",
+              "isRequired": false,
+              "attributes": []
+            },
+            "duracion_estimada": {
+              "name": "duracion_estimada",
+              "isArray": false,
+              "type": "Int",
+              "isRequired": false,
+              "attributes": []
+            },
+            "nivel_dificultad": {
+              "name": "nivel_dificultad",
+              "isArray": false,
+              "type": {
+                "enum": "CursoNivel_dificultad"
+              },
+              "isRequired": false,
+              "attributes": []
+            },
+            "estado": {
+              "name": "estado",
+              "isArray": false,
+              "type": {
+                "enum": "CursoEstado"
+              },
+              "isRequired": false,
+              "attributes": []
+            },
+            "InscripcionesCurso": {
+              "name": "InscripcionesCurso",
+              "isArray": true,
+              "type": {
+                "model": "InscripcionCurso"
+              },
+              "isRequired": false,
+              "attributes": [],
+              "isArrayNullable": true,
+              "association": {
+                "connectionType": "HAS_MANY",
+                "associatedWith": [
+                  "cursoId"
+                ]
+              }
+            },
+            "SesionEstudio": {
+              "name": "SesionEstudio",
+              "isArray": true,
+              "type": {
+                "model": "SesionEstudio"
+              },
+              "isRequired": false,
+              "attributes": [],
+              "isArrayNullable": true,
+              "association": {
+                "connectionType": "HAS_MANY",
+                "associatedWith": [
+                  "cursoId"
+                ]
+              }
+            },
+            "MaterialEstudio": {
+              "name": "MaterialEstudio",
+              "isArray": true,
+              "type": {
+                "model": "MaterialEstudio"
+              },
+              "isRequired": false,
+              "attributes": [],
+              "isArrayNullable": true,
+              "association": {
+                "connectionType": "HAS_MANY",
+                "associatedWith": [
+                  "cursoId"
+                ]
+              }
+            },
+            "Cuestionarios": {
+              "name": "Cuestionarios",
+              "isArray": true,
+              "type": {
+                "model": "Cuestionario"
+              },
+              "isRequired": false,
+              "attributes": [],
+              "isArrayNullable": true,
+              "association": {
+                "connectionType": "HAS_MANY",
+                "associatedWith": [
+                  "cursoId"
+                ]
+              }
+            },
+            "EvaluacionesCurso": {
+              "name": "EvaluacionesCurso",
+              "isArray": true,
+              "type": {
+                "model": "EvaluacionCurso"
+              },
+              "isRequired": false,
+              "attributes": [],
+              "isArrayNullable": true,
+              "association": {
+                "connectionType": "HAS_MANY",
+                "associatedWith": [
+                  "cursoId"
+                ]
+              }
+            },
+            "createdAt": {
+              "name": "createdAt",
+              "isArray": false,
+              "type": "AWSDateTime",
+              "isRequired": false,
+              "attributes": [],
+              "isReadOnly": true
+            },
+            "updatedAt": {
+              "name": "updatedAt",
+              "isArray": false,
+              "type": "AWSDateTime",
+              "isRequired": false,
+              "attributes": [],
+              "isReadOnly": true
+            }
+          },
+          "syncable": true,
+          "pluralName": "Cursos",
+          "attributes": [
+            {
+              "type": "model",
+              "properties": {}
+            },
+            {
+              "type": "key",
+              "properties": {
+                "fields": [
+                  "cursoId"
+                ]
+              }
+            },
+            {
+              "type": "auth",
+              "properties": {
+                "rules": [
+                  {
+                    "allow": "public",
+                    "provider": "apiKey",
+                    "operations": [
+                      "create",
+                      "update",
+                      "delete",
+                      "read"
+                    ]
+                  },
+                  {
+                    "allow": "private",
+                    "operations": [
+                      "create",
+                      "update",
+                      "delete",
+                      "read"
+                    ]
+                  },
+                  {
+                    "allow": "public",
+                    "provider": "iam",
+                    "operations": [
+                      "create",
+                      "update",
+                      "delete",
+                      "read"
+                    ]
+                  }
+                ]
+              }
+            }
+          ],
+          "primaryKeyInfo": {
+            "isCustomPrimaryKey": true,
+            "primaryKeyFieldName": "cursoId",
+            "sortKeyFieldNames": []
+          }
+        },
+        "InscripcionCurso": {
+          "name": "InscripcionCurso",
+          "fields": {
+            "fecha_inscripcion": {
+              "name": "fecha_inscripcion",
+              "isArray": false,
+              "type": "AWSDateTime",
+              "isRequired": false,
+              "attributes": []
+            },
+            "estado": {
+              "name": "estado",
+              "isArray": false,
+              "type": {
+                "enum": "InscripcionCursoEstado"
+              },
+              "isRequired": false,
+              "attributes": []
+            },
+            "usuarioId": {
+              "name": "usuarioId",
+              "isArray": false,
+              "type": "ID",
+              "isRequired": true,
+              "attributes": []
+            },
+            "Usuario": {
+              "name": "Usuario",
+              "isArray": false,
+              "type": {
+                "model": "Usuario"
+              },
+              "isRequired": false,
+              "attributes": [],
+              "association": {
+                "connectionType": "BELONGS_TO",
+                "targetNames": [
+                  "usuarioId"
+                ]
+              }
+            },
+            "cursoId": {
+              "name": "cursoId",
+              "isArray": false,
+              "type": "ID",
+              "isRequired": true,
+              "attributes": []
+            },
+            "Curso": {
+              "name": "Curso",
+              "isArray": false,
+              "type": {
+                "model": "Curso"
+              },
+              "isRequired": false,
+              "attributes": [],
+              "association": {
+                "connectionType": "BELONGS_TO",
+                "targetNames": [
+                  "cursoId"
+                ]
+              }
+            },
+            "createdAt": {
+              "name": "createdAt",
+              "isArray": false,
+              "type": "AWSDateTime",
+              "isRequired": false,
+              "attributes": [],
+              "isReadOnly": true
+            },
+            "updatedAt": {
+              "name": "updatedAt",
+              "isArray": false,
+              "type": "AWSDateTime",
+              "isRequired": false,
+              "attributes": [],
+              "isReadOnly": true
+            }
+          },
+          "syncable": true,
+          "pluralName": "InscripcionCursos",
+          "attributes": [
+            {
+              "type": "model",
+              "properties": {}
+            },
+            {
+              "type": "key",
+              "properties": {
+                "fields": [
+                  "usuarioId",
+                  "cursoId"
+                ]
+              }
+            },
+            {
+              "type": "auth",
+              "properties": {
+                "rules": [
+                  {
+                    "allow": "public",
+                    "provider": "apiKey",
+                    "operations": [
+                      "create",
+                      "update",
+                      "delete",
+                      "read"
+                    ]
+                  },
+                  {
+                    "allow": "private",
+                    "operations": [
+                      "create",
+                      "update",
+                      "delete",
+                      "read"
+                    ]
+                  },
+                  {
+                    "allow": "public",
+                    "provider": "iam",
+                    "operations": [
+                      "create",
+                      "update",
+                      "delete",
+                      "read"
+                    ]
+                  }
+                ]
+              }
+            }
+          ],
+          "primaryKeyInfo": {
+            "isCustomPrimaryKey": true,
+            "primaryKeyFieldName": "usuarioId",
+            "sortKeyFieldNames": [
+              "cursoId"
+            ]
+          }
+        },
+        "SesionEstudio": {
+          "name": "SesionEstudio",
+          "fields": {
+            "sesionEstudioId": {
+              "name": "sesionEstudioId",
+              "isArray": false,
+              "type": "ID",
+              "isRequired": true,
+              "attributes": []
+            },
+            "fecha": {
+              "name": "fecha",
+              "isArray": false,
+              "type": "AWSDate",
+              "isRequired": true,
+              "attributes": []
+            },
+            "hora_inicio": {
+              "name": "hora_inicio",
+              "isArray": false,
+              "type": "AWSTime",
+              "isRequired": true,
+              "attributes": []
+            },
+            "hora_fin": {
+              "name": "hora_fin",
+              "isArray": false,
+              "type": "AWSTime",
+              "isRequired": true,
+              "attributes": []
+            },
+            "duracion_minutos": {
+              "name": "duracion_minutos",
+              "isArray": false,
+              "type": "Int",
+              "isRequired": false,
+              "attributes": []
+            },
+            "tipo": {
+              "name": "tipo",
+              "isArray": false,
+              "type": {
+                "enum": "SesionEstudioTipo"
+              },
+              "isRequired": false,
+              "attributes": []
+            },
+            "estado": {
+              "name": "estado",
+              "isArray": false,
+              "type": {
+                "enum": "SesionEstudioEstado"
+              },
+              "isRequired": false,
+              "attributes": []
+            },
+            "google_event_id": {
+              "name": "google_event_id",
+              "isArray": false,
+              "type": "String",
+              "isRequired": false,
+              "attributes": []
+            },
+            "recordatorios": {
+              "name": "recordatorios",
+              "isArray": false,
+              "type": "String",
+              "isRequired": false,
+              "attributes": []
+            },
+            "usuarioId": {
+              "name": "usuarioId",
+              "isArray": false,
+              "type": "ID",
+              "isRequired": true,
+              "attributes": []
+            },
+            "Usuario": {
+              "name": "Usuario",
+              "isArray": false,
+              "type": {
+                "model": "Usuario"
+              },
+              "isRequired": false,
+              "attributes": [],
+              "association": {
+                "connectionType": "BELONGS_TO",
+                "targetNames": [
+                  "usuarioId"
+                ]
+              }
+            },
+            "cursoId": {
+              "name": "cursoId",
+              "isArray": false,
+              "type": "ID",
+              "isRequired": false,
+              "attributes": []
+            },
+            "Curso": {
+              "name": "Curso",
+              "isArray": false,
+              "type": {
+                "model": "Curso"
+              },
+              "isRequired": false,
+              "attributes": [],
+              "association": {
+                "connectionType": "BELONGS_TO",
+                "targetNames": [
+                  "cursoId"
+                ]
+              }
+            },
+            "createdAt": {
+              "name": "createdAt",
+              "isArray": false,
+              "type": "AWSDateTime",
+              "isRequired": false,
+              "attributes": [],
+              "isReadOnly": true
+            },
+            "updatedAt": {
+              "name": "updatedAt",
+              "isArray": false,
+              "type": "AWSDateTime",
+              "isRequired": false,
+              "attributes": [],
+              "isReadOnly": true
+            }
+          },
+          "syncable": true,
+          "pluralName": "SesionEstudios",
+          "attributes": [
+            {
+              "type": "model",
+              "properties": {}
+            },
+            {
+              "type": "key",
+              "properties": {
+                "fields": [
+                  "sesionEstudioId"
+                ]
+              }
+            },
+            {
+              "type": "auth",
+              "properties": {
+                "rules": [
+                  {
+                    "allow": "public",
+                    "provider": "apiKey",
+                    "operations": [
+                      "create",
+                      "update",
+                      "delete",
+                      "read"
+                    ]
+                  },
+                  {
+                    "allow": "private",
+                    "operations": [
+                      "create",
+                      "update",
+                      "delete",
+                      "read"
+                    ]
+                  },
+                  {
+                    "allow": "public",
+                    "provider": "iam",
+                    "operations": [
+                      "create",
+                      "update",
+                      "delete",
+                      "read"
+                    ]
+                  }
+                ]
+              }
+            }
+          ],
+          "primaryKeyInfo": {
+            "isCustomPrimaryKey": true,
+            "primaryKeyFieldName": "sesionEstudioId",
+            "sortKeyFieldNames": []
+          }
+        },
+        "MaterialEstudio": {
+          "name": "MaterialEstudio",
+          "fields": {
+            "materialEstudioId": {
+              "name": "materialEstudioId",
+              "isArray": false,
+              "type": "ID",
+              "isRequired": true,
+              "attributes": []
+            },
+            "titulo": {
+              "name": "titulo",
+              "isArray": false,
+              "type": "String",
+              "isRequired": true,
+              "attributes": []
+            },
+            "tipo": {
+              "name": "tipo",
+              "isArray": false,
+              "type": {
+                "enum": "MaterialEstudioTipo"
+              },
+              "isRequired": false,
+              "attributes": []
+            },
+            "url_contenido": {
+              "name": "url_contenido",
+              "isArray": false,
+              "type": "AWSURL",
+              "isRequired": true,
+              "attributes": []
+            },
+            "orden": {
+              "name": "orden",
+              "isArray": false,
+              "type": "Int",
+              "isRequired": false,
+              "attributes": []
+            },
+            "descripcion": {
+              "name": "descripcion",
+              "isArray": false,
+              "type": "String",
+              "isRequired": false,
+              "attributes": []
+            },
+            "cuestionarioId": {
+              "name": "cuestionarioId",
+              "isArray": false,
+              "type": "ID",
+              "isRequired": false,
+              "attributes": []
+            },
+            "Cuestionario": {
+              "name": "Cuestionario",
+              "isArray": false,
+              "type": {
+                "model": "Cuestionario"
+              },
+              "isRequired": false,
+              "attributes": [],
+              "association": {
+                "connectionType": "HAS_ONE",
+                "associatedWith": [
+                  "cuestionarioId"
+                ],
+                "targetNames": []
+              }
+            },
+            "cursoId": {
+              "name": "cursoId",
+              "isArray": false,
+              "type": "ID",
+              "isRequired": true,
+              "attributes": []
+            },
+            "Curso": {
+              "name": "Curso",
+              "isArray": false,
+              "type": {
+                "model": "Curso"
+              },
+              "isRequired": false,
+              "attributes": [],
+              "association": {
+                "connectionType": "BELONGS_TO",
+                "targetNames": [
+                  "cursoId"
+                ]
+              }
+            },
+            "ProgresoMateriales": {
+              "name": "ProgresoMateriales",
+              "isArray": true,
+              "type": {
+                "model": "ProgresoMaterial"
+              },
+              "isRequired": false,
+              "attributes": [],
+              "isArrayNullable": true,
+              "association": {
+                "connectionType": "HAS_MANY",
+                "associatedWith": [
+                  "materialEstudioId"
+                ]
+              }
+            },
+            "createdAt": {
+              "name": "createdAt",
+              "isArray": false,
+              "type": "AWSDateTime",
+              "isRequired": false,
+              "attributes": [],
+              "isReadOnly": true
+            },
+            "updatedAt": {
+              "name": "updatedAt",
+              "isArray": false,
+              "type": "AWSDateTime",
+              "isRequired": false,
+              "attributes": [],
+              "isReadOnly": true
+            }
+          },
+          "syncable": true,
+          "pluralName": "MaterialEstudios",
+          "attributes": [
+            {
+              "type": "model",
+              "properties": {}
+            },
+            {
+              "type": "key",
+              "properties": {
+                "fields": [
+                  "materialEstudioId"
+                ]
+              }
+            },
+            {
+              "type": "auth",
+              "properties": {
+                "rules": [
+                  {
+                    "allow": "public",
+                    "provider": "apiKey",
+                    "operations": [
+                      "create",
+                      "update",
+                      "delete",
+                      "read"
+                    ]
+                  },
+                  {
+                    "allow": "private",
+                    "operations": [
+                      "create",
+                      "update",
+                      "delete",
+                      "read"
+                    ]
+                  },
+                  {
+                    "allow": "public",
+                    "provider": "iam",
+                    "operations": [
+                      "create",
+                      "update",
+                      "delete",
+                      "read"
+                    ]
+                  }
+                ]
+              }
+            }
+          ],
+          "primaryKeyInfo": {
+            "isCustomPrimaryKey": true,
+            "primaryKeyFieldName": "materialEstudioId",
+            "sortKeyFieldNames": []
+          }
+        },
+        "Cuestionario": {
+          "name": "Cuestionario",
+          "fields": {
+            "cuestionarioId": {
+              "name": "cuestionarioId",
+              "isArray": false,
+              "type": "ID",
+              "isRequired": true,
+              "attributes": []
+            },
+            "titulo": {
+              "name": "titulo",
+              "isArray": false,
+              "type": "String",
+              "isRequired": true,
+              "attributes": []
+            },
+            "descripcion": {
+              "name": "descripcion",
+              "isArray": false,
+              "type": "String",
+              "isRequired": false,
+              "attributes": []
+            },
+            "tipo": {
+              "name": "tipo",
+              "isArray": false,
+              "type": {
+                "enum": "CuestionarioTipo"
+              },
+              "isRequired": false,
+              "attributes": []
+            },
+            "puntos_maximos": {
+              "name": "puntos_maximos",
+              "isArray": false,
+              "type": "Int",
+              "isRequired": false,
+              "attributes": []
+            },
+            "preguntas": {
+              "name": "preguntas",
+              "isArray": true,
+              "type": {
+                "model": "Pregunta"
+              },
+              "isRequired": false,
+              "attributes": [],
+              "isArrayNullable": true,
+              "association": {
+                "connectionType": "HAS_MANY",
+                "associatedWith": [
+                  "cuestionarioId"
+                ]
+              }
+            },
+            "cursoId": {
+              "name": "cursoId",
+              "isArray": false,
+              "type": "ID",
+              "isRequired": true,
+              "attributes": []
+            },
+            "Curso": {
+              "name": "Curso",
+              "isArray": false,
+              "type": {
+                "model": "Curso"
+              },
+              "isRequired": false,
+              "attributes": [],
+              "association": {
+                "connectionType": "BELONGS_TO",
+                "targetNames": [
+                  "cursoId"
+                ]
+              }
+            },
+            "materialEstudioId": {
+              "name": "materialEstudioId",
+              "isArray": false,
+              "type": "ID",
+              "isRequired": false,
+              "attributes": []
+            },
+            "MaterialesEstudio": {
+              "name": "MaterialesEstudio",
+              "isArray": false,
+              "type": {
+                "model": "MaterialEstudio"
+              },
+              "isRequired": false,
+              "attributes": [],
+              "association": {
+                "connectionType": "BELONGS_TO",
+                "targetNames": [
+                  "cuestionarioId"
+                ]
+              }
+            },
+            "Respuestas": {
+              "name": "Respuestas",
+              "isArray": true,
+              "type": {
+                "model": "Respuesta"
+              },
+              "isRequired": false,
+              "attributes": [],
+              "isArrayNullable": true,
+              "association": {
+                "connectionType": "HAS_MANY",
+                "associatedWith": [
+                  "cuestionarioId"
+                ]
+              }
+            },
+            "ProgresoCuestionario": {
+              "name": "ProgresoCuestionario",
+              "isArray": true,
+              "type": {
+                "model": "ProgresoCuestionario"
+              },
+              "isRequired": false,
+              "attributes": [],
+              "isArrayNullable": true,
+              "association": {
+                "connectionType": "HAS_MANY",
+                "associatedWith": [
+                  "cuestionarioId"
+                ]
+              }
+            },
+            "createdAt": {
+              "name": "createdAt",
+              "isArray": false,
+              "type": "AWSDateTime",
+              "isRequired": false,
+              "attributes": [],
+              "isReadOnly": true
+            },
+            "updatedAt": {
+              "name": "updatedAt",
+              "isArray": false,
+              "type": "AWSDateTime",
+              "isRequired": false,
+              "attributes": [],
+              "isReadOnly": true
+            }
+          },
+          "syncable": true,
+          "pluralName": "Cuestionarios",
+          "attributes": [
+            {
+              "type": "model",
+              "properties": {}
+            },
+            {
+              "type": "key",
+              "properties": {
+                "fields": [
+                  "cuestionarioId"
+                ]
+              }
+            },
+            {
+              "type": "auth",
+              "properties": {
+                "rules": [
+                  {
+                    "allow": "public",
+                    "provider": "apiKey",
+                    "operations": [
+                      "create",
+                      "update",
+                      "delete",
+                      "read"
+                    ]
+                  },
+                  {
+                    "allow": "private",
+                    "operations": [
+                      "create",
+                      "update",
+                      "delete",
+                      "read"
+                    ]
+                  },
+                  {
+                    "allow": "public",
+                    "provider": "iam",
+                    "operations": [
+                      "create",
+                      "update",
+                      "delete",
+                      "read"
+                    ]
+                  }
+                ]
+              }
+            }
+          ],
+          "primaryKeyInfo": {
+            "isCustomPrimaryKey": true,
+            "primaryKeyFieldName": "cuestionarioId",
+            "sortKeyFieldNames": []
+          }
+        },
+        "Pregunta": {
+          "name": "Pregunta",
+          "fields": {
+            "preguntaId": {
+              "name": "preguntaId",
+              "isArray": false,
+              "type": "ID",
+              "isRequired": true,
+              "attributes": []
+            },
+            "texto_pregunta": {
+              "name": "texto_pregunta",
+              "isArray": false,
+              "type": "String",
+              "isRequired": true,
+              "attributes": []
+            },
+            "tipo": {
+              "name": "tipo",
+              "isArray": false,
+              "type": {
+                "enum": "PreguntaTipo"
+              },
+              "isRequired": false,
+              "attributes": []
+            },
+            "peso_puntos": {
+              "name": "peso_puntos",
+              "isArray": false,
+              "type": "Int",
+              "isRequired": false,
+              "attributes": []
+            },
+            "texto_opcion": {
+              "name": "texto_opcion",
+              "isArray": false,
+              "type": "String",
+              "isRequired": true,
+              "attributes": []
+            },
+            "es_correcta": {
+              "name": "es_correcta",
+              "isArray": false,
+              "type": "Boolean",
+              "isRequired": false,
+              "attributes": []
+            },
+            "cuestionarioId": {
+              "name": "cuestionarioId",
+              "isArray": false,
+              "type": "ID",
+              "isRequired": true,
+              "attributes": []
+            },
+            "Cuestionario": {
+              "name": "Cuestionario",
+              "isArray": false,
+              "type": {
+                "model": "Cuestionario"
+              },
+              "isRequired": false,
+              "attributes": [],
+              "association": {
+                "connectionType": "BELONGS_TO",
+                "targetNames": [
+                  "cuestionarioId"
+                ]
+              }
+            },
+            "Respuestas": {
+              "name": "Respuestas",
+              "isArray": true,
+              "type": {
+                "model": "Respuesta"
+              },
+              "isRequired": false,
+              "attributes": [],
+              "isArrayNullable": true,
+              "association": {
+                "connectionType": "HAS_MANY",
+                "associatedWith": [
+                  "preguntaId"
+                ]
+              }
+            },
+            "createdAt": {
+              "name": "createdAt",
+              "isArray": false,
+              "type": "AWSDateTime",
+              "isRequired": false,
+              "attributes": [],
+              "isReadOnly": true
+            },
+            "updatedAt": {
+              "name": "updatedAt",
+              "isArray": false,
+              "type": "AWSDateTime",
+              "isRequired": false,
+              "attributes": [],
+              "isReadOnly": true
+            }
+          },
+          "syncable": true,
+          "pluralName": "Preguntas",
+          "attributes": [
+            {
+              "type": "model",
+              "properties": {}
+            },
+            {
+              "type": "key",
+              "properties": {
+                "fields": [
+                  "preguntaId"
+                ]
+              }
+            },
+            {
+              "type": "auth",
+              "properties": {
+                "rules": [
+                  {
+                    "allow": "public",
+                    "provider": "apiKey",
+                    "operations": [
+                      "create",
+                      "update",
+                      "delete",
+                      "read"
+                    ]
+                  },
+                  {
+                    "allow": "private",
+                    "operations": [
+                      "create",
+                      "update",
+                      "delete",
+                      "read"
+                    ]
+                  },
+                  {
+                    "allow": "public",
+                    "provider": "iam",
+                    "operations": [
+                      "create",
+                      "update",
+                      "delete",
+                      "read"
+                    ]
+                  }
+                ]
+              }
+            }
+          ],
+          "primaryKeyInfo": {
+            "isCustomPrimaryKey": true,
+            "primaryKeyFieldName": "preguntaId",
+            "sortKeyFieldNames": []
+          }
+        },
+        "Respuesta": {
+          "name": "Respuesta",
+          "fields": {
+            "respuestaId": {
+              "name": "respuestaId",
+              "isArray": false,
+              "type": "ID",
+              "isRequired": true,
+              "attributes": []
+            },
+            "respuesta_texto": {
+              "name": "respuesta_texto",
+              "isArray": false,
+              "type": "String",
+              "isRequired": false,
+              "attributes": []
+            },
+            "fecha_respuesta": {
+              "name": "fecha_respuesta",
+              "isArray": false,
+              "type": "AWSDateTime",
+              "isRequired": false,
+              "attributes": []
+            },
+            "usuarioId": {
+              "name": "usuarioId",
+              "isArray": false,
+              "type": "ID",
+              "isRequired": true,
+              "attributes": []
+            },
+            "Usuario": {
+              "name": "Usuario",
+              "isArray": false,
+              "type": {
+                "model": "Usuario"
+              },
+              "isRequired": false,
+              "attributes": [],
+              "association": {
+                "connectionType": "BELONGS_TO",
+                "targetNames": [
+                  "usuarioId"
+                ]
+              }
+            },
+            "cuestionarioId": {
+              "name": "cuestionarioId",
+              "isArray": false,
+              "type": "ID",
+              "isRequired": true,
+              "attributes": []
+            },
+            "Cuestionario": {
+              "name": "Cuestionario",
+              "isArray": false,
+              "type": {
+                "model": "Cuestionario"
+              },
+              "isRequired": false,
+              "attributes": [],
+              "association": {
+                "connectionType": "BELONGS_TO",
+                "targetNames": [
+                  "cuestionarioId"
+                ]
+              }
+            },
+            "preguntaId": {
+              "name": "preguntaId",
+              "isArray": false,
+              "type": "ID",
+              "isRequired": true,
+              "attributes": []
+            },
+            "Pregunta": {
+              "name": "Pregunta",
+              "isArray": false,
+              "type": {
+                "model": "Pregunta"
+              },
+              "isRequired": false,
+              "attributes": [],
+              "association": {
+                "connectionType": "BELONGS_TO",
+                "targetNames": [
+                  "preguntaId"
+                ]
+              }
+            },
+            "createdAt": {
+              "name": "createdAt",
+              "isArray": false,
+              "type": "AWSDateTime",
+              "isRequired": false,
+              "attributes": [],
+              "isReadOnly": true
+            },
+            "updatedAt": {
+              "name": "updatedAt",
+              "isArray": false,
+              "type": "AWSDateTime",
+              "isRequired": false,
+              "attributes": [],
+              "isReadOnly": true
+            }
+          },
+          "syncable": true,
+          "pluralName": "Respuestas",
+          "attributes": [
+            {
+              "type": "model",
+              "properties": {}
+            },
+            {
+              "type": "key",
+              "properties": {
+                "fields": [
+                  "respuestaId"
+                ]
+              }
+            },
+            {
+              "type": "auth",
+              "properties": {
+                "rules": [
+                  {
+                    "allow": "public",
+                    "provider": "apiKey",
+                    "operations": [
+                      "create",
+                      "update",
+                      "delete",
+                      "read"
+                    ]
+                  },
+                  {
+                    "allow": "private",
+                    "operations": [
+                      "create",
+                      "update",
+                      "delete",
+                      "read"
+                    ]
+                  },
+                  {
+                    "allow": "public",
+                    "provider": "iam",
+                    "operations": [
+                      "create",
+                      "update",
+                      "delete",
+                      "read"
+                    ]
+                  }
+                ]
+              }
+            }
+          ],
+          "primaryKeyInfo": {
+            "isCustomPrimaryKey": true,
+            "primaryKeyFieldName": "respuestaId",
+            "sortKeyFieldNames": []
+          }
+        },
+        "ProgresoMaterial": {
+          "name": "ProgresoMaterial",
+          "fields": {
+            "usuarioId": {
+              "name": "usuarioId",
+              "isArray": false,
+              "type": "ID",
+              "isRequired": true,
+              "attributes": []
+            },
+            "materialEstudioId": {
+              "name": "materialEstudioId",
+              "isArray": false,
+              "type": "ID",
+              "isRequired": true,
+              "attributes": []
+            },
+            "estado": {
+              "name": "estado",
+              "isArray": false,
+              "type": {
+                "enum": "ProgresoMaterialEstado"
+              },
+              "isRequired": false,
+              "attributes": []
+            },
+            "fecha_completado": {
+              "name": "fecha_completado",
+              "isArray": false,
+              "type": "AWSDateTime",
+              "isRequired": false,
+              "attributes": []
+            },
+            "Usuario": {
+              "name": "Usuario",
+              "isArray": false,
+              "type": {
+                "model": "Usuario"
+              },
+              "isRequired": false,
+              "attributes": [],
+              "association": {
+                "connectionType": "BELONGS_TO",
+                "targetNames": [
+                  "usuarioId"
+                ]
+              }
+            },
+            "Material": {
+              "name": "Material",
+              "isArray": false,
+              "type": {
+                "model": "MaterialEstudio"
+              },
+              "isRequired": false,
+              "attributes": [],
+              "association": {
+                "connectionType": "BELONGS_TO",
+                "targetNames": [
+                  "materialEstudioId"
+                ]
+              }
+            },
+            "createdAt": {
+              "name": "createdAt",
+              "isArray": false,
+              "type": "AWSDateTime",
+              "isRequired": false,
+              "attributes": [],
+              "isReadOnly": true
+            },
+            "updatedAt": {
+              "name": "updatedAt",
+              "isArray": false,
+              "type": "AWSDateTime",
+              "isRequired": false,
+              "attributes": [],
+              "isReadOnly": true
+            }
+          },
+          "syncable": true,
+          "pluralName": "ProgresoMaterials",
+          "attributes": [
+            {
+              "type": "model",
+              "properties": {}
+            },
+            {
+              "type": "key",
+              "properties": {
+                "fields": [
+                  "usuarioId",
+                  "materialEstudioId"
+                ]
+              }
+            },
+            {
+              "type": "auth",
+              "properties": {
+                "rules": [
+                  {
+                    "allow": "public",
+                    "provider": "apiKey",
+                    "operations": [
+                      "create",
+                      "update",
+                      "delete",
+                      "read"
+                    ]
+                  },
+                  {
+                    "allow": "private",
+                    "operations": [
+                      "create",
+                      "update",
+                      "delete",
+                      "read"
+                    ]
+                  },
+                  {
+                    "allow": "public",
+                    "provider": "iam",
+                    "operations": [
+                      "create",
+                      "update",
+                      "delete",
+                      "read"
+                    ]
+                  }
+                ]
+              }
+            }
+          ],
+          "primaryKeyInfo": {
+            "isCustomPrimaryKey": true,
+            "primaryKeyFieldName": "usuarioId",
+            "sortKeyFieldNames": [
+              "materialEstudioId"
+            ]
+          }
+        },
+        "ProgresoCuestionario": {
+          "name": "ProgresoCuestionario",
+          "fields": {
+            "estado": {
+              "name": "estado",
+              "isArray": false,
+              "type": {
+                "enum": "ProgresoCuestionarioEstado"
+              },
+              "isRequired": false,
+              "attributes": []
+            },
+            "puntaje_obtenido": {
+              "name": "puntaje_obtenido",
+              "isArray": false,
+              "type": "Int",
+              "isRequired": false,
+              "attributes": []
+            },
+            "fecha_completado": {
+              "name": "fecha_completado",
+              "isArray": false,
+              "type": "AWSDateTime",
+              "isRequired": false,
+              "attributes": []
+            },
+            "usuarioId": {
+              "name": "usuarioId",
+              "isArray": false,
+              "type": "ID",
+              "isRequired": true,
+              "attributes": []
+            },
+            "Usuario": {
+              "name": "Usuario",
+              "isArray": false,
+              "type": {
+                "model": "Usuario"
+              },
+              "isRequired": false,
+              "attributes": [],
+              "association": {
+                "connectionType": "BELONGS_TO",
+                "targetNames": [
+                  "usuarioId"
+                ]
+              }
+            },
+            "cuestionarioId": {
+              "name": "cuestionarioId",
+              "isArray": false,
+              "type": "ID",
+              "isRequired": true,
+              "attributes": []
+            },
+            "Cuestionario": {
+              "name": "Cuestionario",
+              "isArray": false,
+              "type": {
+                "model": "Cuestionario"
+              },
+              "isRequired": false,
+              "attributes": [],
+              "association": {
+                "connectionType": "BELONGS_TO",
+                "targetNames": [
+                  "cuestionarioId"
+                ]
+              }
+            },
+            "createdAt": {
+              "name": "createdAt",
+              "isArray": false,
+              "type": "AWSDateTime",
+              "isRequired": false,
+              "attributes": [],
+              "isReadOnly": true
+            },
+            "updatedAt": {
+              "name": "updatedAt",
+              "isArray": false,
+              "type": "AWSDateTime",
+              "isRequired": false,
+              "attributes": [],
+              "isReadOnly": true
+            }
+          },
+          "syncable": true,
+          "pluralName": "ProgresoCuestionarios",
+          "attributes": [
+            {
+              "type": "model",
+              "properties": {}
+            },
+            {
+              "type": "key",
+              "properties": {
+                "fields": [
+                  "usuarioId",
+                  "cuestionarioId"
+                ]
+              }
+            },
+            {
+              "type": "auth",
+              "properties": {
+                "rules": [
+                  {
+                    "allow": "public",
+                    "provider": "apiKey",
+                    "operations": [
+                      "create",
+                      "update",
+                      "delete",
+                      "read"
+                    ]
+                  },
+                  {
+                    "allow": "private",
+                    "operations": [
+                      "create",
+                      "update",
+                      "delete",
+                      "read"
+                    ]
+                  },
+                  {
+                    "allow": "public",
+                    "provider": "iam",
+                    "operations": [
+                      "create",
+                      "update",
+                      "delete",
+                      "read"
+                    ]
+                  }
+                ]
+              }
+            }
+          ],
+          "primaryKeyInfo": {
+            "isCustomPrimaryKey": true,
+            "primaryKeyFieldName": "usuarioId",
+            "sortKeyFieldNames": [
+              "cuestionarioId"
+            ]
+          }
+        },
+        "EvaluacionCurso": {
+          "name": "EvaluacionCurso",
+          "fields": {
+            "calificacion": {
+              "name": "calificacion",
+              "isArray": false,
+              "type": "Int",
+              "isRequired": false,
+              "attributes": []
+            },
+            "comentario": {
+              "name": "comentario",
+              "isArray": false,
+              "type": "String",
+              "isRequired": false,
+              "attributes": []
+            },
+            "fecha_evaluacion": {
+              "name": "fecha_evaluacion",
+              "isArray": false,
+              "type": "AWSDateTime",
+              "isRequired": false,
+              "attributes": []
+            },
+            "cursoId": {
+              "name": "cursoId",
+              "isArray": false,
+              "type": "ID",
+              "isRequired": true,
+              "attributes": []
+            },
+            "Curso": {
+              "name": "Curso",
+              "isArray": false,
+              "type": {
+                "model": "Curso"
+              },
+              "isRequired": false,
+              "attributes": [],
+              "association": {
+                "connectionType": "BELONGS_TO",
+                "targetNames": [
+                  "cursoId"
+                ]
+              }
+            },
+            "usuarioId": {
+              "name": "usuarioId",
+              "isArray": false,
+              "type": "ID",
+              "isRequired": true,
+              "attributes": []
+            },
+            "Usuario": {
+              "name": "Usuario",
+              "isArray": false,
+              "type": {
+                "model": "Usuario"
+              },
+              "isRequired": false,
+              "attributes": [],
+              "association": {
+                "connectionType": "BELONGS_TO",
+                "targetNames": [
+                  "usuarioId"
+                ]
+              }
+            },
+            "createdAt": {
+              "name": "createdAt",
+              "isArray": false,
+              "type": "AWSDateTime",
+              "isRequired": false,
+              "attributes": [],
+              "isReadOnly": true
+            },
+            "updatedAt": {
+              "name": "updatedAt",
+              "isArray": false,
+              "type": "AWSDateTime",
+              "isRequired": false,
+              "attributes": [],
+              "isReadOnly": true
+            }
+          },
+          "syncable": true,
+          "pluralName": "EvaluacionCursos",
+          "attributes": [
+            {
+              "type": "model",
+              "properties": {}
+            },
+            {
+              "type": "key",
+              "properties": {
+                "fields": [
+                  "usuarioId",
+                  "cursoId"
+                ]
+              }
+            },
+            {
+              "type": "auth",
+              "properties": {
+                "rules": [
+                  {
+                    "allow": "public",
+                    "provider": "apiKey",
+                    "operations": [
+                      "create",
+                      "update",
+                      "delete",
+                      "read"
+                    ]
+                  },
+                  {
+                    "allow": "private",
+                    "operations": [
+                      "create",
+                      "update",
+                      "delete",
+                      "read"
+                    ]
+                  },
+                  {
+                    "allow": "public",
+                    "provider": "iam",
+                    "operations": [
+                      "create",
+                      "update",
+                      "delete",
+                      "read"
+                    ]
+                  }
+                ]
+              }
+            }
+          ],
+          "primaryKeyInfo": {
+            "isCustomPrimaryKey": true,
+            "primaryKeyFieldName": "usuarioId",
+            "sortKeyFieldNames": [
+              "cursoId"
+            ]
+          }
+        },
+        "Metadata": {
+          "name": "Metadata",
+          "fields": {
+            "metadataId": {
+              "name": "metadataId",
+              "isArray": false,
+              "type": "ID",
+              "isRequired": true,
+              "attributes": []
+            },
+            "key": {
+              "name": "key",
+              "isArray": false,
+              "type": "String",
+              "isRequired": false,
+              "attributes": []
+            },
+            "value": {
+              "name": "value",
+              "isArray": false,
+              "type": "String",
+              "isRequired": false,
+              "attributes": []
+            },
+            "parameterId": {
+              "name": "parameterId",
+              "isArray": false,
+              "type": "String",
+              "isRequired": false,
+              "attributes": []
+            },
+            "Parameter": {
+              "name": "Parameter",
+              "isArray": false,
+              "type": {
+                "model": "Parameter"
+              },
+              "isRequired": false,
+              "attributes": [],
+              "association": {
+                "connectionType": "BELONGS_TO",
+                "targetNames": [
+                  "parameterId"
+                ]
+              }
+            },
+            "createdAt": {
+              "name": "createdAt",
+              "isArray": false,
+              "type": "AWSDateTime",
+              "isRequired": false,
+              "attributes": [],
+              "isReadOnly": true
+            },
+            "updatedAt": {
+              "name": "updatedAt",
+              "isArray": false,
+              "type": "AWSDateTime",
+              "isRequired": false,
+              "attributes": [],
+              "isReadOnly": true
+            }
+          },
+          "syncable": true,
+          "pluralName": "Metadata",
+          "attributes": [
+            {
+              "type": "model",
+              "properties": {}
+            },
+            {
+              "type": "key",
+              "properties": {
+                "fields": [
+                  "metadataId"
+                ]
+              }
+            },
+            {
+              "type": "auth",
+              "properties": {
+                "rules": [
+                  {
+                    "allow": "public",
+                    "provider": "iam",
+                    "operations": [
+                      "create",
+                      "update",
+                      "delete",
+                      "read"
+                    ]
+                  },
+                  {
+                    "allow": "private",
+                    "operations": [
+                      "create",
+                      "update",
+                      "delete",
+                      "read"
+                    ]
+                  },
+                  {
+                    "allow": "public",
+                    "provider": "apiKey",
+                    "operations": [
+                      "create",
+                      "update",
+                      "delete",
+                      "read"
+                    ]
+                  }
+                ]
+              }
+            }
+          ],
+          "primaryKeyInfo": {
+            "isCustomPrimaryKey": true,
+            "primaryKeyFieldName": "metadataId",
+            "sortKeyFieldNames": []
+          }
+        },
+        "Parameter": {
+          "name": "Parameter",
+          "fields": {
+            "parameterId": {
+              "name": "parameterId",
+              "isArray": false,
+              "type": "ID",
+              "isRequired": true,
+              "attributes": []
+            },
+            "label": {
+              "name": "label",
+              "isArray": false,
+              "type": "String",
+              "isRequired": true,
+              "attributes": []
+            },
+            "value": {
+              "name": "value",
+              "isArray": false,
+              "type": "String",
+              "isRequired": true,
+              "attributes": []
+            },
+            "Metadata": {
+              "name": "Metadata",
+              "isArray": true,
+              "type": {
+                "model": "Metadata"
+              },
+              "isRequired": false,
+              "attributes": [],
+              "isArrayNullable": true,
+              "association": {
+                "connectionType": "HAS_MANY",
+                "associatedWith": [
+                  "parameterId"
+                ]
+              }
+            },
+            "createdAt": {
+              "name": "createdAt",
+              "isArray": false,
+              "type": "AWSDateTime",
+              "isRequired": false,
+              "attributes": [],
+              "isReadOnly": true
+            },
+            "updatedAt": {
+              "name": "updatedAt",
+              "isArray": false,
+              "type": "AWSDateTime",
+              "isRequired": false,
+              "attributes": [],
+              "isReadOnly": true
+            }
+          },
+          "syncable": true,
+          "pluralName": "Parameters",
+          "attributes": [
+            {
+              "type": "model",
+              "properties": {}
+            },
+            {
+              "type": "key",
+              "properties": {
+                "fields": [
+                  "parameterId"
+                ]
+              }
+            },
+            {
+              "type": "auth",
+              "properties": {
+                "rules": [
+                  {
+                    "allow": "public",
+                    "provider": "iam",
+                    "operations": [
+                      "create",
+                      "update",
+                      "delete",
+                      "read"
+                    ]
+                  },
+                  {
+                    "allow": "private",
+                    "operations": [
+                      "create",
+                      "update",
+                      "delete",
+                      "read"
+                    ]
+                  },
+                  {
+                    "allow": "public",
+                    "provider": "apiKey",
+                    "operations": [
+                      "create",
+                      "update",
+                      "delete",
+                      "read"
+                    ]
+                  }
+                ]
+              }
+            }
+          ],
+          "primaryKeyInfo": {
+            "isCustomPrimaryKey": true,
+            "primaryKeyFieldName": "parameterId",
+            "sortKeyFieldNames": []
+          }
+        }
+      },
+      "enums": {
+        "CursoNivel_dificultad": {
+          "name": "CursoNivel_dificultad",
+          "values": [
+            "basico",
+            "intermedio",
+            "avanzado"
+          ]
+        },
+        "CursoEstado": {
+          "name": "CursoEstado",
+          "values": [
+            "activo",
+            "inactivo"
+          ]
+        },
+        "InscripcionCursoEstado": {
+          "name": "InscripcionCursoEstado",
+          "values": [
+            "en_progreso",
+            "completado",
+            "abandonado",
+            "inscrito"
+          ]
+        },
+        "SesionEstudioTipo": {
+          "name": "SesionEstudioTipo",
+          "values": [
+            "estudio",
+            "repaso",
+            "examen"
+          ]
+        },
+        "SesionEstudioEstado": {
+          "name": "SesionEstudioEstado",
+          "values": [
+            "programada",
+            "completada",
+            "cancelada"
+          ]
+        },
+        "MaterialEstudioTipo": {
+          "name": "MaterialEstudioTipo",
+          "values": [
+            "pdf",
+            "text"
+          ]
+        },
+        "CuestionarioTipo": {
+          "name": "CuestionarioTipo",
+          "values": [
+            "autoevaluacion",
+            "prueba_final"
+          ]
+        },
+        "PreguntaTipo": {
+          "name": "PreguntaTipo",
+          "values": [
+            "multiple",
+            "verdadero_falso",
+            "abierta"
+          ]
+        },
+        "ProgresoMaterialEstado": {
+          "name": "ProgresoMaterialEstado",
+          "values": [
+            "pendiente",
+            "en_proceso",
+            "completado"
+          ]
+        },
+        "ProgresoCuestionarioEstado": {
+          "name": "ProgresoCuestionarioEstado",
+          "values": [
+            "pendiente",
+            "en_proceso",
+            "completado"
+          ]
+        }
+      },
+      "nonModels": {
+        "ExampleReturnType": {
+          "name": "ExampleReturnType",
+          "fields": {
+            "message": {
+              "name": "message",
+              "isArray": false,
+              "type": "String",
+              "isRequired": true,
+              "attributes": []
+            }
+          }
+        }
+      },
+      "mutations": {
+        "Example": {
+          "name": "Example",
+          "isArray": false,
+          "type": {
+            "nonModel": "ExampleReturnType"
+          },
+          "isRequired": false,
+          "arguments": {
+            "formId": {
+              "name": "formId",
+              "isArray": false,
+              "type": "String",
+              "isRequired": true
+            }
+          }
+        }
+      }
+    }
+  },
+  "version": "1.4"
+}
