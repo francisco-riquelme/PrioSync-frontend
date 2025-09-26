@@ -228,11 +228,11 @@ export default function LessonDetail({ courseId, lessonId }: LessonDetailProps) 
         let foundModule: CourseModule | null = null;
         let lessonIndex = 0;
 
-        for (const module of course.modules) {
-          const lessonIndexInModule = module.lessons.findIndex((l: CourseLesson) => l.id === lessonId);
+        for (const courseModule of course.modules) {
+          const lessonIndexInModule = courseModule.lessons.findIndex((l: CourseLesson) => l.id === lessonId);
           if (lessonIndexInModule !== -1) {
-            foundLesson = module.lessons[lessonIndexInModule];
-            foundModule = module;
+            foundLesson = courseModule.lessons[lessonIndexInModule];
+            foundModule = courseModule;
             lessonIndex = lessonIndexInModule + 1; // +1 para mostrar "Lección 1", "Lección 2", etc.
             break;
           }
