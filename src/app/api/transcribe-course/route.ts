@@ -1,12 +1,11 @@
-import { NextRequest, NextResponse } from 'next/server';
+import { NextRequest, NextResponse } from "next/server";
 import {
   VideoMetadata,
   TranscriptionJobStatus,
   TranscriptionResponse,
-  VideoUploadFormData,
   ValidationResult,
   VIDEO_CONFIG,
-} from '@/types/transcription';
+} from "@/types/transcription";
 
 // Almacenamiento temporal en memoria para simulación
 // En producción esto sería DynamoDB o similar
@@ -20,7 +19,7 @@ function validateVideoFile(file: File): ValidationResult {
   if (!(VIDEO_CONFIG.ALLOWED_TYPES as readonly string[]).includes(file.type)) {
     return {
       isValid: false,
-      error: `Tipo de archivo no soportado. Tipos permitidos: ${VIDEO_CONFIG.ALLOWED_TYPES.join(', ')}`
+      error: `Tipo de archivo no soportado. Tipos permitidos: ${VIDEO_CONFIG.ALLOWED_TYPES.join(", ")}`,
     };
   }
 
@@ -28,7 +27,7 @@ function validateVideoFile(file: File): ValidationResult {
   if (file.size > VIDEO_CONFIG.MAX_FILE_SIZE) {
     return {
       isValid: false,
-      error: `El archivo es demasiado grande. Tamaño máximo: ${VIDEO_CONFIG.MAX_FILE_SIZE / (1024 * 1024)}MB`
+      error: `El archivo es demasiado grande. Tamaño máximo: ${VIDEO_CONFIG.MAX_FILE_SIZE / (1024 * 1024)}MB`,
     };
   }
 
@@ -36,7 +35,7 @@ function validateVideoFile(file: File): ValidationResult {
   if (file.size === 0) {
     return {
       isValid: false,
-      error: 'El archivo está vacío'
+      error: "El archivo está vacío",
     };
   }
 
@@ -46,16 +45,18 @@ function validateVideoFile(file: File): ValidationResult {
 /**
  * Extraer metadatos del video (simulado por ahora)
  */
-async function extractVideoMetadata(file: File): Promise<Partial<VideoMetadata>> {
+async function extractVideoMetadata(
+  file: File
+): Promise<Partial<VideoMetadata>> {
   // Por ahora simularemos la extracción de metadatos
   // En el futuro aquí se integraría una librería como ffmpeg para obtener duración real
-  
+
   return {
     fileName: file.name,
     fileSize: file.size,
     fileType: file.type,
     duration: Math.floor(Math.random() * 1800) + 300, // Simulado: 5-35 minutos
-    uploadedAt: new Date().toISOString()
+    uploadedAt: new Date().toISOString(),
   };
 }
 
@@ -66,30 +67,34 @@ async function extractVideoMetadata(file: File): Promise<Partial<VideoMetadata>>
 async function processVideoForTranscription(
   file: File,
   metadata: VideoMetadata
-): Promise<{ success: boolean; message: string; requestId: string; transcriptionText?: string }> {
-  
+): Promise<{
+  success: boolean;
+  message: string;
+  requestId: string;
+  transcriptionText?: string;
+}> {
   const requestId = `transcribe_${Date.now()}_${Math.random().toString(36).slice(2, 11)}`;
-  
+
   // Crear job de transcripción inicial
   const transcriptionJob: TranscriptionJobStatus = {
     id: requestId,
     videoMetadata: metadata,
-    status: 'processing',
+    status: "processing",
     progress: 0,
     createdAt: new Date().toISOString(),
-    updatedAt: new Date().toISOString()
+    updatedAt: new Date().toISOString(),
   };
 
   // Guardar en almacenamiento temporal
   transcriptionJobs.set(requestId, transcriptionJob);
-  
-  console.log('Procesando video para transcripción:', {
+
+  console.log("Procesando video para transcripción:", {
     requestId,
     fileName: file.name,
     fileSize: file.size,
-    metadata
+    metadata,
   });
-  
+
   // Simular procesamiento asíncrono
   // En producción, aquí se llamaría al LLM/AI SDK
   setTimeout(async () => {
@@ -97,13 +102,15 @@ async function processVideoForTranscription(
       const job = transcriptionJobs.get(requestId);
       if (job) {
         // Simular transcripción completada
-        const simulatedTranscription = generateSimulatedTranscription(metadata.title);
-        
-        job.status = 'completed';
+        const simulatedTranscription = generateSimulatedTranscription(
+          metadata.title
+        );
+
+        job.status = "completed";
         job.progress = 100;
         job.transcriptionText = simulatedTranscription;
         job.updatedAt = new Date().toISOString();
-        
+
         transcriptionJobs.set(requestId, job);
         console.log(`Transcripción completada para ${requestId}`);
       }
@@ -114,8 +121,8 @@ async function processVideoForTranscription(
 
   return {
     success: true,
-    message: 'Video recibido y encolado para transcripción',
-    requestId
+    message: "Video recibido y encolado para transcripción",
+    requestId,
   };
 }
 
@@ -174,14 +181,22 @@ También veremos cómo implementar patrones como MVC, Observer y Factory, que so
 
 La metodología ágil Scrum nos ayuda a organizar el trabajo en sprints y mantener una comunicación constante con el cliente para entregar valor de manera iterativa.
 
-Recuerden que la práctica constante es clave para mejorar como desarrolladores.`
+Recuerden que la práctica constante es clave para mejorar como desarrolladores.`,
   };
 
   // Seleccionar transcripción basada en palabras clave del título
   const titleLower = title.toLowerCase();
-  if (titleLower.includes('calculo') || titleLower.includes('matemáticas') || titleLower.includes('derivadas')) {
+  if (
+    titleLower.includes("calculo") ||
+    titleLower.includes("matemáticas") ||
+    titleLower.includes("derivadas")
+  ) {
     return transcriptions.calculo;
-  } else if (titleLower.includes('desarrollo') || titleLower.includes('software') || titleLower.includes('programación')) {
+  } else if (
+    titleLower.includes("desarrollo") ||
+    titleLower.includes("software") ||
+    titleLower.includes("programación")
+  ) {
     return transcriptions.desarrollo;
   } else {
     return transcriptions.default;
@@ -193,20 +208,21 @@ export async function POST(request: NextRequest) {
   try {
     // Verificar que el request contiene FormData
     const formData = await request.formData();
-    
+
     // Extraer datos del formulario
-    const title = formData.get('title') as string;
-    const description = formData.get('description') as string;
-    const courseId = formData.get('courseId') as string;
-    const courseName = formData.get('courseName') as string;
-    const videoFile = formData.get('video') as File;
+    const title = formData.get("title") as string;
+    const description = formData.get("description") as string;
+    const courseId = formData.get("courseId") as string;
+    const courseName = formData.get("courseName") as string;
+    const videoFile = formData.get("video") as File;
 
     // Validar datos requeridos
     if (!title || !courseId || !courseName) {
       return NextResponse.json(
-        { 
+        {
           success: false,
-          error: 'Faltan datos requeridos: título, courseId y courseName son obligatorios' 
+          error:
+            "Faltan datos requeridos: título, courseId y courseName son obligatorios",
         },
         { status: 400 }
       );
@@ -215,9 +231,9 @@ export async function POST(request: NextRequest) {
     // Validar que se subió un archivo
     if (!videoFile || !(videoFile instanceof File)) {
       return NextResponse.json(
-        { 
+        {
           success: false,
-          error: 'No se encontró archivo de video en el formulario' 
+          error: "No se encontró archivo de video en el formulario",
         },
         { status: 400 }
       );
@@ -227,9 +243,9 @@ export async function POST(request: NextRequest) {
     const validation = validateVideoFile(videoFile);
     if (!validation.isValid) {
       return NextResponse.json(
-        { 
+        {
           success: false,
-          error: validation.error 
+          error: validation.error,
         },
         { status: 400 }
       );
@@ -248,7 +264,7 @@ export async function POST(request: NextRequest) {
       fileSize: extractedMetadata.fileSize || videoFile.size,
       fileType: extractedMetadata.fileType || videoFile.type,
       duration: extractedMetadata.duration,
-      uploadedAt: extractedMetadata.uploadedAt || new Date().toISOString()
+      uploadedAt: extractedMetadata.uploadedAt || new Date().toISOString(),
     };
 
     // Procesar video para transcripción
@@ -256,9 +272,9 @@ export async function POST(request: NextRequest) {
 
     if (!result.success) {
       return NextResponse.json(
-        { 
+        {
           success: false,
-          error: 'Error al procesar el video para transcripción' 
+          error: "Error al procesar el video para transcripción",
         },
         { status: 500 }
       );
@@ -269,20 +285,20 @@ export async function POST(request: NextRequest) {
       success: true,
       requestId: result.requestId,
       message: result.message,
-      videoMetadata
+      videoMetadata,
     };
 
-    console.log('Video procesado exitosamente:', response);
+    console.log("Video procesado exitosamente:", response);
 
     return NextResponse.json(response, { status: 201 });
-
   } catch (error) {
-    console.error('Error en API transcribe-course:', error);
-    
+    console.error("Error en API transcribe-course:", error);
+
     return NextResponse.json(
-      { 
+      {
         success: false,
-        error: 'Error interno del servidor al procesar la solicitud de transcripción' 
+        error:
+          "Error interno del servidor al procesar la solicitud de transcripción",
       },
       { status: 500 }
     );
@@ -293,12 +309,12 @@ export async function POST(request: NextRequest) {
 export async function GET(request: NextRequest) {
   try {
     const { searchParams } = new URL(request.url);
-    const requestId = searchParams.get('requestId');
+    const requestId = searchParams.get("requestId");
 
     if (requestId) {
       // Consultar una transcripción específica
       const job = transcriptionJobs.get(requestId);
-      
+
       if (job) {
         return NextResponse.json(job);
       } else {
@@ -306,19 +322,19 @@ export async function GET(request: NextRequest) {
         const mockTranscription: TranscriptionJobStatus = {
           id: requestId,
           videoMetadata: {
-            title: 'Video de ejemplo',
-            courseId: 'example-course',
-            courseName: 'Curso de Ejemplo',
-            fileName: 'example.mp4',
+            title: "Video de ejemplo",
+            courseId: "example-course",
+            courseName: "Curso de Ejemplo",
+            fileName: "example.mp4",
             fileSize: 50000000,
-            fileType: 'video/mp4',
+            fileType: "video/mp4",
             duration: 300,
-            uploadedAt: new Date().toISOString()
+            uploadedAt: new Date().toISOString(),
           },
-          status: 'processing',
+          status: "processing",
           progress: 50,
           createdAt: new Date().toISOString(),
-          updatedAt: new Date().toISOString()
+          updatedAt: new Date().toISOString(),
         };
 
         return NextResponse.json(mockTranscription);
@@ -328,11 +344,10 @@ export async function GET(request: NextRequest) {
       const transcriptions = Array.from(transcriptionJobs.values());
       return NextResponse.json({ transcriptions });
     }
-
   } catch (error) {
-    console.error('Error al obtener transcripciones:', error);
+    console.error("Error al obtener transcripciones:", error);
     return NextResponse.json(
-      { error: 'Error al obtener transcripciones' },
+      { error: "Error al obtener transcripciones" },
       { status: 500 }
     );
   }

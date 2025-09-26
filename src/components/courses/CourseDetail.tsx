@@ -220,6 +220,7 @@ export default function CourseDetail({ courseId }: CourseDetailProps) {
   };
 
   const handleModuleFeedback = async (moduleId: string) => {
+    console.log('handleModuleFeedback', moduleId);
     // try {
     //   // await submitFeedback(courseId, feedbackData, { moduleId });
     // } catch (error) {
@@ -228,6 +229,7 @@ export default function CourseDetail({ courseId }: CourseDetailProps) {
   };
 
   const handleLessonFeedback = async (moduleId: string, lessonId: string) => {
+    console.log('handleLessonFeedback', moduleId, lessonId);
     // try {
     //   // await submitFeedback(courseId, feedbackData, { moduleId, lessonId });
     // } catch (error) {
@@ -327,7 +329,7 @@ export default function CourseDetail({ courseId }: CourseDetailProps) {
         Contenido del Curso
       </Typography>
 
-      {course.modules.map((module, moduleIndex) => (
+      {course.modules.map((module) => (
         <Card key={module.id} sx={{ mb: 2 }}>
           <CardContent>
             <Box 
