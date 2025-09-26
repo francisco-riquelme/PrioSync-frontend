@@ -1,16 +1,15 @@
-// QueryFactory.ts - Library-compatible version
-import { createHash } from 'crypto';
-import { throwError } from '../error';
-import { logger } from '../log';
-import { ClientManager } from './ClientManager';
+// QueryFactory.ts - Type-safe CRUD operations for AWS Amplify Data models
+import { throwError } from "../error";
+import { ClientManager } from "./ClientManager";
 import {
   logOperation,
   logSuccess,
-  validateAndReturn,
+  validateResponse,
   extractIdentifier,
-} from './helpers';
-import { getGlobalCache, type QueryCache } from './cache';
-import { getIdentifierFields } from './initialize';
+  createObjectHash,
+  handlePagination,
+} from "./helpers";
+import { getGlobalCache, type QueryCache } from "./cache";
 import type {
   AmplifyModelType,
   QueryFactoryConfig,
@@ -20,75 +19,78 @@ import type {
   DeleteInput,
   ModelType,
   Identifier,
-} from './types';
+  PaginationResult,
+  SortDirection,
+  AmplifyAuthMode,
+} from "./types";
 
-/**
- * Create deterministic hash from object using schema-aware identifier fields
- */
-function createObjectHash(
-  obj: Record<string, unknown>,
-  entityName: string,
-): string {
-  try {
-    const identifierFields = getIdentifierFields(entityName);
-
-    // Extract only the identifier fields for hashing
-    const identifierData: Record<string, unknown> = {};
-    for (const field of identifierFields) {
-      if (obj[field] !== undefined) {
-        identifierData[field] = obj[field];
-      }
-    }
-
-    // If no identifier fields found, use the whole object
-    const dataToHash =
-      Object.keys(identifierData).length > 0 ? identifierData : obj;
-
-    // Create deterministic hash from sorted key-value pairs
-    const keys = Object.keys(dataToHash).sort();
-    const pairs = keys.map(key => `${key}:${String(dataToHash[key])}`);
-    const serialized = pairs.join('|');
-
-    return createHash('sha256').update(serialized).digest('hex');
-  } catch (error) {
-    // Fallback to JSON.stringify if hash generation fails
-    logger.warn(
-      `Hash generation failed for ${entityName}, falling back to JSON`,
-      { error },
-    );
-    return createHash('sha256').update(JSON.stringify(obj)).digest('hex');
-  }
-}
-
+//#region MAIN FACTORY FUNCTION
 /**
  * Creates type-safe CRUD operations for AWS Amplify Data models.
- * Library-compatible version with explicit type preservation.
+ *
+ * Generates a complete set of database operations (create, read, update, delete, list)
+ * with comprehensive error handling, logging, and optional caching. All operations
+ * preserve TypeScript types across package boundaries.
+ *
+ * **Features:**
+ * - Type-safe operations with full TypeScript support
+ * - Automatic error handling and logging
+ * - Optional LRU caching with smart invalidation
+ * - Pagination support with automatic following
+ * - Schema-aware identifier extraction
+ * - Client isolation via unique keys
+ *
+ * @template Types - Record of all available Amplify model types
+ * @template TName - Specific model name as string literal
+ * @param config - Configuration object for factory creation
+ * @returns Promise resolving to complete CRUD operations interface
+ *
+ * @example
+ * ```typescript
+ * const userFactory = await QueryFactory({
+ *   name: "User",
+ *   clientKey: "main",
+ *   cache: { enabled: true, maxSize: 10 * 1024 * 1024 }
+ * });
+ *
+ * const user = await userFactory.get({ input: { userId: "123" } });
+ * const users = await userFactory.list({ limit: 50, followNextToken: true });
+ * ```
  */
 export function QueryFactory<
   Types extends Record<string, AmplifyModelType>,
   TName extends keyof Types & string,
 >(
-  config: QueryFactoryConfig<TName>,
+  config: QueryFactoryConfig<TName>
 ): Promise<QueryFactoryResult<TName, Types>> {
   return createQueryFactory<Types, TName>(config);
 }
+
+/**
+ * Internal factory implementation that creates the actual query operations.
+ *
+ * @internal
+ * @template Types - Record of all available Amplify model types
+ * @template TName - Specific model name as string literal
+ * @param config - Configuration object for factory creation
+ * @returns Promise resolving to query operations interface
+ */
 
 async function createQueryFactory<
   Types extends Record<string, AmplifyModelType>,
   TName extends keyof Types & string,
 >(
-  config: QueryFactoryConfig<TName>,
+  config: QueryFactoryConfig<TName>
 ): Promise<QueryFactoryResult<TName, Types>> {
-  const { name, clientKey = 'default', cache: cacheConfig } = config;
+  const { name, clientKey = "default", cache: cacheConfig } = config;
   const nameStr = String(name);
 
   const cache = cacheConfig ? getGlobalCache(cacheConfig) : undefined;
 
-  // Get the initialized client
-  const client = await getInitializedClient(nameStr, clientKey);
+  const manager = ClientManager.getInstance(clientKey);
+  const client = await manager.getClient<{ models: Record<string, unknown> }>();
   const model = getModelFromClient(client, nameStr);
 
-  // Create operations with explicit typing that survives compilation
   const queryResult: QueryFactoryResult<TName, Types> = {
     create: createCreateOperation<Types, TName>(model, nameStr, cache),
     update: createUpdateOperation<Types, TName>(model, nameStr, cache),
@@ -99,31 +101,47 @@ async function createQueryFactory<
 
   return queryResult;
 }
+//#endregion
 
-// Separate functions to maintain type information
+//#region OPERATION FACTORY FUNCTIONS
+/**
+ * Creates a type-safe create operation with caching invalidation.
+ *
+ * @internal
+ * @template Types - Record of all available Amplify model types
+ * @template TName - Specific model name as string literal
+ * @param model - Amplify model instance
+ * @param nameStr - String representation of model name
+ * @param cache - Optional cache instance for invalidation
+ * @returns Function that performs create operations
+ */
 function createCreateOperation<
   Types extends Record<string, AmplifyModelType>,
   TName extends keyof Types & string,
 >(
   model: unknown,
   nameStr: string,
-  cache?: QueryCache,
+  cache?: QueryCache
 ): (props: {
   input: CreateInput<TName, Types>;
 }) => Promise<ModelType<TName, Types>> {
-  return async props => {
+  return async (props) => {
     try {
       const { input } = props;
-      logOperation(nameStr, 'create', input);
+      logOperation(nameStr, "create", input);
 
       // eslint-disable-next-line @typescript-eslint/no-explicit-any
       const response = await (model as any).create(input);
-      const data = validateAndReturn(response, 'create', nameStr, input);
+      const data = validateResponse({
+        response,
+        operation: "create",
+        name: nameStr,
+        input,
+      });
 
-      // Invalidate list cache after creation
       cache?.invalidatePattern(`${nameStr}:list`);
 
-      logSuccess('create', { nameStr });
+      logSuccess("create", { nameStr });
       return data as ModelType<TName, Types>;
     } catch (error) {
       throw throwError(`${nameStr} could not be created`, error);
@@ -131,34 +149,49 @@ function createCreateOperation<
   };
 }
 
+/**
+ * Creates a type-safe update operation with cache invalidation.
+ *
+ * @internal
+ * @template Types - Record of all available Amplify model types
+ * @template TName - Specific model name as string literal
+ * @param model - Amplify model instance
+ * @param nameStr - String representation of model name
+ * @param cache - Optional cache instance for invalidation
+ * @returns Function that performs update operations
+ */
 function createUpdateOperation<
   Types extends Record<string, AmplifyModelType>,
   TName extends keyof Types & string,
 >(
   model: unknown,
   nameStr: string,
-  cache?: QueryCache,
+  cache?: QueryCache
 ): (props: {
   input: UpdateInput<TName, Types>;
 }) => Promise<ModelType<TName, Types>> {
-  return async props => {
+  return async (props) => {
     try {
       const { input } = props;
-      logOperation(nameStr, 'update', input);
+      logOperation(nameStr, "update", input);
 
       // eslint-disable-next-line @typescript-eslint/no-explicit-any
       const response = await (model as any).update(input);
-      const data = validateAndReturn(response, 'update', nameStr, input);
+      const data = validateResponse({
+        response,
+        operation: "update",
+        name: nameStr,
+        input,
+      });
 
-      // Extract identifier and invalidate cache
       const identifier = extractIdentifier(
         input as Record<string, unknown>,
-        nameStr,
+        nameStr
       );
       cache?.delete(`${nameStr}:get:${createObjectHash(identifier, nameStr)}`);
       cache?.invalidatePattern(`${nameStr}:list`);
 
-      logSuccess('update', { nameStr });
+      logSuccess("update", { nameStr });
       return data as ModelType<TName, Types>;
     } catch (error) {
       throw throwError(`${nameStr} could not be updated`, error);
@@ -166,34 +199,49 @@ function createUpdateOperation<
   };
 }
 
+/**
+ * Creates a type-safe delete operation with cache invalidation.
+ *
+ * @internal
+ * @template Types - Record of all available Amplify model types
+ * @template TName - Specific model name as string literal
+ * @param model - Amplify model instance
+ * @param nameStr - String representation of model name
+ * @param cache - Optional cache instance for invalidation
+ * @returns Function that performs delete operations
+ */
 function createDeleteOperation<
   Types extends Record<string, AmplifyModelType>,
   TName extends keyof Types & string,
 >(
   model: unknown,
   nameStr: string,
-  cache?: QueryCache,
+  cache?: QueryCache
 ): (props: {
   input: DeleteInput<TName, Types>;
 }) => Promise<ModelType<TName, Types>> {
-  return async props => {
+  return async (props) => {
     try {
       const { input } = props;
-      logOperation(nameStr, 'delete', input);
+      logOperation(nameStr, "delete", input);
 
       // eslint-disable-next-line @typescript-eslint/no-explicit-any
       const response = await (model as any).delete(input);
-      const data = validateAndReturn(response, 'delete', nameStr, input);
+      const data = validateResponse({
+        response,
+        operation: "delete",
+        name: nameStr,
+        input,
+      });
 
-      // Extract identifier and invalidate cache
       const identifier = extractIdentifier(
         input as Record<string, unknown>,
-        nameStr,
+        nameStr
       );
       cache?.delete(`${nameStr}:get:${createObjectHash(identifier, nameStr)}`);
       cache?.invalidatePattern(`${nameStr}:list`);
 
-      logSuccess('delete', { nameStr });
+      logSuccess("delete", { nameStr });
       return data as ModelType<TName, Types>;
     } catch (error) {
       throw throwError(`${nameStr} could not be deleted`, error);
@@ -201,38 +249,52 @@ function createDeleteOperation<
   };
 }
 
+/**
+ * Creates a type-safe get operation with cache-first strategy.
+ *
+ * @internal
+ * @template Types - Record of all available Amplify model types
+ * @template TName - Specific model name as string literal
+ * @param model - Amplify model instance
+ * @param nameStr - String representation of model name
+ * @param cache - Optional cache instance for retrieval and storage
+ * @returns Function that performs get operations
+ */
 function createGetOperation<
   Types extends Record<string, AmplifyModelType>,
   TName extends keyof Types & string,
 >(
   model: unknown,
   nameStr: string,
-  cache?: QueryCache,
+  cache?: QueryCache
 ): (props: {
   input: Identifier<TName, Types>;
 }) => Promise<ModelType<TName, Types>> {
-  return async props => {
+  return async (props) => {
     try {
       const { input } = props;
       const cacheKey = `${nameStr}:get:${createObjectHash(input as Record<string, unknown>, nameStr)}`;
 
-      // Check cache first
       const cached = cache?.get<ModelType<TName, Types>>(cacheKey);
       if (cached) {
-        logSuccess('get', { nameStr, source: 'cache' });
+        logSuccess("get", { nameStr, source: "cache" });
         return cached;
       }
 
-      logOperation(nameStr, 'get', input);
+      logOperation(nameStr, "get", input);
 
       // eslint-disable-next-line @typescript-eslint/no-explicit-any
       const response = await (model as any).get(input);
-      const data = validateAndReturn(response, 'get', nameStr, input);
+      const data = validateResponse({
+        response,
+        operation: "get",
+        name: nameStr,
+        input,
+      });
 
-      // Cache the result
       cache?.set(cacheKey, data);
 
-      logSuccess('get', { nameStr, data });
+      logSuccess("get", { nameStr, data });
       return data as ModelType<TName, Types>;
     } catch (error) {
       throw throwError(`${nameStr} could not be retrieved`, error);
@@ -240,73 +302,139 @@ function createGetOperation<
   };
 }
 
+/**
+ * Creates a type-safe list operation with pagination and caching.
+ *
+ * @internal
+ * @template Types - Record of all available Amplify model types
+ * @template TName - Specific model name as string literal
+ * @param model - Amplify model instance
+ * @param nameStr - String representation of model name
+ * @param cache - Optional cache instance for retrieval and storage
+ * @returns Function that performs list operations with pagination
+ */
 function createListOperation<
   Types extends Record<string, AmplifyModelType>,
   TName extends keyof Types & string,
 >(
   model: unknown,
   nameStr: string,
-  cache?: QueryCache,
-): () => Promise<ModelType<TName, Types>[]> {
-  return async () => {
+  cache?: QueryCache
+): (props?: {
+  filter?: Record<string, unknown>;
+  sortDirection?: SortDirection;
+  limit?: number;
+  nextToken?: string;
+  authMode?: AmplifyAuthMode;
+  followNextToken?: boolean;
+  maxPages?: number;
+}) => Promise<PaginationResult<ModelType<TName, Types>>> {
+  return async (props = {}) => {
     try {
-      const cacheKey = `${nameStr}:list`;
+      const {
+        filter,
+        sortDirection,
+        limit,
+        nextToken,
+        authMode,
+        followNextToken = false,
+        maxPages = 10,
+      } = props;
 
-      // Check cache first
-      const cached = cache?.get<ModelType<TName, Types>[]>(cacheKey);
-      if (cached) {
-        logSuccess('list', { count: cached.length, nameStr, source: 'cache' });
-        return cached;
+      const cacheKeyData = {
+        filter: filter || {},
+        sortDirection: sortDirection || "asc",
+        limit: limit || "all",
+        nextToken: nextToken || "first",
+        followNextToken,
+      };
+      const cacheKey = `${nameStr}:list:${createObjectHash(cacheKeyData, nameStr)}`;
+
+      // Only cache simple queries (no pagination, no filters)
+      if (!nextToken && !filter && !followNextToken && cache) {
+        const cached =
+          cache.get<PaginationResult<ModelType<TName, Types>>>(cacheKey);
+        if (cached) {
+          logSuccess("list", {
+            count: cached.items.length,
+            nameStr,
+            source: "cache",
+            hasNextToken: !!cached.nextToken,
+          });
+          return cached;
+        }
       }
 
-      logOperation(nameStr, 'list');
+      logOperation(nameStr, "list", {
+        filter,
+        sortDirection,
+        limit,
+        nextToken,
+        followNextToken,
+      });
 
-      // eslint-disable-next-line @typescript-eslint/no-explicit-any
-      const response = await (model as any).list();
-      const { data, errors } = response;
+      const listParams: Record<string, unknown> = {};
+      if (filter) listParams.filter = filter;
+      if (sortDirection) listParams.sortDirection = sortDirection;
+      if (limit) listParams.limit = limit;
+      if (authMode) listParams.authMode = authMode;
 
-      if (errors && errors.length > 0) {
-        logger.error(`GraphQL errors during ${nameStr} list operation`, {
-          errors,
-        });
-        throw throwError(`${nameStr} list failed`, errors);
+      // Create operation function for pagination utility
+      const listOperation = async (params: Record<string, unknown> = {}) => {
+        // eslint-disable-next-line @typescript-eslint/no-explicit-any
+        return (model as any).list(
+          Object.keys(params).length > 0 ? params : undefined
+        );
+      };
+
+      // Use pagination utility
+      const result = await handlePagination<ModelType<TName, Types>>(
+        listOperation,
+        { ...listParams, nextToken },
+        { followNextToken, maxPages }
+      );
+
+      // Only cache simple queries
+      if (!nextToken && !filter && !followNextToken && cache) {
+        cache.set(cacheKey, result);
       }
 
-      const result = (data || []) as ModelType<TName, Types>[];
+      logSuccess("list", {
+        count: result.items.length,
+        nameStr,
+        hasNextToken: !!result.nextToken,
+        scannedCount: result.scannedCount,
+        followedPagination: followNextToken,
+      });
 
-      // Cache the result
-      cache?.set(cacheKey, result);
-
-      logSuccess('list', { count: result.length, nameStr });
       return result;
     } catch (error) {
       throw throwError(`${nameStr} list could not be retrieved`, error);
     }
   };
 }
+//#endregion
 
-// Helper functions remain the same
-async function getInitializedClient(nameStr: string, clientKey: string) {
-  try {
-    const manager = ClientManager.getInstance(clientKey);
-    return await manager.getClient<{ models: Record<string, unknown> }>();
-  } catch (error) {
-    throw throwError(
-      `Failed to resolve client for model: ${nameStr}. Make sure to call initializeQueries() first.`,
-      error,
-    );
-  }
-}
-
+//#region UTILITY FUNCTIONS
+/**
+ * Extracts a specific model from the Amplify client models collection.
+ *
+ * @internal
+ * @param client - Amplify client with models collection
+ * @param nameStr - Model name to extract
+ * @returns The requested model instance
+ * @throws Error if model is not found, listing available models
+ */
 function getModelFromClient(
   client: { models: Record<string, unknown> },
-  nameStr: string,
+  nameStr: string
 ): unknown {
   const modelRef = client.models[nameStr];
   if (!modelRef) {
     throw throwError(
-      `Model "${nameStr}" not found in client models. Available models: ${Object.keys(client.models).join(', ')}`,
+      `Model "${nameStr}" not found in client models. Available models: ${Object.keys(client.models).join(", ")}`
     );
   }
   return modelRef;
 }
+//#endregion
