@@ -15,6 +15,60 @@ const transcriptionJobs = new Map<string, TranscriptionJobStatus>();
 
 
 /**
+ * Sanitizar input de texto para prevenir inyección de prompts
+ */
+function sanitizeTextInput(input: string, maxLength: number = 100): string {
+  if (!input || typeof input !== 'string') {
+    return 'Contenido no especificado';
+  }
+  
+  // Remover caracteres potencialmente peligrosos y comandos
+  const sanitized = input
+    .replace(/[<>{}[\]]/g, '') // Remover brackets y llaves
+    .replace(/\\/g, '') // Remover backslashes
+    .replace(/["'`]/g, '') // Remover comillas
+    .replace(/\n|\r/g, ' ') // Convertir saltos de línea a espacios
+    .replace(/\s+/g, ' ') // Normalizar espacios múltiples
+    .trim();
+  
+  // Truncar si es demasiado largo
+  return sanitized.length > maxLength 
+    ? sanitized.substring(0, maxLength) + '...'
+    : sanitized;
+}
+
+/**
+ * Validar y sanitizar metadatos del usuario
+ */
+function validateAndSanitizeMetadata(title: string, courseName: string): { title: string; courseName: string } {
+  // Lista de palabras/frases prohibidas que podrían ser intentos de inyección
+  const forbiddenPatterns = [
+    /ignore\s+previous/i,
+    /forget\s+instructions/i,
+    /system\s*:/i,
+    /assistant\s*:/i,
+    /user\s*:/i,
+    /prompt\s*:/i,
+    /act\s+as/i,
+    /pretend\s+to\s+be/i,
+    /you\s+are\s+now/i,
+    /new\s+instructions/i,
+  ];
+  
+  const sanitizedTitle = sanitizeTextInput(title, 80);
+  const sanitizedCourseName = sanitizeTextInput(courseName, 60);
+  
+  // Verificar patrones prohibidos
+  const titleHasForbiddenContent = forbiddenPatterns.some(pattern => pattern.test(sanitizedTitle));
+  const courseNameHasForbiddenContent = forbiddenPatterns.some(pattern => pattern.test(sanitizedCourseName));
+  
+  return {
+    title: titleHasForbiddenContent ? 'Tema educativo' : sanitizedTitle,
+    courseName: courseNameHasForbiddenContent ? 'Curso académico' : sanitizedCourseName
+  };
+}
+
+/**
  * Validar archivo de video
  */
 function validateVideoFile(file: File): ValidationResult {
@@ -110,7 +164,6 @@ async function processVideoForTranscription(
     // Verificar que tenemos la API key de Google
     console.log('Verificando API Key...');
     console.log('API Key existe:', !!process.env.GOOGLE_GENERATIVE_AI_API_KEY);
-    console.log('API Key preview:', process.env.GOOGLE_GENERATIVE_AI_API_KEY?.substring(0, 20) + '...');
     
     if (!process.env.GOOGLE_GENERATIVE_AI_API_KEY) {
       console.error('GOOGLE_GENERATIVE_AI_API_KEY no está configurada');
@@ -137,11 +190,24 @@ async function processVideoForTranscription(
 
     console.log('Iniciando generación de transcripción con Gemini...');
     
+    // Sanitizar metadatos para prevenir inyección de prompts
+    const { title: safeTitle, courseName: safeCourseName } = validateAndSanitizeMetadata(
+      metadata.title, 
+      metadata.courseName
+    );
+    
+    console.log('Metadatos sanitizados:', { 
+      originalTitle: metadata.title,
+      safeTitle,
+      originalCourseName: metadata.courseName,
+      safeCourseName 
+    });
+    
     try {
       // Realizar una llamada simple a Gemini para probar conectividad
       const { text: transcriptionText } = await generateText({
         model,
-        prompt: `Como profesor universitario, genera una transcripción realista de una clase de "${metadata.title}" para el curso "${metadata.courseName}". La clase debe incluir introducción, desarrollo del tema y conclusión. Aproximadamente 300-500 palabras con estilo natural de profesor explicando conceptos.`,
+        prompt: `Como profesor universitario, genera una transcripción realista de una clase de "${safeTitle}" para el curso "${safeCourseName}". La clase debe incluir introducción, desarrollo del tema y conclusión. Aproximadamente 300-500 palabras con estilo natural de profesor explicando conceptos.`,
       });
 
       console.log('Transcripción generada exitosamente con Gemini');
@@ -166,10 +232,10 @@ async function processVideoForTranscription(
     } catch (geminiError) {
       console.error('Error específico de Gemini:', geminiError);
       
-      // Si la llamada a Gemini falla, usar transcripción de respaldo
-      const fallbackTranscription = `Bienvenidos a esta clase de ${metadata.title}.
+      // Si la llamada a Gemini falla, usar transcripción de respaldo con metadatos sanitizados
+      const fallbackTranscription = `Bienvenidos a esta clase de ${safeTitle}.
 
-En esta sesión del curso ${metadata.courseName}, vamos a explorar los conceptos fundamentales de este importante tema.
+En esta sesión del curso ${safeCourseName}, vamos a explorar los conceptos fundamentales de este importante tema.
 
 [Inicio de clase]
 
