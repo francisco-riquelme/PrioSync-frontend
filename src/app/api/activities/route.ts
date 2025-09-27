@@ -10,6 +10,7 @@ interface Activity {
 
 // GET /api/activities
 export async function GET(request: NextRequest) {
+  console.log("GET /api/activities", request);
   try {
     const activities: Activity[] = [];
     return NextResponse.json({ activities });
