@@ -8,6 +8,12 @@ import {
   ValidationResult,
   VIDEO_CONFIG,
 } from '@/types/transcription';
+import { 
+  getCompiledSecurityPatterns, 
+  containsDangerousPatterns, 
+  getFallbackValues, 
+  getLimits 
+} from '@/utils/security-patterns';
 
 // Almacenamiento temporal en memoria para simulación
 // En producción esto sería DynamoDB o similar
@@ -16,20 +22,34 @@ const transcriptionJobs = new Map<string, TranscriptionJobStatus>();
 
 /**
  * Sanitizar input de texto para prevenir inyección de prompts
+ * con validación adicional contra patrones de manipulación configurables
  */
 function sanitizeTextInput(input: string, maxLength: number = 100): string {
   if (!input || typeof input !== 'string') {
     return 'Contenido no especificado';
   }
   
-  // Remover caracteres potencialmente peligrosos y comandos
+  const fallbackValues = getFallbackValues();
+  
+  // Verificar patrones peligrosos antes de sanitizar usando configuración externa
+  if (containsDangerousPatterns(input)) {
+    return fallbackValues.title;
+  }
+  
+  // Sanitización básica
   const sanitized = input
     .replace(/[<>{}[\]]/g, '') // Remover brackets y llaves
     .replace(/\\/g, '') // Remover backslashes
     .replace(/["'`]/g, '') // Remover comillas
     .replace(/\n|\r/g, ' ') // Convertir saltos de línea a espacios
     .replace(/\s+/g, ' ') // Normalizar espacios múltiples
+    .replace(/[|#*]/g, '') // Remover caracteres de markdown que podrían usarse para manipulación
     .trim();
+  
+  // Verificación adicional post-sanitización
+  if (containsDangerousPatterns(sanitized)) {
+    return 'Tema académico';
+  }
   
   // Truncar si es demasiado largo
   return sanitized.length > maxLength 
@@ -38,34 +58,68 @@ function sanitizeTextInput(input: string, maxLength: number = 100): string {
 }
 
 /**
- * Validar y sanitizar metadatos del usuario
+ * Validar y sanitizar metadatos del usuario usando patrones configurables
  */
 function validateAndSanitizeMetadata(title: string, courseName: string): { title: string; courseName: string } {
-  // Lista de palabras/frases prohibidas que podrían ser intentos de inyección
-  const forbiddenPatterns = [
-    /ignore\s+previous/i,
-    /forget\s+instructions/i,
-    /system\s*:/i,
-    /assistant\s*:/i,
-    /user\s*:/i,
-    /prompt\s*:/i,
-    /act\s+as/i,
-    /pretend\s+to\s+be/i,
-    /you\s+are\s+now/i,
-    /new\s+instructions/i,
-  ];
+  const limits = getLimits();
+  const fallbackValues = getFallbackValues();
   
-  const sanitizedTitle = sanitizeTextInput(title, 80);
-  const sanitizedCourseName = sanitizeTextInput(courseName, 60);
+  const sanitizedTitle = sanitizeTextInput(title, limits.maxTitleLength);
+  const sanitizedCourseName = sanitizeTextInput(courseName, limits.maxCourseNameLength);
   
-  // Verificar patrones prohibidos
-  const titleHasForbiddenContent = forbiddenPatterns.some(pattern => pattern.test(sanitizedTitle));
-  const courseNameHasForbiddenContent = forbiddenPatterns.some(pattern => pattern.test(sanitizedCourseName));
+  // Verificar patrones prohibidos usando configuración externa
+  const titleHasForbiddenContent = containsDangerousPatterns(sanitizedTitle);
+  const courseNameHasForbiddenContent = containsDangerousPatterns(sanitizedCourseName);
   
   return {
-    title: titleHasForbiddenContent ? 'Tema educativo' : sanitizedTitle,
-    courseName: courseNameHasForbiddenContent ? 'Curso académico' : sanitizedCourseName
+    title: titleHasForbiddenContent ? fallbackValues.title : sanitizedTitle,
+    courseName: courseNameHasForbiddenContent ? fallbackValues.courseName : sanitizedCourseName
   };
+}
+
+/**
+ * Crear prompt estructurado y seguro para transcripción
+ * Utiliza un enfoque de template fijo para prevenir inyección de prompts
+ * con configuración externa para flexibilidad
+ */
+function createSecureTranscriptionPrompt(title: string, courseName: string): string {
+  const limits = getLimits();
+  const fallbackValues = getFallbackValues();
+  
+  // Validar que los parámetros no contienen intentos de manipulación
+  if (!title || !courseName || typeof title !== 'string' || typeof courseName !== 'string') {
+    title = fallbackValues.genericTitle;
+    courseName = fallbackValues.genericCourse;
+  }
+  
+  // Aplicar sanitización adicional específica para prompts
+  const cleanTitle = title.replace(/[^\w\s\-áéíóúñü]/gi, '').trim() || fallbackValues.genericTitle;
+  const cleanCourseName = courseName.replace(/[^\w\s\-áéíóúñü]/gi, '').trim() || fallbackValues.genericCourse;
+  
+  // Template fijo sin interpolación directa
+  const promptTemplate = [
+    "Eres un asistente educativo que genera transcripciones académicas.",
+    "Tu tarea es crear una transcripción realista de una clase universitaria.",
+    "",
+    "PARÁMETROS DE LA CLASE:",
+    "- Tema de la clase: [TEMA]",
+    "- Curso: [CURSO]",
+    "",
+    "INSTRUCCIONES FIJAS:",
+    "1. Genera una transcripción de clase universitaria profesional",
+    "2. Incluye introducción, desarrollo del tema y conclusión",
+    "3. Usa un estilo natural de profesor explicando conceptos",
+    "4. Aproximadamente 300-500 palabras",
+    "5. Mantén un tono académico y educativo",
+    "6. No incluyas ningún contenido que no sea educativo",
+    "",
+    "Genera la transcripción ahora:"
+  ].join('\n');
+  
+  // Reemplazar marcadores de forma segura sin interpolación directa usando límites configurables
+  return promptTemplate
+    .replace('[TEMA]', cleanTitle.substring(0, limits.promptTitleLength))
+    .replace('[CURSO]', cleanCourseName.substring(0, limits.promptCourseLength));
 }
 
 /**
@@ -121,11 +175,24 @@ async function extractVideoMetadata(file: File): Promise<Partial<VideoMetadata>>
  * IMPLEMENTACIÓN ACTUAL:
  * - Genera transcripciones inteligentes basadas en contexto usando Gemini 2.5 Flash
  * - Utiliza título, descripción y metadatos para crear contenido educativo realista
+ * - Implementa protección contra inyección de prompts mediante:
+ *   * Sanitización avanzada de entrada con patrones de seguridad configurables
+ *   * Prompts estructurados con templates fijos
+ *   * Validación adicional post-sanitización
+ *   * Límites estrictos de longitud de parámetros configurables
+ *   * Patrones de seguridad externalizados en archivo de configuración
+ *   * Soporte para actualizaciones dinámicas vía variables de entorno
+ * 
+ * CONFIGURACIÓN DE SEGURIDAD:
+ * - Patrones definidos en: src/config/security-patterns.json
+ * - Override dinámico vía: PROMPT_INJECTION_PATTERNS (env var)
+ * - Actualizable sin redeployment para respuesta rápida a nuevas amenazas
  * 
  * ROADMAP FUTURO:
  * - Integrar procesamiento real de archivos multimedia (audio/video)
  * - Implementar extracción de audio desde video usando FFmpeg
  * - Soporte para archivos de hasta 2GB (límite actual de Gemini)
+ * - Sistema de actualización automática de patrones desde base de datos
  */
 async function processVideoForTranscription(
   file: File,
@@ -204,10 +271,15 @@ async function processVideoForTranscription(
     });
     
     try {
-      // Realizar una llamada simple a Gemini para probar conectividad
+      // Crear prompt estructurado y seguro
+      const securePrompt = createSecureTranscriptionPrompt(safeTitle, safeCourseName);
+      
+      console.log('Generando transcripción con prompt estructurado y seguro');
+      
+      // Realizar llamada a Gemini con prompt seguro
       const { text: transcriptionText } = await generateText({
         model,
-        prompt: `Como profesor universitario, genera una transcripción realista de una clase de "${safeTitle}" para el curso "${safeCourseName}". La clase debe incluir introducción, desarrollo del tema y conclusión. Aproximadamente 300-500 palabras con estilo natural de profesor explicando conceptos.`,
+        prompt: securePrompt,
       });
 
       console.log('Transcripción generada exitosamente con Gemini');
