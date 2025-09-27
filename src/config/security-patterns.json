@@ -1,0 +1,58 @@
+{
+  "promptInjectionPatterns": {
+    "directCommands": [
+      "ignore\\s+(previous|all|instructions?)",
+      "forget\\s+(everything|instructions?|previous)",
+      "disregard\\s+(previous|instructions?)"
+    ],
+    "roleManipulation": [
+      "you\\s+are\\s+now\\s+(a|an|the)",
+      "act\\s+as\\s+(a|an|the)?",
+      "pretend\\s+to\\s+be",
+      "roleplay\\s+as"
+    ],
+    "systemMarkers": [
+      "system\\s*[:]",
+      "assistant\\s*[:]",
+      "user\\s*[:]",
+      "human\\s*[:]",
+      "ai\\s*[:]"
+    ],
+    "instructionInjection": [
+      "new\\s+instructions?",
+      "updated?\\s+instructions?",
+      "instead\\s+of",
+      "but\\s+first",
+      "however\\s*[,:]?"
+    ],
+    "escapePatterns": [
+      "\\[\\/?(system|user|assistant|human|ai)\\]",
+      "```\\s*(system|user|assistant)",
+      "\\|\\s*system\\s*\\|"
+    ],
+    "legacyPatterns": [
+      "ignore\\s+previous",
+      "forget\\s+instructions",
+      "system\\s*:",
+      "assistant\\s*:",
+      "user\\s*:",
+      "prompt\\s*:",
+      "act\\s+as",
+      "pretend\\s+to\\s+be",
+      "you\\s+are\\s+now",
+      "new\\s+instructions"
+    ]
+  },
+  "fallbackValues": {
+    "title": "Tema educativo",
+    "courseName": "Curso académico",
+    "genericTitle": "tema académico",
+    "genericCourse": "curso universitario"
+  },
+  "limits": {
+    "maxTitleLength": 80,
+    "maxCourseNameLength": 60,
+    "promptTitleLength": 50,
+    "promptCourseLength": 40
+  }
+}
