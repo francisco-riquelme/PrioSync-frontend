@@ -13,10 +13,11 @@ WebSocket-specific middleware for AWS API Gateway WebSocket APIs with Amplify Da
 
 ### WebSocketModelInitializer
 
-- Lazy Amplify Data model initialization with caching
-- Concurrent request protection via promise sharing
+- Amplify Data model initialization via lean queries ClientManager
+- Global state management and automatic caching via singleton pattern
 - Timeout protection and error recovery
 - Multi-tenant support via client key isolation
+- No duplicate state management - leverages ClientManager's built-in caching
 
 ### WebSocketRequestValidator
 
@@ -61,12 +62,12 @@ WebSocketMiddlewareChain; // Type-safe chain definition
 
 ```typescript
 const chain = createWebSocketChain()
-  .use(createWebSocketModelInitializer({ entities: ['User', 'Post'] }))
+  .use(createWebSocketModelInitializer({ entities: ["User", "Post"] }))
   .use(createWebSocketRequestValidator({ schema: messageSchema }))
   .use(createWebSocketRequestLogger())
   .use(createWebSocketErrorHandler());
 
-export const handler = wrapWebSocketHandler(chain, async input => {
+export const handler = wrapWebSocketHandler(chain, async (input) => {
   const { User } = getModelsFromInput(input);
   const message = getValidatedMessage<MessageType>(input);
   // Handler logic
@@ -75,9 +76,10 @@ export const handler = wrapWebSocketHandler(chain, async input => {
 
 ## Performance
 
-- **Initialization**: 100-500ms first request, cached afterward
+- **Initialization**: 100-500ms first request, globally cached by ClientManager afterward
 - **Validation**: Scales with schema complexity, route filtering available
 - **Logging**: Minimal overhead with configurable detail levels
+- **State Management**: Single global state via ClientManager singleton (no duplicate caches)
 
 ## Security
 

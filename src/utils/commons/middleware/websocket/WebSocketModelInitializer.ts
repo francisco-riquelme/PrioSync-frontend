@@ -17,16 +17,16 @@ import { buildWebSocketContext, getErrorMessage } from "./utils";
  * and automatic retry logic on initialization failures.
  *
  * **Initialization Flow:**
- * 1. Checks if models are already initialized (uses caching)
- * 2. If not initialized, creates initialization promise with timeout
+ * 1. Delegates to ClientManager.initializeQueries() for all initialization logic
+ * 2. ClientManager handles global state management and caching automatically
  * 3. Initializes Amplify client and query factories for specified entities
  * 4. Adds initialized models to input object for subsequent middleware
  * 5. Handles initialization failures with proper error responses
  *
  * **Caching Behavior:**
- * - Models are initialized once and cached for subsequent requests
- * - Initialization failures reset the cache to allow retry
- * - Concurrent requests share the same initialization promise
+ * - ClientManager handles all caching and state management globally
+ * - Models are initialized once per clientKey and cached automatically
+ * - Concurrent requests are handled efficiently by ClientManager
  * - Optional in-memory caching with LRU eviction for query results
  *
  * **Error Handling:**
@@ -36,9 +36,10 @@ import { buildWebSocketContext, getErrorMessage } from "./utils";
  *
  * **Performance Considerations:**
  * - First request bears initialization cost (typically 100-500ms)
- * - Subsequent requests use cached models (near-zero overhead)
+ * - Subsequent requests use ClientManager's cached models (near-zero overhead)
  * - Timeout protection prevents hanging Lambda functions
  * - Optional query caching improves read performance
+ * - No duplicate state management - relies on ClientManager singleton
  *
  * @template TSchema - Amplify Data schema type with models property
  * @template TTypes - Record of available Amplify model types
@@ -65,38 +66,20 @@ export function createWebSocketModelInitializer<
   } = config;
 
   /**
-   * Tracks whether models have been successfully initialized
-   * @internal
-   */
-  let isInitialized = false;
-
-  /**
-   * Promise for the current initialization attempt
-   * Shared across concurrent requests to prevent duplicate initialization
-   * @internal
-   */
-  let initPromise: Promise<{
-    [K in TSelected]: QueryFactoryResult<K, TTypes>;
-  }> | null = null;
-
-  /**
    * Initialize Amplify models with timeout protection
    *
-   * Creates Amplify client and query factories for the specified entities.
-   * Uses Promise.race to implement timeout protection and prevent hanging.
+   * Delegates to ClientManager.initializeQueries() which handles all caching and
+   * state management. Uses Promise.race to implement timeout protection.
    *
-   * @param _input - WebSocket input (currently unused but kept for future extensibility)
    * @returns Promise resolving to initialized query factories
    * @throws {Error} When initialization times out or Amplify client fails
    * @internal
    */
-  const initialize = async (
-    _input: WebSocketInputWithModels<TTypes, TSelected>
-  ): Promise<{
+  const initializeWithTimeout = async (): Promise<{
     [K in TSelected]: QueryFactoryResult<K, TTypes>;
   }> => {
-    const db = await Promise.race([
-      // Use unified initialization with cache support
+    const models = await Promise.race([
+      // Use ClientManager's unified initialization with cache support
       initializeQueries<TSchema, TTypes, TSelected>({
         amplifyOutputs,
         schema,
@@ -112,7 +95,7 @@ export function createWebSocketModelInitializer<
       ),
     ]);
 
-    return db;
+    return models;
   };
 
   return async (input, next) => {
@@ -124,47 +107,28 @@ export function createWebSocketModelInitializer<
     );
 
     try {
-      // Use cached models if already initialized
-      if (isInitialized && initPromise) {
-        const models = await initPromise;
-        return await next({ ...input, models });
-      }
-
-      // Start initialization if not already in progress
-      if (!initPromise) {
-        initPromise = initialize(input);
-      }
-
-      const models = await initPromise;
-      isInitialized = true;
+      // Let ClientManager handle all caching and state management
+      const models = await initializeWithTimeout();
 
       return await next({ ...input, models });
     } catch (error) {
       const message = getErrorMessage(error);
 
-      // Handle initialization failures
-      if (!isInitialized) {
-        logger.error("WebSocket Model Initializer - Initialization failed", {
-          ...context,
-          error: message,
-          cacheEnabled: !!cache?.enabled,
-        });
+      logger.error("WebSocket Model Initializer - Initialization failed", {
+        ...context,
+        error: message,
+        clientKey,
+        cacheEnabled: !!cache?.enabled,
+        entitiesRequested: entities || "all",
+      });
 
-        // Reset state to allow retry on next request
-        isInitialized = false;
-        initPromise = null;
-
-        return {
-          statusCode: 500,
-          body: JSON.stringify({
-            error: "Model initialization failed",
-            message,
-          }),
-        } as TReturn;
-      }
-
-      // Re-throw post-initialization errors for error middleware to handle
-      throw error;
+      return {
+        statusCode: 500,
+        body: JSON.stringify({
+          error: "Model initialization failed",
+          message,
+        }),
+      } as TReturn;
     }
   };
 }
