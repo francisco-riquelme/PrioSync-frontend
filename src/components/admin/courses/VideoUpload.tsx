@@ -7,16 +7,26 @@ import {
   Typography,
   Alert,
   Chip,
-  Paper
+  Paper,
+  CircularProgress
 } from '@mui/material';
 import {
   CloudUpload as CloudUploadIcon,
   VideoFile as VideoFileIcon,
-  Delete as DeleteIcon
+  Delete as DeleteIcon,
+  AutoAwesome as AutoAwesomeIcon
 } from '@mui/icons-material';
+
+interface VideoMetadata {
+  duration: string;
+  title: string;
+  resolution?: string;
+  size: string;
+}
 
 interface VideoUploadProps {
   onFileSelect: (file: File | null) => void;
+  onMetadataExtracted?: (metadata: VideoMetadata) => void;
   error?: string;
   disabled?: boolean;
 }
@@ -31,9 +41,11 @@ const ACCEPTED_VIDEO_TYPES = [
 
 const MAX_FILE_SIZE = 100 * 1024 * 1024; // 100MB
 
-export function VideoUpload({ onFileSelect, error, disabled }: VideoUploadProps) {
+export function VideoUpload({ onFileSelect, onMetadataExtracted, error, disabled }: VideoUploadProps) {
   const [selectedFile, setSelectedFile] = useState<File | null>(null);
   const [dragOver, setDragOver] = useState(false);
+  const [extractingMetadata, setExtractingMetadata] = useState(false);
+  const [extractedMetadata, setExtractedMetadata] = useState<VideoMetadata | null>(null);
 
   const formatFileSize = (bytes: number): string => {
     if (bytes === 0) return '0 Bytes';
@@ -41,6 +53,52 @@ export function VideoUpload({ onFileSelect, error, disabled }: VideoUploadProps)
     const sizes = ['Bytes', 'KB', 'MB', 'GB'];
     const i = Math.floor(Math.log(bytes) / Math.log(k));
     return parseFloat((bytes / Math.pow(k, i)).toFixed(2)) + ' ' + sizes[i];
+  };
+
+  const formatDuration = (seconds: number): string => {
+    if (isNaN(seconds) || !isFinite(seconds)) {
+      return 'Duración desconocida';
+    }
+    
+    const hours = Math.floor(seconds / 3600);
+    const minutes = Math.floor((seconds % 3600) / 60);
+    const secs = Math.floor(seconds % 60);
+    
+    if (hours > 0) {
+      return `${hours}h ${minutes}m ${secs}s`;
+    }
+    return `${minutes}m ${secs}s`;
+  };
+
+  const extractVideoMetadata = async (file: File): Promise<VideoMetadata> => {
+    return new Promise((resolve) => {
+      const video = document.createElement('video');
+      video.preload = 'metadata';
+      
+      video.onloadedmetadata = () => {
+        const metadata: VideoMetadata = {
+          duration: formatDuration(video.duration),
+          title: file.name.replace(/\.[^/.]+$/, ""), // Nombre sin extensión
+          resolution: `${video.videoWidth}x${video.videoHeight}`,
+          size: formatFileSize(file.size)
+        };
+        
+        URL.revokeObjectURL(video.src);
+        resolve(metadata);
+      };
+      
+      video.onerror = () => {
+        URL.revokeObjectURL(video.src);
+        // Fallback metadata
+        resolve({
+          duration: 'Duración desconocida',
+          title: file.name.replace(/\.[^/.]+$/, ""),
+          size: formatFileSize(file.size)
+        });
+      };
+      
+      video.src = URL.createObjectURL(file);
+    });
   };
 
   const validateFile = (file: File): string | null => {
@@ -55,7 +113,7 @@ export function VideoUpload({ onFileSelect, error, disabled }: VideoUploadProps)
     return null;
   };
 
-  const handleFileSelect = useCallback((file: File) => {
+  const handleFileSelect = useCallback(async (file: File) => {
     const validationError = validateFile(file);
     
     if (validationError) {
@@ -65,7 +123,19 @@ export function VideoUpload({ onFileSelect, error, disabled }: VideoUploadProps)
 
     setSelectedFile(file);
     onFileSelect(file);
-  }, [onFileSelect]);
+
+    // Extraer metadatos automáticamente
+    setExtractingMetadata(true);
+    try {
+      const metadata = await extractVideoMetadata(file);
+      setExtractedMetadata(metadata);
+      onMetadataExtracted?.(metadata);
+    } catch (error) {
+      console.error('Error extrayendo metadatos:', error);
+    } finally {
+      setExtractingMetadata(false);
+    }
+  }, [onFileSelect, onMetadataExtracted]);
 
   const handleDrop = useCallback((e: React.DragEvent) => {
     e.preventDefault();
@@ -100,6 +170,7 @@ export function VideoUpload({ onFileSelect, error, disabled }: VideoUploadProps)
 
   const handleRemoveFile = () => {
     setSelectedFile(null);
+    setExtractedMetadata(null);
     onFileSelect(null);
   };
 
@@ -190,6 +261,25 @@ export function VideoUpload({ onFileSelect, error, disabled }: VideoUploadProps)
               <Typography variant="body2" color="text.secondary">
                 {formatFileSize(selectedFile.size)} • {selectedFile.type}
               </Typography>
+              
+              {extractingMetadata && (
+                <Box sx={{ display: 'flex', alignItems: 'center', gap: 1, mt: 1 }}>
+                  <CircularProgress size={16} />
+                  <Typography variant="caption" color="text.secondary">
+                    Extrayendo metadatos...
+                  </Typography>
+                </Box>
+              )}
+              
+              {extractedMetadata && (
+                <Box sx={{ mt: 1 }}>
+                  <Typography variant="caption" color="success.main">
+                    <AutoAwesomeIcon sx={{ fontSize: 14, mr: 0.5 }} />
+                    Duración: {extractedMetadata.duration}
+                    {extractedMetadata.resolution && ` • ${extractedMetadata.resolution}`}
+                  </Typography>
+                </Box>
+              )}
             </Box>
 
             <Button
