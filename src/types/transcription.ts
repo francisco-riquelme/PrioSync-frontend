@@ -106,7 +106,7 @@ export interface CourseOption {
 
 // Configuraciones predefinidas
 export const VIDEO_CONFIG = {
-  MAX_FILE_SIZE: 50 * 1024 * 1024, // 50MB
+  MAX_FILE_SIZE: 100 * 1024 * 1024, // 100MB
   ALLOWED_TYPES: ['video/mp4', 'video/avi', 'video/mov', 'video/quicktime', 'video/wmv', 'video/mkv'] as const,
   MAX_DURATION: 7200, // 2 horas en segundos
 } as const;
