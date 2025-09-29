@@ -145,7 +145,7 @@ async function testCompleteTranscriptionFlow() {
       });
     }
 
-    console.log('\nFlujo completo de transcripción completado exitosamente! 🎉');
+    console.log('\nFlujo completo de transcripción completado exitosamente!');
 
   } catch (error) {
     console.error('Error en el flujo de transcripción:', error.message);
