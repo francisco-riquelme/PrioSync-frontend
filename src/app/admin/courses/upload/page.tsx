@@ -1,9 +1,9 @@
-import AdminLayout from '@/components/admin/AdminLayout'
-import { 
-  Paper, 
-  Typography, 
-  Box 
-} from '@mui/material'
+'use client';
+
+import React from 'react';
+import { Container, Typography, Paper, Box } from '@mui/material';
+import AdminLayout from '@/components/admin/AdminLayout';
+import { CourseUploadForm } from '@/components/admin/courses/CourseUploadForm';
 
 export default function AdminCoursesUploadPage() {
   return (
@@ -11,32 +11,41 @@ export default function AdminCoursesUploadPage() {
       title="Administrador - Cargar Videos"
       subtitle="Sube videos para generar transcripciones automáticamente"
     >
-      <Paper elevation={2} sx={{ p: 4 }}>
-        <Typography variant="h6" gutterBottom>
-          Formulario de Carga de Videos
-        </Typography>
-        
-        <Typography variant="body2" color="text.secondary">
-          El formulario de subida de videos y la integración con LLM para 
-          transcripción se implementará en la siguiente tarea.
-        </Typography>
-        
-        <Box 
+      <Container maxWidth="md" sx={{ py: 4 }}>
+        <Paper 
+          elevation={2} 
           sx={{ 
-            mt: 4, 
-            p: 3, 
-            border: '2px dashed',
-            borderColor: 'grey.300',
+            p: 4, 
             borderRadius: 2,
-            textAlign: 'center',
-            backgroundColor: 'grey.50'
+            background: 'linear-gradient(135deg, #f5f7fa 0%, #c3cfe2 100%)'
           }}
         >
-          <Typography variant="body1" color="text.secondary">
-            Área de carga de videos (próximamente)
-          </Typography>
-        </Box>
-      </Paper>
+          <Box sx={{ mb: 4, textAlign: 'center' }}>
+            <Typography 
+              variant="h4" 
+              component="h1" 
+              gutterBottom
+              sx={{ 
+                fontWeight: 'bold',
+                color: 'primary.main',
+                mb: 2
+              }}
+            >
+              Subir Curso para Transcripción
+            </Typography>
+            <Typography 
+              variant="body1" 
+              color="text.secondary"
+              sx={{ maxWidth: '600px', mx: 'auto' }}
+            >
+              Carga un video y completa los metadatos necesarios para generar 
+              una transcripción inteligente usando Gemini AI 2.5 Flash.
+            </Typography>
+          </Box>
+
+          <CourseUploadForm />
+        </Paper>
+      </Container>
     </AdminLayout>
-  )
+  );
 }
