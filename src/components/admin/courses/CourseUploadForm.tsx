@@ -235,7 +235,7 @@ export function CourseUploadForm() {
           </Typography>
           <MetadataAutofill
             videoFile={formData.videoFile}
-            extractedMetadata={extractedVideoMetadata}
+            extractedMetadata={extractedVideoMetadata || undefined}
             onSuggestionsGenerated={handleSuggestionsGenerated}
             disabled={isSubmitting}
           />
