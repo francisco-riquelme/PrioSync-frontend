@@ -13,11 +13,6 @@ export const useStudySessions = () => {
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
 
-  // Cargar sesiones al inicializar
-  useEffect(() => {
-    loadSessions();
-  }, []);
-
   const loadSessions = useCallback(async () => {
     try {
       setLoading(true);
@@ -31,6 +26,11 @@ export const useStudySessions = () => {
       setLoading(false);
     }
   }, []);
+
+  // Cargar sesiones al inicializar
+  useEffect(() => {
+    loadSessions();
+  }, [loadSessions]);
 
   // Crear nueva sesión
   const createSession = useCallback(

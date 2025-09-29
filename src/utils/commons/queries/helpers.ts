@@ -1,4 +1,5 @@
 import { logger } from "../log";
+import { createHash } from "crypto";
 import type {
   OperationType,
   AmplifyModelType,
@@ -499,19 +500,13 @@ export function createObjectHash(
     const pairs = keys.map((key) => `${key}:${String(dataToHash[key])}`);
     const serialized = pairs.join("|");
 
-    return require("crypto")
-      .createHash("sha256")
-      .update(serialized)
-      .digest("hex");
+    return createHash("sha256").update(serialized).digest("hex");
   } catch (error) {
     logger.warn(
       `Hash generation failed for ${entityName}, falling back to JSON`,
       { error }
     );
-    return require("crypto")
-      .createHash("sha256")
-      .update(JSON.stringify(obj))
-      .digest("hex");
+    return createHash("sha256").update(JSON.stringify(obj)).digest("hex");
   }
 }
 //#endregion
@@ -550,6 +545,7 @@ export function createObjectHash(
  * ```
  */
 export async function handlePagination<T>(
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
   operation: (params?: Record<string, unknown>) => Promise<any>,
   params: Record<string, unknown> = {},
   options: {
