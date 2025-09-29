@@ -87,21 +87,36 @@ export class ClientManager {
   private client: unknown | null = null;
   private initPromise: Promise<void> | null = null;
   private queryFactories = new Map<string, unknown>();
+  private schema: { models: Record<string, unknown> } | null = null;
 
   private constructor(private readonly clientKey: string) {}
 
   //#region STATIC FACTORY METHODS
   /**
-   * Gets or creates a ClientManager instance for the specified key.
+   * Gets or creates a ClientManager instance for the specified key with optional schema.
    *
+   * @template TSchema - Schema type containing model definitions
    * @param clientKey - Unique identifier for client isolation (default: "default")
+   * @param schema - Optional schema to use for typing the client
    * @returns ClientManager instance for the specified key
    */
-  public static getInstance(clientKey: string = "default"): ClientManager {
+  public static getInstance<
+    TSchema extends { models: Record<string, unknown> } = {
+      models: Record<string, unknown>;
+    },
+  >(clientKey: string = "default", schema?: TSchema): ClientManager {
     if (!ClientManager.instances.has(clientKey)) {
       ClientManager.instances.set(clientKey, new ClientManager(clientKey));
     }
-    return ClientManager.instances.get(clientKey)!;
+
+    const instance = ClientManager.instances.get(clientKey)!;
+
+    // Store the schema if provided
+    if (schema) {
+      instance.setSchema(schema);
+    }
+
+    return instance;
   }
 
   /**
@@ -146,7 +161,7 @@ export class ClientManager {
           globalSchema = schema;
 
           const manager = ClientManager.getInstance(clientKey);
-          await manager.getClient<TTypes>();
+          await manager.initializeClient<TTypes>();
         } catch (error) {
           initializationPromise = null;
           const errorMessage =
@@ -218,18 +233,58 @@ export class ClientManager {
 
   //#region CLIENT MANAGEMENT
   /**
-   * Gets the initialized Amplify client, initializing it if necessary.
+   * Sets the schema for this client manager instance.
    *
-   * @template T - Type of the client (should extend Record<string, unknown>)
+   * @template TSchema - Schema type containing model definitions
+   * @param schema - Schema to use for typing
+   */
+  public setSchema<TSchema extends { models: Record<string, unknown> }>(
+    schema: TSchema
+  ): void {
+    this.schema = schema;
+  }
+
+  /**
+   * Gets the stored schema for this instance.
+   *
+   * @returns The stored schema or null if not set
+   */
+  public getSchema(): { models: Record<string, unknown> } | null {
+    return this.schema;
+  }
+
+  /**
+   * Gets the initialized Amplify client with proper typing based on the schema.
+   *
+   * @template TTypes - Record of all available Amplify model types (inferred from schema)
    * @returns Promise resolving to the initialized client
    */
-  public async getClient<T extends Record<string, unknown>>(): Promise<T> {
-    if (!this.initPromise) {
-      this.initPromise = this.generateClient<T>();
+  public async getClient<
+    TTypes extends Record<string, unknown> = Record<string, unknown>,
+  >(): Promise<TTypes> {
+    // If client is already initialized, return it
+    if (this.client !== null) {
+      return this.client as TTypes;
     }
 
-    await this.initPromise;
-    return this.client as T;
+    // Check if Amplify has been configured globally
+    if (!globalAmplifyOutputs) {
+      throw new Error(
+        "Amplify not configured. Call ClientManager.initializeQueries() with amplifyOutputs first."
+      );
+    }
+
+    // Initialize the client if not already in progress
+    await this.initializeClient<TTypes>();
+
+    // After initialization, client should not be null
+    if (this.client === null) {
+      throw new Error(
+        `Client initialization failed for key: ${this.clientKey}`
+      );
+    }
+
+    return this.client as TTypes;
   }
 
   /**
@@ -261,7 +316,7 @@ export class ClientManager {
    * @param entityName - Name of the entity
    * @param factory - Query factory instance to store
    */
-  public setQueryFactory<
+  private setQueryFactory<
     T extends string,
     TTypes extends Record<T, AmplifyModelType>,
   >(entityName: T, factory: QueryFactoryResult<T, TTypes>): void {
@@ -277,45 +332,12 @@ export class ClientManager {
    * @param entityName - Name of the entity
    * @returns Query factory instance or null if not found
    */
-  public getQueryFactory<
+  private getQueryFactory<
     T extends string,
     TTypes extends Record<T, AmplifyModelType>,
   >(entityName: T): QueryFactoryResult<T, TTypes> | null {
     const factory = this.queryFactories.get(entityName);
     return factory ? (factory as QueryFactoryResult<T, TTypes>) : null;
-  }
-
-  /**
-   * Checks if a query factory exists for the given entity.
-   *
-   * @param entityName - Name of the entity to check
-   * @returns True if factory exists, false otherwise
-   */
-  public hasQueryFactory(entityName: string): boolean {
-    return this.queryFactories.has(entityName);
-  }
-
-  /**
-   * Gets all stored query factories as a record.
-   *
-   * @returns Object containing all query factories indexed by entity name
-   */
-  public getAllQueryFactories(): Record<string, unknown> {
-    const result: Record<string, unknown> = {};
-    this.queryFactories.forEach((factory, entityName) => {
-      result[entityName] = factory;
-    });
-    return result;
-  }
-
-  /**
-   * Checks if specific entities have been initialized.
-   *
-   * @param entities - Array of entity names to check
-   * @returns True if all entities are initialized, false otherwise
-   */
-  public areEntitiesInitialized(entities: readonly string[]): boolean {
-    return entities.every((entity) => this.hasQueryFactory(entity));
   }
   //#endregion
 
@@ -361,54 +383,6 @@ export class ClientManager {
   }
 
   /**
-   * Gets only existing query factories without auto-initialization.
-   *
-   * Returns only entities that have already been initialized. Missing entities
-   * will be logged but not created.
-   *
-   * @template TTypes - Record of all available Amplify model types
-   * @template TSelected - Selected entity names to retrieve
-   * @param config - Configuration for existing factory retrieval
-   * @returns Object with query factories for entities that exist (may be partial)
-   */
-  public getExistingQueryFactories<
-    TTypes extends Record<string, AmplifyModelType>,
-    TSelected extends keyof TTypes & string,
-  >(config: {
-    entities: readonly TSelected[];
-  }): {
-    [K in TSelected]?: QueryFactoryResult<K, TTypes>;
-  } {
-    const { entities } = config;
-
-    const queries: Record<string, unknown> = {};
-    const missing: string[] = [];
-
-    // Just get existing factories without creating missing ones
-    for (const entityName of entities) {
-      const entityKey = String(entityName) as TSelected;
-      const existingFactory = this.getQueryFactory(entityKey);
-
-      if (existingFactory) {
-        queries[entityName] = existingFactory;
-      } else {
-        missing.push(entityKey);
-      }
-    }
-
-    if (missing.length > 0) {
-      logger.warn(
-        `Some query factories not found: ${missing.join(", ")}. Use getQueryFactories() for auto-initialization.`,
-        { missing, clientKey: this.clientKey }
-      );
-    }
-
-    return queries as {
-      [K in TSelected]?: QueryFactoryResult<K, TTypes>;
-    };
-  }
-
-  /**
    * Ensures query factories exist, creating them if needed.
    *
    * This is a centralized method that eliminates code duplication between
@@ -419,7 +393,7 @@ export class ClientManager {
    * @param config - Configuration for factory creation
    * @returns Promise resolving to factory creation results
    */
-  public async ensureQueryFactories<
+  private async ensureQueryFactories<
     TTypes extends Record<string, AmplifyModelType>,
     TSelected extends keyof TTypes & string,
   >(config: {
@@ -484,28 +458,35 @@ export class ClientManager {
 
   //#region PRIVATE METHODS
   /**
-   * Generates the Amplify client instance.
+   * Initializes the Amplify client instance.
    *
    * @private
    * @template T - Type of the client (should extend Record<string, unknown>)
-   * @returns Promise that resolves when client is generated
+   * @returns Promise that resolves when client is initialized
    * @throws Error if client generation fails
    */
-  private async generateClient<
-    T extends Record<string, unknown>,
+  private async initializeClient<
+    T extends Record<string, unknown> = Record<string, unknown>,
   >(): Promise<void> {
-    try {
-      this.client = generateClient<T>();
-    } catch (error) {
-      this.initPromise = null; // Allow retry
-      const message = error instanceof Error ? error.message : String(error);
-      logger.error(`Client generation failed for key: ${this.clientKey}`, {
-        error: message,
-      });
-      throw new Error(
-        `Failed to generate client '${this.clientKey}': ${message}`
-      );
+    if (!this.initPromise) {
+      this.initPromise = (async () => {
+        try {
+          this.client = generateClient<T>();
+        } catch (error) {
+          this.initPromise = null; // Allow retry
+          const message =
+            error instanceof Error ? error.message : String(error);
+          logger.error(`Client generation failed for key: ${this.clientKey}`, {
+            error: message,
+          });
+          throw new Error(
+            `Failed to generate client '${this.clientKey}': ${message}`
+          );
+        }
+      })();
     }
+
+    await this.initPromise;
   }
   //#endregion
 }
