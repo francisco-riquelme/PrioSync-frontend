@@ -18,6 +18,7 @@ import {
 } from '@mui/icons-material';
 import { VideoUpload } from './VideoUpload';
 import { MetadataFields } from './MetadataFields';
+import { MetadataAutofill } from './MetadataAutofill';
 import { TranscriptionProgress } from './TranscriptionProgress';
 import type { CourseMetadata, TranscriptionJobStatus } from '@/types/transcription';
 
@@ -50,6 +51,7 @@ export function CourseUploadForm() {
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [transcriptionStatus, setTranscriptionStatus] = useState<TranscriptionJobStatus | null>(null);
   const [currentRequestId, setCurrentRequestId] = useState<string | null>(null);
+  const [extractedVideoMetadata, setExtractedVideoMetadata] = useState<{title: string, duration: string} | null>(null);
 
   // Validación del formulario
   const validateForm = (): boolean => {
@@ -61,18 +63,18 @@ export function CourseUploadForm() {
     if (!formData.title.trim()) {
       newErrors.title = 'El título es obligatorio';
     }
-    if (!formData.description.trim()) {
-      newErrors.description = 'La descripción es obligatoria';
-    }
-    if (!formData.instructor.trim()) {
-      newErrors.instructor = 'El instructor es obligatorio';
-    }
-    if (!formData.category.trim()) {
-      newErrors.category = 'La categoría es obligatoria';
-    }
-    if (!formData.subject.trim()) {
-      newErrors.subject = 'La materia es obligatoria';
-    }
+
+    // Aplicar valores por defecto para campos opcionales vacíos
+    const defaultFormData = {
+      description: formData.description || 'Contenido educativo sin descripción específica.',
+      instructor: formData.instructor || 'Instructor no especificado',
+      category: formData.category || 'General',
+      subject: formData.subject || 'Materia general',
+      targetAudience: formData.targetAudience || 'Audiencia general'
+    };
+
+    // Actualizar form data con valores por defecto
+    setFormData(prev => ({ ...prev, ...defaultFormData }));
 
     setErrors(newErrors);
     return Object.keys(newErrors).length === 0;
@@ -84,6 +86,24 @@ export function CourseUploadForm() {
     if (file && errors.videoFile) {
       setErrors(prev => ({ ...prev, videoFile: undefined }));
     }
+  };
+
+  // Manejo de metadatos extraídos del video
+  const handleMetadataExtracted = (metadata: {title: string, duration: string}) => {
+    setExtractedVideoMetadata(metadata);
+    // Aplicar automáticamente el título si no existe
+    if (!formData.title) {
+      setFormData(prev => ({
+        ...prev,
+        title: metadata.title,
+        duration: metadata.duration
+      }));
+    }
+  };
+
+  // Manejo de sugerencias generadas
+  const handleSuggestionsGenerated = (suggestions: Partial<CourseMetadata>) => {
+    setFormData(prev => ({ ...prev, ...suggestions }));
   };
 
   // Manejo de cambios en metadatos
@@ -201,6 +221,7 @@ export function CourseUploadForm() {
           </Typography>
           <VideoUpload
             onFileSelect={handleFileSelect}
+            onMetadataExtracted={handleMetadataExtracted}
             error={errors.videoFile}
             disabled={isSubmitting}
           />
@@ -212,6 +233,13 @@ export function CourseUploadForm() {
             <InfoIcon color="primary" />
             Metadatos del Curso
           </Typography>
+          <MetadataAutofill
+            videoFile={formData.videoFile}
+            extractedMetadata={extractedVideoMetadata}
+            onSuggestionsGenerated={handleSuggestionsGenerated}
+            disabled={isSubmitting}
+          />
+          
           <MetadataFields
             metadata={formData}
             errors={errors as Partial<CourseMetadata>}
