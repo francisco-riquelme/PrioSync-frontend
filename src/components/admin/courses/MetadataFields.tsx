@@ -1,6 +1,6 @@
 'use client';
 
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import {
   TextField,
   FormControl,
@@ -12,9 +12,18 @@ import {
   Box,
   Typography,
   Autocomplete,
-  IconButton
+  IconButton,
+  Switch,
+  FormControlLabel,
+  Button,
+  Alert
 } from '@mui/material';
-import { Add as AddIcon } from '@mui/icons-material';
+import { 
+  Add as AddIcon, 
+  Help as HelpIcon,
+  ExpandLess as ExpandLessIcon,
+  ExpandMore as ExpandMoreIcon
+} from '@mui/icons-material';
 import type { CourseMetadata, CourseLevel, Language } from '@/types/transcription';
 
 interface MetadataFieldsProps {
@@ -22,7 +31,21 @@ interface MetadataFieldsProps {
   errors: Partial<CourseMetadata>;
   onChange: (updates: Partial<CourseMetadata>) => void;
   disabled?: boolean;
+  autoSuggestions?: Partial<CourseMetadata>;
 }
+
+const DEFAULT_VALUES: CourseMetadata = {
+  title: '',
+  description: 'Contenido educativo sin descripción específica.',
+  instructor: 'Instructor no especificado',
+  category: 'General',
+  level: 'beginner',
+  duration: 'Duración no especificada',
+  language: 'es',
+  tags: ['video-educativo'],
+  subject: 'Materia general',
+  targetAudience: 'Audiencia general'
+};
 
 const COURSE_LEVELS: { value: CourseLevel; label: string }[] = [
   { value: 'beginner', label: 'Principiante' },
@@ -84,14 +107,38 @@ const COMMON_AUDIENCES = [
   'Emprendedores'
 ];
 
-export function MetadataFields({ metadata, errors, onChange, disabled }: MetadataFieldsProps) {
+export function MetadataFields({ 
+  metadata, 
+  errors, 
+  onChange, 
+  disabled, 
+  autoSuggestions 
+}: MetadataFieldsProps) {
+  const [useMinimalMode, setUseMinimalMode] = useState(false);
+  const [showOptionalFields, setShowOptionalFields] = useState(false);
   const [newTag, setNewTag] = useState('');
+
+  // Aplicar sugerencias automáticas cuando estén disponibles
+  useEffect(() => {
+    if (autoSuggestions) {
+      onChange(autoSuggestions);
+    }
+  }, [autoSuggestions, onChange]);
 
   const handleInputChange = (field: keyof CourseMetadata) => (
     event: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement> | any
   ) => {
     const value = event.target ? event.target.value : event;
     onChange({ [field]: value });
+  };
+
+  const handleUseDefaults = () => {
+    const defaultsToApply = {
+      ...DEFAULT_VALUES,
+      title: metadata.title || DEFAULT_VALUES.title,
+      duration: metadata.duration || DEFAULT_VALUES.duration
+    };
+    onChange(defaultsToApply);
   };
 
   const handleAddTag = () => {
@@ -116,232 +163,255 @@ export function MetadataFields({ metadata, errors, onChange, disabled }: Metadat
     }
   };
 
+  const requiredFields = ['title'];
+  const completedRequired = requiredFields.filter(field => metadata[field as keyof CourseMetadata]).length;
+  const optionalFields = ['description', 'instructor', 'category', 'subject', 'targetAudience'];
+  const completedOptional = optionalFields.filter(field => metadata[field as keyof CourseMetadata]).length;
+
   return (
-    <Box sx={{ display: 'flex', flexDirection: 'column', gap: 3 }}>
-      {/* Información básica */}
-      <Box>
-        <Typography variant="subtitle1" gutterBottom sx={{ fontWeight: 'medium' }}>
-          Información Básica
-        </Typography>
+    <Box>
+      {/* Controles superiores */}
+      <Box sx={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', mb: 3 }}>
+        <FormControlLabel
+          control={
+            <Switch 
+              checked={useMinimalMode} 
+              onChange={(e) => setUseMinimalMode(e.target.checked)}
+            />
+          }
+          label="Solo campos esenciales"
+        />
         
-        <Box 
-          sx={{ 
-            display: 'grid',
-            gridTemplateColumns: { xs: '1fr', md: '2fr 1fr' },
-            gap: 2,
-            mb: 2
-          }}
+        <Button 
+          variant="outlined" 
+          size="small"
+          onClick={handleUseDefaults}
+          startIcon={<HelpIcon />}
+          disabled={disabled}
         >
-          <TextField
-            fullWidth
-            label="Título del Curso"
-            value={metadata.title}
-            onChange={handleInputChange('title')}
-            error={!!errors.title}
-            helperText={errors.title || 'Título descriptivo y claro del curso'}
-            disabled={disabled}
-            required
-          />
+          Usar Valores por Defecto
+        </Button>
+      </Box>
+
+      <Box sx={{ display: 'flex', flexDirection: 'column', gap: 3 }}>
+        {/* CAMPOS OBLIGATORIOS */}
+        <Box>
+          <Typography variant="subtitle1" gutterBottom sx={{ fontWeight: 'medium', color: 'primary.main' }}>
+            Campos Obligatorios
+          </Typography>
           
           <TextField
             fullWidth
-            label="Duración Estimada"
-            value={metadata.duration}
-            onChange={handleInputChange('duration')}
-            error={!!errors.duration}
-            helperText={errors.duration || 'Ej: 2 horas, 45 minutos'}
-            disabled={disabled}
-            placeholder="Ej: 2h 30min"
-          />
-        </Box>
-
-        <TextField
-          fullWidth
-          multiline
-          rows={3}
-          label="Descripción del Curso"
-          value={metadata.description}
-          onChange={handleInputChange('description')}
-          error={!!errors.description}
-          helperText={errors.description || 'Descripción detallada del contenido y objetivos'}
-          disabled={disabled}
-          required
-        />
-      </Box>
-
-      {/* Clasificación */}
-      <Box>
-        <Typography variant="subtitle1" gutterBottom sx={{ fontWeight: 'medium' }}>
-          Clasificación
-        </Typography>
-        
-        <Box 
-          sx={{ 
-            display: 'grid',
-            gridTemplateColumns: { xs: '1fr', md: '1fr 1fr' },
-            gap: 2
-          }}
-        >
-          <TextField
-            fullWidth
-            label="Instructor"
-            value={metadata.instructor}
-            onChange={handleInputChange('instructor')}
-            error={!!errors.instructor}
-            helperText={errors.instructor || 'Nombre del instructor o docente'}
+            label="Título del Curso *"
+            value={metadata.title}
+            onChange={handleInputChange('title')}
+            error={!!errors.title}
+            helperText={errors.title || 'Único campo obligatorio - se puede extraer del nombre del archivo'}
             disabled={disabled}
             required
           />
-
-          <Autocomplete
-            freeSolo
-            options={COMMON_CATEGORIES}
-            value={metadata.category}
-            onChange={(_, value) => onChange({ category: value || '' })}
-            renderInput={(params) => (
-              <TextField
-                {...params}
-                label="Categoría"
-                error={!!errors.category}
-                helperText={errors.category || 'Categoría principal del curso'}
-                required
-                disabled={disabled}
-              />
-            )}
-          />
-
-          <Autocomplete
-            freeSolo
-            options={COMMON_SUBJECTS}
-            value={metadata.subject}
-            onChange={(_, value) => onChange({ subject: value || '' })}
-            renderInput={(params) => (
-              <TextField
-                {...params}
-                label="Materia"
-                error={!!errors.subject}
-                helperText={errors.subject || 'Materia específica del curso'}
-                required
-                disabled={disabled}
-              />
-            )}
-          />
-
-          <Autocomplete
-            freeSolo
-            options={COMMON_AUDIENCES}
-            value={metadata.targetAudience}
-            onChange={(_, value) => onChange({ targetAudience: value || '' })}
-            renderInput={(params) => (
-              <TextField
-                {...params}
-                label="Audiencia Objetivo"
-                error={!!errors.targetAudience}
-                helperText={errors.targetAudience || 'Público objetivo del curso'}
-                disabled={disabled}
-              />
-            )}
-          />
-        </Box>
-      </Box>
-
-      {/* Configuración */}
-      <Box>
-        <Typography variant="subtitle1" gutterBottom sx={{ fontWeight: 'medium' }}>
-          Configuración
-        </Typography>
-        
-        <Box 
-          sx={{ 
-            display: 'grid',
-            gridTemplateColumns: { xs: '1fr', md: '1fr 1fr' },
-            gap: 2
-          }}
-        >
-          <FormControl fullWidth error={!!errors.level}>
-            <InputLabel>Nivel de Dificultad</InputLabel>
-            <Select
-              value={metadata.level}
-              label="Nivel de Dificultad"
-              onChange={handleInputChange('level')}
-              disabled={disabled}
-            >
-              {COURSE_LEVELS.map((level) => (
-                <MenuItem key={level.value} value={level.value}>
-                  {level.label}
-                </MenuItem>
-              ))}
-            </Select>
-            <FormHelperText>
-              {errors.level || 'Nivel de complejidad del contenido'}
-            </FormHelperText>
-          </FormControl>
-
-          <FormControl fullWidth error={!!errors.language}>
-            <InputLabel>Idioma Principal</InputLabel>
-            <Select
-              value={metadata.language}
-              label="Idioma Principal"
-              onChange={handleInputChange('language')}
-              disabled={disabled}
-            >
-              {LANGUAGES.map((lang) => (
-                <MenuItem key={lang.value} value={lang.value}>
-                  {lang.label}
-                </MenuItem>
-              ))}
-            </Select>
-            <FormHelperText>
-              {errors.language || 'Idioma del contenido del video'}
-            </FormHelperText>
-          </FormControl>
-        </Box>
-      </Box>
-
-      {/* Tags */}
-      <Box>
-        <Typography variant="subtitle1" gutterBottom sx={{ fontWeight: 'medium' }}>
-          Etiquetas
-        </Typography>
-        
-        <Box sx={{ display: 'flex', gap: 1, mb: 2 }}>
-          <TextField
-            fullWidth
-            size="small"
-            label="Agregar etiqueta"
-            value={newTag}
-            onChange={(e) => setNewTag(e.target.value)}
-            onKeyPress={handleKeyPress}
-            disabled={disabled}
-            placeholder="Ej: JavaScript, Frontend, React"
-          />
-          <IconButton
-            onClick={handleAddTag}
-            disabled={disabled || !newTag.trim()}
-            color="primary"
-          >
-            <AddIcon />
-          </IconButton>
         </Box>
 
-        <Box sx={{ display: 'flex', gap: 1, flexWrap: 'wrap' }}>
-          {metadata.tags.map((tag) => (
-            <Chip
-              key={tag}
-              label={tag}
-              onDelete={disabled ? undefined : () => handleRemoveTag(tag)}
-              color="primary"
-              variant="outlined"
-            />
-          ))}
-        </Box>
-        
-        {metadata.tags.length === 0 && (
-          <Typography variant="body2" color="text.secondary" sx={{ mt: 1 }}>
-            Agrega etiquetas para mejorar la búsqueda y categorización del curso
-          </Typography>
+        {!useMinimalMode && (
+          <>
+            {/* Información básica */}
+            <Box>
+              <Typography variant="subtitle1" gutterBottom sx={{ fontWeight: 'medium' }}>
+                Información Básica
+              </Typography>
+              
+              <Box sx={{ display: 'grid', gridTemplateColumns: '2fr 1fr', gap: 2, mb: 2 }}>
+                <TextField
+                  multiline
+                  rows={2}
+                  label="Descripción"
+                  value={metadata.description}
+                  onChange={handleInputChange('description')}
+                  helperText="Se puede generar automáticamente si se deja vacío"
+                  disabled={disabled}
+                  placeholder={DEFAULT_VALUES.description}
+                />
+                
+                <TextField
+                  label="Duración"
+                  value={metadata.duration}
+                  onChange={handleInputChange('duration')}
+                  disabled={disabled}
+                  placeholder="Se extrae automáticamente del video"
+                />
+              </Box>
+            </Box>
+
+            {/* Clasificación */}
+            <Box>
+              <Typography variant="subtitle1" gutterBottom sx={{ fontWeight: 'medium' }}>
+                Clasificación
+              </Typography>
+              
+              <Box sx={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 2 }}>
+                <TextField
+                  label="Instructor"
+                  value={metadata.instructor}
+                  onChange={handleInputChange('instructor')}
+                  disabled={disabled}
+                  placeholder={DEFAULT_VALUES.instructor}
+                />
+
+                <Autocomplete
+                  freeSolo
+                  options={COMMON_CATEGORIES}
+                  value={metadata.category}
+                  onChange={(_, value) => onChange({ category: value || DEFAULT_VALUES.category })}
+                  renderInput={(params) => (
+                    <TextField
+                      {...params}
+                      label="Categoría"
+                      placeholder={DEFAULT_VALUES.category}
+                      disabled={disabled}
+                    />
+                  )}
+                />
+
+                <Autocomplete
+                  freeSolo
+                  options={COMMON_SUBJECTS}
+                  value={metadata.subject}
+                  onChange={(_, value) => onChange({ subject: value || DEFAULT_VALUES.subject })}
+                  renderInput={(params) => (
+                    <TextField
+                      {...params}
+                      label="Materia"
+                      placeholder={DEFAULT_VALUES.subject}
+                      disabled={disabled}
+                    />
+                  )}
+                />
+
+                <Autocomplete
+                  freeSolo
+                  options={COMMON_AUDIENCES}
+                  value={metadata.targetAudience}
+                  onChange={(_, value) => onChange({ targetAudience: value || DEFAULT_VALUES.targetAudience })}
+                  renderInput={(params) => (
+                    <TextField
+                      {...params}
+                      label="Audiencia Objetivo"
+                      placeholder={DEFAULT_VALUES.targetAudience}
+                      disabled={disabled}
+                    />
+                  )}
+                />
+              </Box>
+            </Box>
+
+            {/* Configuración */}
+            <Box>
+              <Box sx={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', mb: 2 }}>
+                <Typography variant="subtitle1" sx={{ fontWeight: 'medium' }}>
+                  Configuración Avanzada
+                </Typography>
+                <Button
+                  size="small"
+                  onClick={() => setShowOptionalFields(!showOptionalFields)}
+                  endIcon={showOptionalFields ? <ExpandLessIcon /> : <ExpandMoreIcon />}
+                >
+                  {showOptionalFields ? 'Ocultar' : 'Mostrar'}
+                </Button>
+              </Box>
+              
+              {showOptionalFields && (
+                <Box sx={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 2 }}>
+                  <FormControl fullWidth>
+                    <InputLabel>Nivel de Dificultad</InputLabel>
+                    <Select
+                      value={metadata.level}
+                      label="Nivel de Dificultad"
+                      onChange={handleInputChange('level')}
+                      disabled={disabled}
+                    >
+                      {COURSE_LEVELS.map((level) => (
+                        <MenuItem key={level.value} value={level.value}>
+                          {level.label}
+                        </MenuItem>
+                      ))}
+                    </Select>
+                  </FormControl>
+
+                  <FormControl fullWidth>
+                    <InputLabel>Idioma Principal</InputLabel>
+                    <Select
+                      value={metadata.language}
+                      label="Idioma Principal"
+                      onChange={handleInputChange('language')}
+                      disabled={disabled}
+                    >
+                      {LANGUAGES.map((lang) => (
+                        <MenuItem key={lang.value} value={lang.value}>
+                          {lang.label}
+                        </MenuItem>
+                      ))}
+                    </Select>
+                  </FormControl>
+                </Box>
+              )}
+            </Box>
+
+            {/* Tags */}
+            <Box>
+              <Typography variant="subtitle1" gutterBottom sx={{ fontWeight: 'medium' }}>
+                Etiquetas (Opcional)
+              </Typography>
+              
+              <Box sx={{ display: 'flex', gap: 1, mb: 2 }}>
+                <TextField
+                  fullWidth
+                  size="small"
+                  label="Agregar etiqueta"
+                  value={newTag}
+                  onChange={(e) => setNewTag(e.target.value)}
+                  onKeyPress={handleKeyPress}
+                  disabled={disabled}
+                  placeholder="Ej: JavaScript, Frontend, React"
+                />
+                <IconButton
+                  onClick={handleAddTag}
+                  disabled={disabled || !newTag.trim()}
+                  color="primary"
+                >
+                  <AddIcon />
+                </IconButton>
+              </Box>
+
+              <Box sx={{ display: 'flex', gap: 1, flexWrap: 'wrap' }}>
+                {metadata.tags.map((tag) => (
+                  <Chip
+                    key={tag}
+                    label={tag}
+                    onDelete={disabled ? undefined : () => handleRemoveTag(tag)}
+                    color="primary"
+                    variant="outlined"
+                    size="small"
+                  />
+                ))}
+              </Box>
+              
+              {metadata.tags.length === 0 && (
+                <Typography variant="body2" color="text.secondary" sx={{ mt: 1 }}>
+                  Agrega etiquetas para mejorar la búsqueda y categorización del curso
+                </Typography>
+              )}
+            </Box>
+          </>
         )}
       </Box>
+
+      {/* Resumen de campos completados */}
+      <Alert severity="info" sx={{ mt: 3 }}>
+        <Typography variant="body2">
+          <strong>Progreso:</strong> {completedRequired} de {requiredFields.length} campos obligatorios completados
+          {!useMinimalMode && ` • ${completedOptional} de ${optionalFields.length} campos opcionales completados`}
+        </Typography>
+      </Alert>
     </Box>
   );
 }
