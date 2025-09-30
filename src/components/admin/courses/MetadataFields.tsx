@@ -14,6 +14,7 @@ import {
   Autocomplete,
   IconButton,
   Switch,
+  SelectChangeEvent,
   FormControlLabel,
   Button,
   Alert
@@ -133,7 +134,7 @@ export function MetadataFields({
   };
 
   const handleSelectChange = (field: keyof CourseMetadata) => (
-    event: React.ChangeEvent<{ value: unknown }>
+    event: SelectChangeEvent<string>
   ) => {
     onChange({ [field]: event.target.value });
   };
