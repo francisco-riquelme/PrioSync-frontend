@@ -71,18 +71,56 @@ export default function AdminLayout({
   }
 
   return (
-    <Container maxWidth="lg" sx={{ py: 4 }}>
-      <Typography variant="h4" component="h1" gutterBottom>
-        {title}
-      </Typography>
-      
-      {subtitle && (
-        <Typography variant="subtitle1" color="text.secondary" sx={{ mb: 4 }}>
-          {subtitle}
-        </Typography>
-      )}
+    <Box 
+      sx={{ 
+        minHeight: '100vh',
+        background: 'linear-gradient(135deg, #667eea 0%, #764ba2 100%)',
+        py: 4
+      }}
+    >
+      <Container maxWidth="lg">
+        <Paper
+          elevation={0}
+          sx={{
+            background: 'rgba(255, 255, 255, 0.95)',
+            backdropFilter: 'blur(10px)',
+            borderRadius: 3,
+            p: 4,
+            mb: 4
+          }}
+        >
+          <Typography 
+            variant="h4" 
+            component="h1" 
+            gutterBottom
+            sx={{
+              color: 'primary.main',
+              fontWeight: 'bold',
+              textAlign: 'center',
+              mb: 2
+            }}
+          >
+            {title}
+          </Typography>
+          
+          {subtitle && (
+            <Typography 
+              variant="subtitle1" 
+              color="text.secondary" 
+              sx={{ 
+                mb: 4,
+                textAlign: 'center',
+                maxWidth: '800px',
+                mx: 'auto'
+              }}
+            >
+              {subtitle}
+            </Typography>
+          )}
+        </Paper>
 
-      {children}
-    </Container>
+        {children}
+      </Container>
+    </Box>
   )
 }

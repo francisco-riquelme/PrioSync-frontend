@@ -9,21 +9,24 @@ export default function AdminCoursesUploadPage() {
   return (
     <AdminLayout 
       title="Administrador - Cargar Videos"
-      subtitle="Sube videos para generar transcripciones automáticamente"
+      subtitle="Sube videos y completa los metadatos necesarios para generar transcripciones inteligentes usando Gemini AI 2.5 Flash."
     >
-      <Container maxWidth="md" sx={{ py: 4 }}>
+      <Container maxWidth="md">
         <Paper 
-          elevation={2} 
+          elevation={3} 
           sx={{ 
             p: 4, 
-            borderRadius: 2,
-            background: 'linear-gradient(135deg, #f5f7fa 0%, #c3cfe2 100%)'
+            borderRadius: 3,
+            background: 'rgba(255, 255, 255, 0.98)',
+            backdropFilter: 'blur(5px)',
+            border: '1px solid rgba(255, 255, 255, 0.2)',
+            boxShadow: '0 8px 32px rgba(0, 0, 0, 0.1)'
           }}
         >
           <Box sx={{ mb: 4, textAlign: 'center' }}>
             <Typography 
-              variant="h4" 
-              component="h1" 
+              variant="h5" 
+              component="h2" 
               gutterBottom
               sx={{ 
                 fontWeight: 'bold',
@@ -36,7 +39,7 @@ export default function AdminCoursesUploadPage() {
             <Typography 
               variant="body1" 
               color="text.secondary"
-              sx={{ maxWidth: '600px', mx: 'auto' }}
+              sx={{ maxWidth: '600px', mx: 'auto', lineHeight: 1.6 }}
             >
               Carga un video y completa los metadatos necesarios para generar 
               una transcripción inteligente usando Gemini AI 2.5 Flash.

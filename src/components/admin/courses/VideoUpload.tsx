@@ -184,32 +184,56 @@ export function VideoUpload({ onFileSelect, onMetadataExtracted, error, disabled
           sx={{
             border: 2,
             borderStyle: 'dashed',
-            borderColor: error ? 'error.main' : dragOver ? 'primary.main' : 'grey.300',
-            borderRadius: 2,
-            p: 4,
+            borderColor: error ? 'error.main' : dragOver ? 'primary.main' : 'grey.400',
+            borderRadius: 3,
+            p: 5,
             textAlign: 'center',
             cursor: disabled ? 'not-allowed' : 'pointer',
-            backgroundColor: dragOver ? 'action.hover' : 'background.paper',
-            transition: 'all 0.2s ease-in-out',
+            backgroundColor: dragOver 
+              ? 'rgba(25, 118, 210, 0.08)' 
+              : 'rgba(255, 255, 255, 0.9)',
+            transition: 'all 0.3s ease-in-out',
+            backdropFilter: 'blur(5px)',
+            boxShadow: dragOver 
+              ? '0 8px 25px rgba(25, 118, 210, 0.15)' 
+              : '0 4px 15px rgba(0, 0, 0, 0.1)',
             '&:hover': disabled ? {} : {
               borderColor: 'primary.main',
-              backgroundColor: 'action.hover'
+              backgroundColor: 'rgba(25, 118, 210, 0.05)',
+              transform: 'translateY(-2px)',
+              boxShadow: '0 8px 25px rgba(25, 118, 210, 0.15)'
             }
           }}
         >
           <CloudUploadIcon 
             sx={{ 
-              fontSize: 48, 
-              color: error ? 'error.main' : 'primary.main',
-              mb: 2 
+              fontSize: 64, 
+              color: error ? 'error.main' : dragOver ? 'primary.main' : 'primary.light',
+              mb: 2,
+              transition: 'all 0.3s ease'
             }} 
           />
           
-          <Typography variant="h6" gutterBottom>
+          <Typography 
+            variant="h6" 
+            gutterBottom
+            sx={{ 
+              fontWeight: 'bold',
+              color: 'text.primary',
+              mb: 1
+            }}
+          >
             Arrastra y suelta tu video aquí
           </Typography>
           
-          <Typography variant="body2" color="text.secondary" sx={{ mb: 3 }}>
+          <Typography 
+            variant="body2" 
+            color="text.secondary" 
+            sx={{ 
+              mb: 3,
+              fontSize: '0.9rem'
+            }}
+          >
             o haz clic para seleccionar un archivo
           </Typography>
 
@@ -218,7 +242,20 @@ export function VideoUpload({ onFileSelect, onMetadataExtracted, error, disabled
             component="label"
             disabled={disabled}
             startIcon={<CloudUploadIcon />}
-            sx={{ mb: 2 }}
+            sx={{ 
+              mb: 3,
+              borderRadius: 2,
+              px: 3,
+              py: 1.5,
+              fontSize: '1rem',
+              fontWeight: 'bold',
+              textTransform: 'none',
+              boxShadow: '0 4px 15px rgba(25, 118, 210, 0.3)',
+              '&:hover': {
+                boxShadow: '0 6px 20px rgba(25, 118, 210, 0.4)',
+                transform: 'translateY(-1px)'
+              }
+            }}
           >
             Seleccionar Video
             <input
@@ -230,15 +267,49 @@ export function VideoUpload({ onFileSelect, onMetadataExtracted, error, disabled
           </Button>
 
           <Box sx={{ mt: 2 }}>
+            <Typography 
+              variant="caption" 
+              color="text.secondary" 
+              sx={{ 
+                display: 'block', 
+                mb: 1,
+                fontSize: '0.85rem'
+              }}
+            >
+              Formatos soportados:
+            </Typography>
             {ACCEPTED_VIDEO_TYPES.map((type) => (
               <Chip
                 key={type}
                 label={type.split('/')[1].toUpperCase()}
                 size="small"
                 variant="outlined"
-                sx={{ mr: 1, mb: 1 }}
+                sx={{ 
+                  mr: 1, 
+                  mb: 1,
+                  borderColor: 'primary.light',
+                  color: 'primary.main',
+                  backgroundColor: 'rgba(25, 118, 210, 0.08)',
+                  '&:hover': {
+                    backgroundColor: 'rgba(25, 118, 210, 0.12)'
+                  }
+                }}
               />
             ))}
+            
+            <Typography 
+              variant="caption" 
+              color="info.main" 
+              sx={{ 
+                display: 'block', 
+                mt: 2,
+                fontSize: '0.8rem',
+                fontWeight: 'medium'
+              }}
+            >
+              📋 Límites: Archivos de video hasta 100MB. Formatos soportados: MP4, AVI, MOV, WMV, MKV. La transcripción 
+              utiliza Gemini 2.5 Flash para análisis inteligente del contenido educativo.
+            </Typography>
           </Box>
         </Paper>
       ) : (
