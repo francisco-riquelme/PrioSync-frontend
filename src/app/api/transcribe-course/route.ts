@@ -8,11 +8,14 @@ import {
   VIDEO_CONFIG,
 } from '@/types/transcription';
 import { 
-  getCompiledSecurityPatterns, 
   containsDangerousPatterns, 
   getFallbackValues, 
   getLimits 
 } from '@/utils/security-patterns';
+
+// Configuración para Vercel Edge Runtime
+export const runtime = 'nodejs';
+export const maxDuration = 300; // 5 minutos para transcripción
 
 // Almacenamiento temporal en memoria para simulación
 // En producción esto sería DynamoDB o similar

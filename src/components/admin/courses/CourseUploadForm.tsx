@@ -7,11 +7,9 @@ import {
   Typography,
   Alert,
   CircularProgress,
-  Paper,
-  Divider
+  Paper
 } from '@mui/material';
 import {
-  CloudUpload as CloudUploadIcon,
   VideoFile as VideoFileIcon,
   Send as SendIcon,
   Info as InfoIcon

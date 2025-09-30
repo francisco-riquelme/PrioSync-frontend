@@ -14,12 +14,9 @@ import {
   ListItemIcon,
   ListItemText,
   Divider,
-  Chip,
-  LinearProgress,
   Snackbar,
   Alert,
   CircularProgress,
-  Backdrop,
 } from '@mui/material';
 import {
   ArrowBack as ArrowBackIcon,
@@ -296,18 +293,6 @@ export default function LessonDetail({ courseId, lessonId }: LessonDetailProps) 
     setMessage('Funcionalidad de feedback próximamente disponible');
     setMessageType('success');
     setShowMessage(true);
-  };
-
-  const getMaterialIcon = (type: string) => {
-    switch (type) {
-      case 'pdf':
-      case 'document':
-        return <DescriptionIcon />;
-      case 'quiz':
-        return <QuizIcon />;
-      default:
-        return <DownloadIcon />;
-    }
   };
 
   const handleCloseMessage = () => {

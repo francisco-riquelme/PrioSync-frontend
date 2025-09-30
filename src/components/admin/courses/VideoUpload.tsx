@@ -130,7 +130,7 @@ export function VideoUpload({ onFileSelect, onMetadataExtracted, error, disabled
     } finally {
       setExtractingMetadata(false);
     }
-  }, [onFileSelect, onMetadataExtracted]);
+  }, [onFileSelect, onMetadataExtracted, extractVideoMetadata, validateFile]);
 
   const handleDrop = useCallback((e: React.DragEvent) => {
     e.preventDefault();
