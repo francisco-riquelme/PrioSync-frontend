@@ -126,9 +126,9 @@ export function MetadataFields({
   }, [autoSuggestions, onChange]);
 
   const handleInputChange = (field: keyof CourseMetadata) => (
-    event: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement> | any
+    event: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement> | string
   ) => {
-    const value = event.target ? event.target.value : event;
+    const value = typeof event === 'string' ? event : event.target.value;
     onChange({ [field]: value });
   };
 
