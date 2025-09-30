@@ -356,15 +356,17 @@ export default function CourseDetail({ courseId }: CourseDetailProps) {
               <>
                 <Divider sx={{ mb: 2 }} />
                 <List disablePadding>
-                  {module.lessons.map((lesson) => (
+                  {module.lessons.map((lesson, lessonIndex) => (
                     <ListItem 
                       key={lesson.id}
                       sx={{ 
                         pl: 0,
+                        cursor: 'pointer',
                         '&:hover': { backgroundColor: 'action.hover' },
                         borderRadius: 1,
                         mb: 1
                       }}
+                      onClick={() => router.push(`/courses/${courseId}/lesson/${lesson.id}`)}
                     >
                       <ListItemIcon>
                         <CheckCircleIcon 
@@ -372,7 +374,7 @@ export default function CourseDetail({ courseId }: CourseDetailProps) {
                         />
                       </ListItemIcon>
                       <ListItemText
-                        primary={lesson.title}
+                        primary={`Lección ${lessonIndex + 1}: ${lesson.title}`}
                         secondary={lesson.duration}
                         sx={{
                           '& .MuiListItemText-primary': {
