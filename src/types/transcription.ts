@@ -39,17 +39,37 @@ export interface VideoMetadata {
 
 // Representa el estado/registro de una transcripción en progreso o completada
 export interface TranscriptionJobStatus {
+  id?: string; // ID del job
   requestId: string;
+  videoMetadata?: VideoMetadata;
   status: 'pending' | 'processing' | 'completed' | 'failed';
   progress?: number; // 0-100
+  transcriptionText?: string; // Transcripción literal
+  enrichedContent?: string; // Contenido educativo enriquecido
+  analysis?: {
+    summary: string;
+    keyTopics: string[];
+    difficulty: string;
+    recommendations: string[];
+    educationalStructure?: {
+      introduction?: string;
+      mainConcepts?: string[];
+      examples?: string[];
+      conclusion?: string;
+    };
+  };
   result?: TranscriptionResult;
   error?: string;
-  timestamp: string;
+  errorMessage?: string;
+  timestamp?: string;
+  createdAt?: string;
+  updatedAt?: string;
 }
 
 // Resultado de la transcripción con análisis de Gemini AI
 export interface TranscriptionResult {
   transcript: string;
+  enrichedContent?: string; // Contenido educativo enriquecido
   metadata: CourseMetadata;
   processingInfo: {
     duration: number;
@@ -61,6 +81,12 @@ export interface TranscriptionResult {
     keyTopics: string[];
     difficulty: string;
     recommendations: string[];
+    educationalStructure?: {
+      introduction?: string;
+      mainConcepts?: string[];
+      examples?: string[];
+      conclusion?: string;
+    };
   };
 }
 
