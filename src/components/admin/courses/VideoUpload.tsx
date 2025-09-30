@@ -16,6 +16,7 @@ import {
   Delete as DeleteIcon,
   AutoAwesome as AutoAwesomeIcon
 } from '@mui/icons-material';
+import { VIDEO_CONFIG } from '@/types/transcription';
 
 interface VideoMetadata {
   duration: string;
@@ -31,15 +32,9 @@ interface VideoUploadProps {
   disabled?: boolean;
 }
 
-const ACCEPTED_VIDEO_TYPES = [
-  'video/mp4',
-  'video/avi',
-  'video/mov',
-  'video/wmv',
-  'video/mkv'
-];
-
-const MAX_FILE_SIZE = 100 * 1024 * 1024; // 100MB
+// Usar configuración centralizada
+const ACCEPTED_VIDEO_TYPES = VIDEO_CONFIG.ALLOWED_TYPES as readonly string[];
+const MAX_FILE_SIZE = VIDEO_CONFIG.MAX_FILE_SIZE;
 
 export function VideoUpload({ onFileSelect, onMetadataExtracted, error, disabled }: VideoUploadProps) {
   const [selectedFile, setSelectedFile] = useState<File | null>(null);
@@ -103,7 +98,7 @@ export function VideoUpload({ onFileSelect, onMetadataExtracted, error, disabled
 
   const validateFile = (file: File): string | null => {
     if (!ACCEPTED_VIDEO_TYPES.includes(file.type)) {
-      return 'Tipo de archivo no soportado. Use MP4, AVI, MOV, WMV o MKV.';
+      return 'Tipo de archivo no soportado. Use MP4, AVI, MOV, QuickTime, WMV o MKV.';
     }
     
     if (file.size > MAX_FILE_SIZE) {
@@ -307,7 +302,7 @@ export function VideoUpload({ onFileSelect, onMetadataExtracted, error, disabled
                 fontWeight: 'medium'
               }}
             >
-              📋 Límites: Archivos de video hasta 100MB. Formatos soportados: MP4, AVI, MOV, WMV, MKV. La transcripción 
+              📋 Límites: Archivos de video hasta 100MB. Formatos soportados: MP4, AVI, MOV, QuickTime, WMV, MKV. La transcripción 
               utiliza Gemini 2.5 Flash para análisis inteligente del contenido educativo.
             </Typography>
           </Box>
