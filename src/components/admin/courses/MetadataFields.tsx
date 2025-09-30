@@ -132,6 +132,12 @@ export function MetadataFields({
     onChange({ [field]: value });
   };
 
+  const handleSelectChange = (field: keyof CourseMetadata) => (
+    event: React.ChangeEvent<{ value: unknown }>
+  ) => {
+    onChange({ [field]: event.target.value });
+  };
+
   const handleUseDefaults = () => {
     const defaultsToApply = {
       ...DEFAULT_VALUES,
@@ -326,7 +332,7 @@ export function MetadataFields({
                     <Select
                       value={metadata.level}
                       label="Nivel de Dificultad"
-                      onChange={handleInputChange('level')}
+                      onChange={handleSelectChange('level')}
                       disabled={disabled}
                     >
                       {COURSE_LEVELS.map((level) => (
@@ -342,7 +348,7 @@ export function MetadataFields({
                     <Select
                       value={metadata.language}
                       label="Idioma Principal"
-                      onChange={handleInputChange('language')}
+                      onChange={handleSelectChange('language')}
                       disabled={disabled}
                     >
                       {LANGUAGES.map((lang) => (
