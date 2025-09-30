@@ -6,10 +6,47 @@ Este documento proporciona instrucciones detalladas para utilizar el sistema de 
 
 ## Requisitos Previos
 
+### Requisitos del Sistema
 - Acceso a la plataforma PrioSync con permisos de administrador
-- Archivos de video en formato compatible (MP4, AVI, MOV, WEBM)
+- Archivos de video en formato compatible (MP4, AVI, MOV, QuickTime, WMV, MKV)
 - Conexión estable a internet
 - Navegador web moderno
+
+### Configuración de Variables de Entorno
+
+**IMPORTANTE**: El sistema requiere la configuración correcta de variables de entorno para funcionar.
+
+#### Archivo .env.local Requerido
+
+Debe crear un archivo `.env.local` en la carpeta raíz del proyecto con las siguientes variables:
+
+```bash
+# Google Gemini API Configuration (OBLIGATORIO)
+GOOGLE_GENERATIVE_AI_API_KEY=su_clave_api_de_google_gemini
+
+# Habilitar modo administrador (OBLIGATORIO)
+NEXT_PUBLIC_IS_ADMIN_MODE=true
+```
+
+#### Variables Críticas
+
+**GOOGLE_GENERATIVE_AI_API_KEY**:
+- **Propósito**: Clave de API para acceder a los servicios de Google Gemini
+- **Obtención**: Generar desde [Google AI Studio](https://makersuite.google.com/app/apikey)
+- **Seguridad**: Mantener confidencial, no compartir públicamente
+
+**NEXT_PUBLIC_IS_ADMIN_MODE**:
+- **Propósito**: Habilita las funcionalidades de administración incluyendo transcripción
+- **Valores**: `true` (habilitar) o `false` (deshabilitar)
+- **Requerido**: Debe estar en `true` para acceder al sistema de transcripción
+
+#### Verificación de Configuración
+
+Para verificar que las variables están configuradas correctamente:
+
+1. Reinicie el servidor de desarrollo después de crear/modificar `.env.local`
+2. Verifique que puede acceder a `/admin/courses/upload`
+3. Confirme que no aparecen errores de API key en la consola del navegador
 
 ## Acceso al Sistema
 
@@ -144,9 +181,36 @@ Texto exacto del audio del video:
 
 ## Gestión de Errores Comunes
 
+### Errores de Configuración
+
+#### Error: "Acceso denegado" o "Página no encontrada"
+**Problema**: No puede acceder a la página de administración
+**Causa**: Variable `NEXT_PUBLIC_IS_ADMIN_MODE` no configurada o en `false`
+**Solución**: 
+1. Verifique que `.env.local` existe en la carpeta raíz
+2. Confirme que `NEXT_PUBLIC_IS_ADMIN_MODE=true`
+3. Reinicie el servidor de desarrollo
+
+#### Error: "API Key inválida" o "Error de autenticación"
+**Problema**: Fallo en la comunicación con Google Gemini
+**Causa**: Variable `GOOGLE_GENERATIVE_AI_API_KEY` incorrecta o faltante
+**Solución**:
+1. Verifique que la clave API esté correctamente copiada
+2. Confirme que la clave es válida en Google AI Studio
+3. Asegúrese de que no hay espacios extra en la variable
+4. Reinicie el servidor después de cambios
+
+#### Error: "Variables de entorno no encontradas"
+**Problema**: El sistema no detecta las variables de configuración
+**Solución**:
+1. Confirme que el archivo se llama exactamente `.env.local`
+2. Verifique que está en la carpeta raíz del proyecto
+3. No use comillas alrededor de los valores
+4. Reinicie completamente el servidor
+
 ### Errores de Formato de Archivo
 **Problema**: "Formato de archivo no soportado"
-**Solución**: Verifique que el archivo sea MP4, AVI, MOV o WEBM
+**Solución**: Verifique que el archivo sea MP4, AVI, MOV, QuickTime, WMV o MKV
 
 ### Errores de Tamaño
 **Problema**: "Archivo demasiado grande"
