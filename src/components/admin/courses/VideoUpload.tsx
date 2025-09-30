@@ -314,37 +314,93 @@ export function VideoUpload({ onFileSelect, onMetadataExtracted, error, disabled
         </Paper>
       ) : (
         <Paper 
-          elevation={1} 
+          elevation={2} 
           sx={{ 
             p: 3, 
-            borderRadius: 2,
+            borderRadius: 3,
             border: 1,
-            borderColor: 'success.main'
+            borderColor: 'success.light',
+            backgroundColor: 'rgba(76, 175, 80, 0.05)',
+            backdropFilter: 'blur(5px)',
+            boxShadow: '0 4px 15px rgba(76, 175, 80, 0.1)'
           }}
         >
           <Box sx={{ display: 'flex', alignItems: 'center', gap: 2 }}>
-            <VideoFileIcon color="primary" sx={{ fontSize: 32 }} />
+            <Box
+              sx={{
+                p: 1.5,
+                borderRadius: 2,
+                backgroundColor: 'primary.main',
+                color: 'white',
+                display: 'flex',
+                alignItems: 'center',
+                justifyContent: 'center'
+              }}
+            >
+              <VideoFileIcon sx={{ fontSize: 28 }} />
+            </Box>
             
             <Box sx={{ flexGrow: 1 }}>
-              <Typography variant="subtitle1" fontWeight="medium">
+              <Typography 
+                variant="subtitle1" 
+                fontWeight="bold"
+                sx={{ 
+                  color: 'text.primary',
+                  mb: 0.5
+                }}
+              >
                 {selectedFile.name}
               </Typography>
-              <Typography variant="body2" color="text.secondary">
+              <Typography 
+                variant="body2" 
+                color="text.secondary"
+                sx={{ mb: 1 }}
+              >
                 {formatFileSize(selectedFile.size)} • {selectedFile.type}
               </Typography>
               
               {extractingMetadata && (
-                <Box sx={{ display: 'flex', alignItems: 'center', gap: 1, mt: 1 }}>
+                <Box 
+                  sx={{ 
+                    display: 'flex', 
+                    alignItems: 'center', 
+                    gap: 1, 
+                    mt: 1,
+                    p: 1,
+                    borderRadius: 1,
+                    backgroundColor: 'rgba(25, 118, 210, 0.08)'
+                  }}
+                >
                   <CircularProgress size={16} />
-                  <Typography variant="caption" color="text.secondary">
+                  <Typography 
+                    variant="caption" 
+                    color="primary.main"
+                    sx={{ fontWeight: 'medium' }}
+                  >
                     Extrayendo metadatos...
                   </Typography>
                 </Box>
               )}
               
               {extractedMetadata && (
-                <Box sx={{ mt: 1 }}>
-                  <Typography variant="caption" color="success.main">
+                <Box 
+                  sx={{ 
+                    mt: 1,
+                    p: 1,
+                    borderRadius: 1,
+                    backgroundColor: 'rgba(76, 175, 80, 0.08)',
+                    border: '1px solid rgba(76, 175, 80, 0.2)'
+                  }}
+                >
+                  <Typography 
+                    variant="caption" 
+                    color="success.main"
+                    sx={{ 
+                      display: 'flex', 
+                      alignItems: 'center',
+                      fontWeight: 'medium'
+                    }}
+                  >
                     <AutoAwesomeIcon sx={{ fontSize: 14, mr: 0.5 }} />
                     Duración: {extractedMetadata.duration}
                     {extractedMetadata.resolution && ` • ${extractedMetadata.resolution}`}
@@ -354,12 +410,30 @@ export function VideoUpload({ onFileSelect, onMetadataExtracted, error, disabled
             </Box>
 
             <Button
-              variant="outlined"
+              variant="contained"
               color="error"
               startIcon={<DeleteIcon />}
               onClick={handleRemoveFile}
               disabled={disabled}
               size="small"
+              sx={{
+                borderRadius: 2,
+                textTransform: 'none',
+                fontWeight: 'medium',
+                px: 2,
+                py: 1,
+                backgroundColor: 'error.main',
+                boxShadow: '0 3px 12px rgba(211, 47, 47, 0.3)',
+                '&:hover': {
+                  backgroundColor: 'error.dark',
+                  boxShadow: '0 4px 15px rgba(211, 47, 47, 0.4)',
+                  transform: 'translateY(-1px)'
+                },
+                '&:active': {
+                  transform: 'translateY(0)'
+                },
+                transition: 'all 0.2s ease-in-out'
+              }}
             >
               Eliminar
             </Button>
