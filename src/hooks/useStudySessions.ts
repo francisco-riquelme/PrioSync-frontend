@@ -13,11 +13,6 @@ export const useStudySessions = () => {
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
 
-  // Cargar sesiones al inicializar
-  useEffect(() => {
-    loadSessions();
-  }, []);
-
   const loadSessions = useCallback(async () => {
     try {
       setLoading(true);
@@ -31,6 +26,11 @@ export const useStudySessions = () => {
       setLoading(false);
     }
   }, []);
+
+  // Cargar sesiones al inicializar
+  useEffect(() => {
+    loadSessions();
+  }, [loadSessions]);
 
   // Crear nueva sesión
   const createSession = useCallback(
@@ -51,8 +51,14 @@ export const useStudySessions = () => {
           );
         }
 
-        if (startDateTime < new Date()) {
-          throw new Error("No puedes crear una sesión en el pasado");
+        // Validar que no se puedan crear sesiones en el pasado
+        const today = new Date();
+        today.setHours(0, 0, 0, 0); // Obtener solo la fecha sin la hora
+        const sessionDate = new Date(startDateTime);
+        sessionDate.setHours(0, 0, 0, 0);
+
+        if (sessionDate < today) {
+          throw new Error("No puedes crear una sesión en fechas pasadas");
         }
 
         const sessionData: Omit<

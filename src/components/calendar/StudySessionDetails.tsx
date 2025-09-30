@@ -9,7 +9,6 @@ import {
   Button,
   Typography,
   Box,
-  Chip,
   IconButton,
   Divider,
 } from '@mui/material';
@@ -18,21 +17,8 @@ import {
   Edit as EditIcon,
   Delete as DeleteIcon,
   AccessTime as TimeIcon,
-  Subject as SubjectIcon,
-  LocationOn as LocationIcon,
-  Notes as NotesIcon,
-  Notifications as NotificationsIcon,
-  LocalOffer as TagIcon,
 } from '@mui/icons-material';
-import { StudySession, PRIORITY_OPTIONS } from '@/types/studySession';
-
-interface StudySessionDetailsProps {
-  open: boolean;
-  onClose: () => void;
-  onEdit: () => void;
-  onDelete: () => void;
-  session: StudySession | null;
-}
+import { StudySessionDetailsProps } from './componentTypes';
 
 const StudySessionDetails: React.FC<StudySessionDetailsProps> = ({
   open,
@@ -43,19 +29,12 @@ const StudySessionDetails: React.FC<StudySessionDetailsProps> = ({
 }) => {
   if (!session) return null;
 
-  const priorityOption = PRIORITY_OPTIONS.find(p => p.value === session.priority);
-  
-  const formatDate = (date: Date) => {
+  const formatDateTime = (date: Date) => {
     return new Intl.DateTimeFormat('es-ES', {
       weekday: 'long',
       year: 'numeric',
       month: 'long',
       day: 'numeric',
-    }).format(date);
-  };
-
-  const formatTime = (date: Date) => {
-    return new Intl.DateTimeFormat('es-ES', {
       hour: '2-digit',
       minute: '2-digit'
     }).format(date);
@@ -79,11 +58,19 @@ const StudySessionDetails: React.FC<StudySessionDetailsProps> = ({
       maxWidth="sm"
       fullWidth
       PaperProps={{
-        sx: { borderRadius: 3 }
+        sx: { borderRadius: 2 }
       }}
     >
-      <DialogTitle sx={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', pb: 1 }}>
-        <Typography variant="h6" sx={{ fontWeight: 600 }}>
+      <DialogTitle 
+        component="div"
+        sx={{ 
+          display: 'flex', 
+          justifyContent: 'space-between', 
+          alignItems: 'center', 
+          pb: 1 
+        }}
+      >
+        <Typography variant="h6" component="h2" sx={{ fontWeight: 600 }}>
           Detalles de la Sesión
         </Typography>
         <IconButton onClick={onClose} size="small">
@@ -91,22 +78,12 @@ const StudySessionDetails: React.FC<StudySessionDetailsProps> = ({
         </IconButton>
       </DialogTitle>
 
-      <DialogContent sx={{ pt: 1 }}>
-        {/* Título y Prioridad */}
+      <DialogContent sx={{ pt: 2 }}>
+        {/* Título */}
         <Box sx={{ mb: 3 }}>
           <Typography variant="h5" gutterBottom sx={{ fontWeight: 600 }}>
             {session.title}
           </Typography>
-          {priorityOption && (
-            <Chip 
-              label={priorityOption.label}
-              sx={{ 
-                backgroundColor: priorityOption.color,
-                color: 'white',
-                fontWeight: 500
-              }}
-            />
-          )}
         </Box>
 
         <Divider sx={{ mb: 3 }} />
@@ -120,92 +97,27 @@ const StudySessionDetails: React.FC<StudySessionDetailsProps> = ({
             </Typography>
           </Box>
           <Typography variant="body1" gutterBottom>
-            {formatDate(session.startTime)}
+            <strong>Inicio:</strong> {formatDateTime(session.startTime)}
           </Typography>
-          <Typography variant="body1" color="text.secondary">
-            {formatTime(session.startTime)} - {formatTime(session.endTime)} ({getDuration()})
+          <Typography variant="body1" gutterBottom>
+            <strong>Fin:</strong> {formatDateTime(session.endTime)}
           </Typography>
-        </Box>
-
-        {/* Materia */}
-        <Box sx={{ mb: 3 }}>
-          <Box sx={{ display: 'flex', alignItems: 'center', gap: 1, mb: 1 }}>
-            <SubjectIcon color="primary" />
-            <Typography variant="h6" sx={{ fontWeight: 600 }}>
-              Materia
-            </Typography>
-          </Box>
-          <Typography variant="body1">
-            {session.subject}
+          <Typography variant="body2" color="text.secondary">
+            Duración: {getDuration()}
           </Typography>
         </Box>
 
-        {/* Ubicación */}
-        {session.location && (
-          <Box sx={{ mb: 3 }}>
-            <Box sx={{ display: 'flex', alignItems: 'center', gap: 1, mb: 1 }}>
-              <LocationIcon color="primary" />
-              <Typography variant="h6" sx={{ fontWeight: 600 }}>
-                Ubicación
-              </Typography>
-            </Box>
-            <Typography variant="body1">
-              {session.location}
+        {/* Fechas de creación */}
+        <Box sx={{ mb: 2 }}>
+          <Typography variant="body2" color="text.secondary">
+            Creado: {formatDateTime(session.createdAt)}
+          </Typography>
+          {session.updatedAt && session.updatedAt !== session.createdAt && (
+            <Typography variant="body2" color="text.secondary">
+              Actualizado: {formatDateTime(session.updatedAt)}
             </Typography>
-          </Box>
-        )}
-
-        {/* Descripción */}
-        {session.description && (
-          <Box sx={{ mb: 3 }}>
-            <Box sx={{ display: 'flex', alignItems: 'center', gap: 1, mb: 1 }}>
-              <NotesIcon color="primary" />
-              <Typography variant="h6" sx={{ fontWeight: 600 }}>
-                Descripción
-              </Typography>
-            </Box>
-            <Typography variant="body1">
-              {session.description}
-            </Typography>
-          </Box>
-        )}
-
-        {/* Recordatorio */}
-        {session.reminder && session.reminder > 0 && (
-          <Box sx={{ mb: 3 }}>
-            <Box sx={{ display: 'flex', alignItems: 'center', gap: 1, mb: 1 }}>
-              <NotificationsIcon color="primary" />
-              <Typography variant="h6" sx={{ fontWeight: 600 }}>
-                Recordatorio
-              </Typography>
-            </Box>
-            <Typography variant="body1">
-              {session.reminder} minutos antes
-            </Typography>
-          </Box>
-        )}
-
-        {/* Tags */}
-        {session.tags && session.tags.length > 0 && (
-          <Box sx={{ mb: 3 }}>
-            <Box sx={{ display: 'flex', alignItems: 'center', gap: 1, mb: 1 }}>
-              <TagIcon color="primary" />
-              <Typography variant="h6" sx={{ fontWeight: 600 }}>
-                Etiquetas
-              </Typography>
-            </Box>
-            <Box sx={{ display: 'flex', flexWrap: 'wrap', gap: 1 }}>
-              {session.tags.map((tag, index) => (
-                <Chip 
-                  key={index}
-                  label={tag}
-                  variant="outlined"
-                  size="small"
-                />
-              ))}
-            </Box>
-          </Box>
-        )}
+          )}
+        </Box>
       </DialogContent>
 
       <DialogActions sx={{ p: 3, gap: 1 }}>
