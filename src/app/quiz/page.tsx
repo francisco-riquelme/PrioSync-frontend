@@ -255,27 +255,26 @@ const QuizPage: React.FC = () => {
     const incorrectQuestions: string[] = [];
     const strengths: string[] = [];
     const weaknesses: string[] = [];
+
+    // Función para categorizar el tema de una pregunta
+    function categorizeTopic(question: QuizQuestion): string {
+      if (question.question.includes('JSX')) return 'JSX y Sintaxis';
+      else if (question.question.includes('useState') || question.question.includes('useEffect')) return 'React Hooks';
+      else if (question.question.includes('Virtual DOM')) return 'Conceptos Fundamentales';
+      else if (question.question.includes('props') || question.question.includes('state')) return 'Gestión de Estado';
+      else if (question.question.includes('componente')) return 'Componentes de React';
+      else return 'Conceptos Avanzados';
+    }
     
     // Identificar preguntas incorrectas y áreas débiles
     mockQuizData.questions.forEach((question) => {
       const userAnswer = selectedAnswers[question.id];
+      const topic = categorizeTopic(question);
       if (userAnswer !== question.correctAnswer) {
         incorrectQuestions.push(question.id);
-        // Categorizar debilidades por tema
-        if (question.question.includes('JSX')) weaknesses.push('JSX y Sintaxis');
-        else if (question.question.includes('useState') || question.question.includes('useEffect')) weaknesses.push('React Hooks');
-        else if (question.question.includes('Virtual DOM')) weaknesses.push('Conceptos Fundamentales');
-        else if (question.question.includes('props') || question.question.includes('state')) weaknesses.push('Gestión de Estado');
-        else if (question.question.includes('componente')) weaknesses.push('Componentes de React');
-        else weaknesses.push('Conceptos Avanzados');
+        weaknesses.push(topic);
       } else {
-        // Identificar fortalezas
-        if (question.question.includes('JSX')) strengths.push('JSX y Sintaxis');
-        else if (question.question.includes('useState') || question.question.includes('useEffect')) strengths.push('React Hooks');
-        else if (question.question.includes('Virtual DOM')) strengths.push('Conceptos Fundamentales');
-        else if (question.question.includes('props') || question.question.includes('state')) strengths.push('Gestión de Estado');
-        else if (question.question.includes('componente')) strengths.push('Componentes de React');
-        else strengths.push('Conceptos Avanzados');
+        strengths.push(topic);
       }
     });
 
