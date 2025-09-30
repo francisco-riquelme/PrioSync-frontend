@@ -106,7 +106,7 @@ export function TranscriptionProgress({
     }
   };
 
-  const getStatusColor = () => {
+  const getStatusColor = (): 'primary' | 'secondary' | 'error' | 'info' | 'success' | 'warning' => {
     switch (status.status) {
       case 'pending':
         return 'warning';
@@ -116,6 +116,8 @@ export function TranscriptionProgress({
         return 'success';
       case 'failed':
         return 'error';
+      default:
+        return 'primary';
     }
   };
 
@@ -165,7 +167,7 @@ export function TranscriptionProgress({
       {(status.status === 'pending' || status.status === 'processing') && (
         <Box sx={{ mb: 2 }}>
           <LinearProgress 
-            color={getStatusColor() as 'primary' | 'secondary' | 'error' | 'info' | 'success' | 'warning'}
+            color={getStatusColor()}
             sx={{ height: 8, borderRadius: 4 }}
           />
           <Typography variant="body2" color="text.secondary" sx={{ mt: 1 }}>
