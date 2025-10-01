@@ -133,9 +133,9 @@ export function MetadataFields({
   };
 
   const handleSelectChange = (field: keyof CourseMetadata) => (
-    event: SelectChangeEvent<string>
+    event: SelectChangeEvent<unknown>
   ) => {
-    onChange({ [field]: event.target.value });
+    onChange({ [field]: event.target.value as string });
   };
 
   const handleUseDefaults = () => {
