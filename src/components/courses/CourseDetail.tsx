@@ -220,6 +220,7 @@ export default function CourseDetail({ courseId }: CourseDetailProps) {
   };
 
   const handleModuleFeedback = async (moduleId: string) => {
+    console.log('handleModuleFeedback', moduleId);
     // try {
     //   // await submitFeedback(courseId, feedbackData, { moduleId });
     // } catch (error) {
@@ -228,6 +229,7 @@ export default function CourseDetail({ courseId }: CourseDetailProps) {
   };
 
   const handleLessonFeedback = async (moduleId: string, lessonId: string) => {
+    console.log('handleLessonFeedback', moduleId, lessonId);
     // try {
     //   // await submitFeedback(courseId, feedbackData, { moduleId, lessonId });
     // } catch (error) {
@@ -327,7 +329,7 @@ export default function CourseDetail({ courseId }: CourseDetailProps) {
         Contenido del Curso
       </Typography>
 
-      {course.modules.map((module, moduleIndex) => (
+      {course.modules.map((module) => (
         <Card key={module.id} sx={{ mb: 2 }}>
           <CardContent>
             <Box 
@@ -354,15 +356,17 @@ export default function CourseDetail({ courseId }: CourseDetailProps) {
               <>
                 <Divider sx={{ mb: 2 }} />
                 <List disablePadding>
-                  {module.lessons.map((lesson) => (
+                  {module.lessons.map((lesson, lessonIndex) => (
                     <ListItem 
                       key={lesson.id}
                       sx={{ 
                         pl: 0,
+                        cursor: 'pointer',
                         '&:hover': { backgroundColor: 'action.hover' },
                         borderRadius: 1,
                         mb: 1
                       }}
+                      onClick={() => router.push(`/courses/${courseId}/lesson/${lesson.id}`)}
                     >
                       <ListItemIcon>
                         <CheckCircleIcon 
@@ -370,7 +374,7 @@ export default function CourseDetail({ courseId }: CourseDetailProps) {
                         />
                       </ListItemIcon>
                       <ListItemText
-                        primary={lesson.title}
+                        primary={`Lección ${lessonIndex + 1}: ${lesson.title}`}
                         secondary={lesson.duration}
                         sx={{
                           '& .MuiListItemText-primary': {

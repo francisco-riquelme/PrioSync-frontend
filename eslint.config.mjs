@@ -18,6 +18,8 @@ const eslintConfig = [
       "out/**",
       "build/**",
       "next-env.d.ts",
+      "test-transcription-api.js",
+      "test-transcription-complete.js",
     ],
   },
 ];
