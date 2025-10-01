@@ -67,6 +67,7 @@ export default function VerificationPage() {
         setError(result.error || 'Código incorrecto. Inténtalo de nuevo.');
       }
     } catch (error) {
+      console.error(error);
       setError('Error al verificar el código. Inténtalo de nuevo.');
     } finally {
       setLoading(false);

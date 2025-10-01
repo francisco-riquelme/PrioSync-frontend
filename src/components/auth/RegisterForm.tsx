@@ -89,6 +89,7 @@ export default function RegisterForm() {
         setFieldErrors({ email: true, password: true, confirmPassword: true });
       }
     } catch (error) {
+      console.error(error);
       setError(ERROR_MESSAGES.REGISTRATION_FAILED);
       setFieldErrors({ email: true, password: true, confirmPassword: true });
     } finally {

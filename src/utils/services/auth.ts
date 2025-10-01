@@ -1,4 +1,4 @@
-import { signUp, confirmSignUp, signIn, SignUpOutput } from "aws-amplify/auth";
+import { signUp, confirmSignUp, signIn } from "aws-amplify/auth";
 
 export interface SignUpInput {
   email: string;
@@ -19,21 +19,21 @@ export interface SignInInput {
 export interface SignUpResult {
   isSignUpComplete: boolean;
   userId: string | undefined;
-  nextStep: any;
+  nextStep: unknown;
   success: boolean;
   error?: string;
 }
 
 export interface ConfirmSignUpResult {
   isSignUpComplete: boolean;
-  nextStep: any;
+  nextStep: unknown;
   success: boolean;
   error?: string;
 }
 
 export interface SignInResult {
   isSignedIn: boolean;
-  nextStep: any;
+  nextStep: unknown;
   success: boolean;
   error?: string;
 }
