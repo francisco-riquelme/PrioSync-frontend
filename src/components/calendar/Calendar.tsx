@@ -99,7 +99,8 @@ const Calendar: React.FC = () => {
       backgroundColor: theme.palette.error.main,
     },
     '& .rbc-today': {
-      backgroundColor: `${theme.palette.action.hover} !important`,
+      backgroundColor: '#e8f5e9 !important', // Verde claro minimalista
+      border: '1px solid #81c784 !important',
     },
     '& .rbc-off-range-bg': {
       backgroundColor: `${theme.palette.action.disabledBackground} !important`,

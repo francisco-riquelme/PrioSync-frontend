@@ -11,6 +11,8 @@
     "prepare": "husky"
   },
   "dependencies": {
+    "@ai-sdk/google": "^2.0.17",
+    "@aws-amplify/data-schema": "^1.21.1",
     "@emotion/cache": "^11.14.0",
     "@emotion/react": "^11.14.0",
     "@emotion/styled": "^11.14.1",

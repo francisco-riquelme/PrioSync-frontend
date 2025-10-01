@@ -19,6 +19,20 @@ import {
 } from '@mui/icons-material';
 import { CalendarStudySessionFormData, StudySessionFormProps } from './componentTypes';
 
+// Función auxiliar para formatear fecha en zona horaria local
+const formatLocalDate = (date: Date): string => {
+  const year = date.getFullYear();
+  const month = String(date.getMonth() + 1).padStart(2, '0');
+  const day = String(date.getDate()).padStart(2, '0');
+  return `${year}-${month}-${day}`;
+};
+
+// Función para parsear fecha en zona horaria local (evita UTC)
+const parseLocalDate = (dateString: string): Date => {
+  const [year, month, day] = dateString.split('-').map(Number);
+  return new Date(year, month - 1, day);
+};
+
 const StudySessionForm: React.FC<StudySessionFormProps> = ({
   open,
   onClose,
@@ -45,7 +59,7 @@ const StudySessionForm: React.FC<StudySessionFormProps> = ({
         const endDate = new Date(editingSession.endTime);
         
         setFormData({
-          startDate: startDate.toISOString().split('T')[0],
+          startDate: formatLocalDate(startDate),
           startTime: startDate.toTimeString().slice(0, 5),
           endTime: endDate.toTimeString().slice(0, 5)
         });
@@ -55,7 +69,7 @@ const StudySessionForm: React.FC<StudySessionFormProps> = ({
         const endDate = new Date(selectedSlot.end);
         
         setFormData({
-          startDate: startDate.toISOString().split('T')[0],
+          startDate: formatLocalDate(startDate),
           startTime: startDate.toTimeString().slice(0, 5),
           endTime: endDate.toTimeString().slice(0, 5)
         });
@@ -65,7 +79,7 @@ const StudySessionForm: React.FC<StudySessionFormProps> = ({
         const oneHourLater = new Date(now.getTime() + 60 * 60 * 1000);
         
         setFormData({
-          startDate: now.toISOString().split('T')[0],
+          startDate: formatLocalDate(now),
           startTime: now.toTimeString().slice(0, 5),
           endTime: oneHourLater.toTimeString().slice(0, 5)
         });
@@ -169,7 +183,7 @@ const StudySessionForm: React.FC<StudySessionFormProps> = ({
                   📅 Fecha seleccionada
                 </Typography>
                 <Typography variant="h6" sx={{ fontWeight: 600 }}>
-                  {new Date(formData.startDate).toLocaleDateString('es-ES', {
+                  {parseLocalDate(formData.startDate).toLocaleDateString('es-ES', {
                     weekday: 'long',
                     year: 'numeric',
                     month: 'long',
