@@ -1,0 +1,13 @@
+{
+  "functions": {
+    "src/app/api/transcribe-course/route.ts": {
+      "maxDuration": 300
+    }
+  },
+  "build": {
+    "env": {
+      "NEXT_PUBLIC_IS_ADMIN_MODE": "true",
+      "NEXT_PUBLIC_DEFAULT_LOCALE": "es"
+    }
+  }
+}
