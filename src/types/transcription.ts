@@ -7,6 +7,24 @@ export interface VideoFile {
   lastModified: number;
 }
 
+// Metadatos del curso para la transcripción inteligente
+export interface CourseMetadata {
+  title: string;
+  description: string;
+  instructor: string;
+  category: string;
+  level: CourseLevel;
+  duration: string;
+  language: Language;
+  tags: string[];
+  subject: string;
+  targetAudience: string;
+}
+
+export type CourseLevel = 'beginner' | 'intermediate' | 'advanced';
+
+export type Language = 'es' | 'en' | 'fr' | 'de' | 'it' | 'pt';
+
 export interface VideoMetadata {
   title: string;
   description?: string;
@@ -21,14 +39,55 @@ export interface VideoMetadata {
 
 // Representa el estado/registro de una transcripción en progreso o completada
 export interface TranscriptionJobStatus {
-  id: string;
-  videoMetadata: VideoMetadata;
+  id?: string; // ID del job
+  requestId: string;
+  videoMetadata?: VideoMetadata;
   status: 'pending' | 'processing' | 'completed' | 'failed';
   progress?: number; // 0-100
-  transcriptionText?: string;
+  transcriptionText?: string; // Transcripción literal
+  enrichedContent?: string; // Contenido educativo enriquecido
+  analysis?: {
+    summary: string;
+    keyTopics: string[];
+    difficulty: string;
+    recommendations: string[];
+    educationalStructure?: {
+      introduction?: string;
+      mainConcepts?: string[];
+      examples?: string[];
+      conclusion?: string;
+    };
+  };
+  result?: TranscriptionResult;
+  error?: string;
   errorMessage?: string;
-  createdAt: string;
-  updatedAt: string;
+  timestamp?: string;
+  createdAt?: string;
+  updatedAt?: string;
+}
+
+// Resultado de la transcripción con análisis de Gemini AI
+export interface TranscriptionResult {
+  transcript: string;
+  enrichedContent?: string; // Contenido educativo enriquecido
+  metadata: CourseMetadata;
+  processingInfo: {
+    duration: number;
+    model: string;
+    timestamp: string;
+  };
+  analysis?: {
+    summary: string;
+    keyTopics: string[];
+    difficulty: string;
+    recommendations: string[];
+    educationalStructure?: {
+      introduction?: string;
+      mainConcepts?: string[];
+      examples?: string[];
+      conclusion?: string;
+    };
+  };
 }
 
 // Respuesta de la API al crear/consultar transcripción
@@ -42,12 +101,8 @@ export interface TranscriptionResponse {
   transcriptionText?: string;
 }
 
-// Datos del formulario para subir video
-export interface VideoUploadFormData {
-  title: string;
-  description?: string;
-  courseId: string;
-  courseName: string;
+// Datos del formulario para subir video con metadatos educativos
+export interface VideoUploadFormData extends CourseMetadata {
   video: File;
 }
 
@@ -78,8 +133,8 @@ export interface CourseOption {
 // Configuraciones predefinidas
 export const VIDEO_CONFIG = {
   MAX_FILE_SIZE: 100 * 1024 * 1024, // 100MB
-  ALLOWED_TYPES: ['video/mp4', 'video/avi', 'video/mov', 'video/quicktime'] as const,
-  MAX_DURATION: 3600, // 1 hora en segundos
+  ALLOWED_TYPES: ['video/mp4', 'video/avi', 'video/mov', 'video/quicktime', 'video/wmv', 'video/mkv'] as const,
+  MAX_DURATION: 7200, // 2 horas en segundos
 } as const;
 
 export const TRANSCRIPTION_STATUS_LABELS = {
