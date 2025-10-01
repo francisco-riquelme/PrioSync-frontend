@@ -51,8 +51,14 @@ export const useStudySessions = () => {
           );
         }
 
-        if (startDateTime < new Date()) {
-          throw new Error("No puedes crear una sesión en el pasado");
+        // Validar que no se puedan crear sesiones en el pasado
+        const today = new Date();
+        today.setHours(0, 0, 0, 0); // Obtener solo la fecha sin la hora
+        const sessionDate = new Date(startDateTime);
+        sessionDate.setHours(0, 0, 0, 0);
+
+        if (sessionDate < today) {
+          throw new Error("No puedes crear una sesión en fechas pasadas");
         }
 
         const sessionData: Omit<

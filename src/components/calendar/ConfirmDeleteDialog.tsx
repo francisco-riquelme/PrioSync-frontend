@@ -9,23 +9,13 @@ import {
   Button,
   Typography,
   Box,
-  Chip,
   Alert,
 } from '@mui/material';
 import {
   Warning as WarningIcon,
   AccessTime as TimeIcon,
-  Subject as SubjectIcon,
 } from '@mui/icons-material';
-import { StudySession, PRIORITY_OPTIONS } from '@/types/studySession';
-
-interface ConfirmDeleteDialogProps {
-  open: boolean;
-  onClose: () => void;
-  onConfirm: () => void;
-  session: StudySession | null;
-  loading?: boolean;
-}
+import { ConfirmDeleteDialogProps } from './componentTypes';
 
 const ConfirmDeleteDialog: React.FC<ConfirmDeleteDialogProps> = ({
   open,
@@ -36,8 +26,7 @@ const ConfirmDeleteDialog: React.FC<ConfirmDeleteDialogProps> = ({
 }) => {
   if (!session) return null;
 
-  const priorityOption = PRIORITY_OPTIONS.find(p => p.value === session.priority);
-  const formatDate = (date: Date) => {
+  const formatDateTime = (date: Date) => {
     return new Intl.DateTimeFormat('es-ES', {
       weekday: 'long',
       year: 'numeric',
@@ -55,12 +44,15 @@ const ConfirmDeleteDialog: React.FC<ConfirmDeleteDialogProps> = ({
       maxWidth="sm"
       fullWidth
       PaperProps={{
-        sx: { borderRadius: 3 }
+        sx: { borderRadius: 2 }
       }}
     >
-      <DialogTitle sx={{ display: 'flex', alignItems: 'center', gap: 1, pb: 2 }}>
+      <DialogTitle 
+        component="div"
+        sx={{ display: 'flex', alignItems: 'center', gap: 1, pb: 2 }}
+      >
         <WarningIcon color="warning" />
-        <Typography variant="h6">
+        <Typography variant="h6" component="h2">
           Confirmar Eliminación
         </Typography>
       </DialogTitle>
@@ -75,37 +67,12 @@ const ConfirmDeleteDialog: React.FC<ConfirmDeleteDialogProps> = ({
             {session.title}
           </Typography>
           
-          <Box sx={{ display: 'flex', alignItems: 'center', gap: 1, mb: 1 }}>
-            <SubjectIcon fontSize="small" color="action" />
-            <Typography variant="body2" color="text.secondary">
-              {session.subject}
-            </Typography>
-            {priorityOption && (
-              <Chip 
-                label={priorityOption.label}
-                size="small"
-                sx={{ 
-                  backgroundColor: priorityOption.color,
-                  color: 'white',
-                  fontWeight: 500,
-                  fontSize: '0.75rem'
-                }}
-              />
-            )}
-          </Box>
-
           <Box sx={{ display: 'flex', alignItems: 'center', gap: 1, mb: 2 }}>
             <TimeIcon fontSize="small" color="action" />
             <Typography variant="body2" color="text.secondary">
-              {formatDate(session.startTime)}
+              {formatDateTime(session.startTime)} - {formatDateTime(session.endTime)}
             </Typography>
           </Box>
-
-          {session.description && (
-            <Typography variant="body2" color="text.secondary" sx={{ fontStyle: 'italic' }}>
-              &ldquo;{session.description}&rdquo;
-            </Typography>
-          )}
         </Box>
 
         <Typography variant="body2" color="text.secondary">

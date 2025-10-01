@@ -6,27 +6,17 @@ import { Calendar as BigCalendar, momentLocalizer, View, Event } from 'react-big
 import 'react-big-calendar/lib/css/react-big-calendar.css';
 import moment from 'moment';
 import 'moment/locale/es';
-// Estilos migrados de calendar.css al sistema de MUI
 import {
   Box,
   Paper,
   Typography,
-  Toolbar,
-  IconButton,
-  Button,
-  ButtonGroup,
   useTheme,
-  Chip,
 } from '@mui/material';
-import {
-  ChevronLeft,
-  ChevronRight,
-  Today,
-  Add as AddIcon,
-} from '@mui/icons-material';
 import { useUser } from '@/contexts/UserContext';
 import { useStudySessions } from '@/hooks/useStudySessions';
 import { StudySession } from '@/types/studySession';
+import { CalendarEvent } from './componentTypes';
+import CalendarToolbar from './CalendarToolbar';
 import StudySessionForm from './StudySessionForm';
 import StudySessionDetails from './StudySessionDetails';
 import ConfirmDeleteDialog from './ConfirmDeleteDialog';
@@ -34,17 +24,6 @@ import ConfirmDeleteDialog from './ConfirmDeleteDialog';
 // Configurar moment en español
 moment.locale('es');
 const localizer = momentLocalizer(moment as unknown as moment.Moment);
-
-// Tipos para eventos
-interface CalendarEvent extends Event {
-  id: string;
-  title: string;
-  start: Date;
-  end: Date;
-  type: 'clase' | 'examen' | 'entrega' | 'personal';
-  description?: string;
-  session?: StudySession; // Para eventos de sesiones de estudio
-}
 
 const Calendar: React.FC = () => {
   const theme = useTheme();
@@ -61,6 +40,10 @@ const Calendar: React.FC = () => {
 
   const [view, setView] = useState<View>('month');
   const [date, setDate] = useState(new Date());
+
+  const handleViewChange = (newView: 'month' | 'week' | 'day') => {
+    setView(newView as View);
+  };
   const [formDialogOpen, setFormDialogOpen] = useState(false);
   const [detailsDialogOpen, setDetailsDialogOpen] = useState(false);
   const [deleteConfirmOpen, setDeleteConfirmOpen] = useState(false);
@@ -121,6 +104,16 @@ const Calendar: React.FC = () => {
     '& .rbc-off-range-bg': {
       backgroundColor: `${theme.palette.action.disabledBackground} !important`,
     },
+    // Estilos para fechas pasadas (deshabilitadas)
+    '& .rbc-day-bg.past-date': {
+      backgroundColor: `${theme.palette.action.disabledBackground} !important`,
+      cursor: 'not-allowed !important',
+      opacity: 0.6,
+    },
+    '& .rbc-date-cell.past-date': {
+      color: `${theme.palette.text.disabled} !important`,
+      cursor: 'not-allowed !important',
+    },
     '& .rbc-event': {
       borderRadius: 8,
       border: 'none',
@@ -156,94 +149,35 @@ const Calendar: React.FC = () => {
     },
   }), [theme]);
 
-  // Función para obtener el color según el tipo de evento
-  const getEventStyle = (event: Event): { style?: CSSProperties } => {
-    const calendarEvent = event as CalendarEvent;
-    const colors: Record<string, CSSProperties> = {
-      clase: { backgroundColor: theme.palette.primary.main, color: 'white' },
-      examen: { backgroundColor: '#ef4444', color: 'white' },
-      entrega: { backgroundColor: '#f59e0b', color: 'white' },
-      personal: { backgroundColor: '#10b981', color: 'white' },
-    };
-
-    if (calendarEvent.session) {
-      const session = calendarEvent.session;
-      if (session.priority === 'high') {
-        return { style: { backgroundColor: '#ef4444', color: 'white' } };
-      } else if (session.priority === 'low') {
-        return { style: { backgroundColor: '#22c55e', color: 'white' } };
-      } else {
-        return { style: { backgroundColor: '#3b82f6', color: 'white' } };
-      }
-    }
-
+  // Función para obtener el color de los eventos (simplificado - un solo estilo)
+  const getEventStyle = (): { style: CSSProperties } => {
     return {
-      style: colors[calendarEvent.type] || colors.personal
+      style: {
+        backgroundColor: theme.palette.primary.main,
+        color: 'white',
+        borderRadius: 8,
+        border: 'none',
+        fontSize: 13,
+        fontWeight: 500,
+        padding: '4px 8px',
+        boxShadow: theme.shadows[1],
+      }
     };
   };
-  // Componente personalizado para el toolbar
-  interface CustomToolbarProps {
-    label: string;
-    onNavigate: (action: string) => void;
-    onView: (view: View) => void;
-  }
-  const CustomToolbar = ({ label, onNavigate, onView }: CustomToolbarProps) => (
-    <Toolbar sx={{ justifyContent: 'space-between', mb: 2, px: 0 }}>
-      <Box sx={{ display: 'flex', alignItems: 'center', gap: 1 }}>
-        <IconButton onClick={() => onNavigate('PREV')} size="small">
-          <ChevronLeft />
-        </IconButton>
-        <IconButton onClick={() => onNavigate('TODAY')} size="small">
-          <Today />
-        </IconButton>
-        <IconButton onClick={() => onNavigate('NEXT')} size="small">
-          <ChevronRight />
-        </IconButton>
-        <Typography variant="h6" sx={{ ml: 2, fontWeight: 600 }}>
-          {label}
-        </Typography>
-      </Box>
-      
-      <Box sx={{ display: 'flex', alignItems: 'center', gap: 2 }}>
-        <ButtonGroup size="small" variant="outlined">
-          <Button 
-            onClick={() => onView('month')}
-            variant={view === 'month' ? 'contained' : 'outlined'}
-          >
-            Mes
-          </Button>
-          <Button 
-            onClick={() => onView('week')}
-            variant={view === 'week' ? 'contained' : 'outlined'}
-          >
-            Semana
-          </Button>
-          <Button 
-            onClick={() => onView('day')}
-            variant={view === 'day' ? 'contained' : 'outlined'}
-          >
-            Día
-          </Button>
-        </ButtonGroup>
-        
-        <Button
-          variant="contained"
-          startIcon={<AddIcon />}
-          onClick={() => {
-            setEditingSession(null);
-            setSelectedSlot(null);
-            setFormDialogOpen(true);
-          }}
-          sx={{ ml: 1 }}
-        >
-          Nueva Sesión
-        </Button>
-      </Box>
-    </Toolbar>
-  );
 
   // Función para manejar la selección de slots
   const handleSelectSlot = (slotInfo: { start: Date; end: Date; slots: Date[]; action: string }) => {
+    // Verificar que no sea una fecha pasada
+    const today = new Date();
+    today.setHours(0, 0, 0, 0);
+    const selectedDate = new Date(slotInfo.start);
+    selectedDate.setHours(0, 0, 0, 0);
+    
+    if (selectedDate < today) {
+      // No permitir selección de fechas pasadas
+      return;
+    }
+    
     setSelectedSlot(slotInfo);
     setEditingSession(null);
     setFormDialogOpen(true);
@@ -333,46 +267,6 @@ const Calendar: React.FC = () => {
           </Box>
         </Box>
         
-        {/* Leyenda de tipos de eventos */}
-        <Box sx={{ display: 'flex', gap: 1, mb: 3, flexWrap: 'wrap' }}>
-          <Chip 
-            label="Clases" 
-            sx={{ 
-              backgroundColor: theme.palette.primary.main, 
-              color: 'white',
-              '& .MuiChip-label': { fontWeight: 500 }
-            }}
-            size="small"
-          />
-          <Chip 
-            label="Exámenes" 
-            sx={{ 
-              backgroundColor: '#ef4444', 
-              color: 'white',
-              '& .MuiChip-label': { fontWeight: 500 }
-            }}
-            size="small"
-          />
-          <Chip 
-            label="Entregas" 
-            sx={{ 
-              backgroundColor: '#f59e0b', 
-              color: 'white',
-              '& .MuiChip-label': { fontWeight: 500 }
-            }}
-            size="small"
-          />
-          <Chip 
-            label="Personal/Estudio" 
-            sx={{ 
-              backgroundColor: '#10b981', 
-              color: 'white',
-              '& .MuiChip-label': { fontWeight: 500 }
-            }}
-            size="small"
-          />
-        </Box>
-
         <Box sx={{ ...calendarStyle, height: 600 }}>
           <BigCalendar
             localizer={localizer}
@@ -385,7 +279,19 @@ const Calendar: React.FC = () => {
             onNavigate={setDate}
             eventPropGetter={getEventStyle}
             components={{
-              toolbar: CustomToolbar,
+              toolbar: (props: { label: string; onNavigate: (action: string) => void; onView: (view: View) => void }) => (
+                <CalendarToolbar
+                  label={props.label}
+                  onNavigate={props.onNavigate}
+                  onView={handleViewChange}
+                  currentView={view as 'month' | 'week' | 'day'}
+                  onAddSession={() => {
+                    setEditingSession(null);
+                    setSelectedSlot(null);
+                    setFormDialogOpen(true);
+                  }}
+                />
+              ),
             }}
             onSelectSlot={handleSelectSlot}
             onSelectEvent={handleSelectEvent}
@@ -418,12 +324,36 @@ const Calendar: React.FC = () => {
         }}
         onSubmit={async (formData) => {
           try {
+            // Generar título automático basado en fecha y hora
+            const date = new Date(formData.startDate);
+            const dateStr = date.toLocaleDateString('es-ES', { 
+              weekday: 'short', 
+              day: 'numeric', 
+              month: 'short' 
+            });
+            const autoTitle = `Sesión de Estudio - ${dateStr} ${formData.startTime}`;
+            
+            // Adaptar los datos del formulario simplificado al formato del hook
+            const adaptedFormData = {
+              title: autoTitle,
+              subject: 'Estudio Personal', // Campo fijo para el formato simplificado
+              startDate: formData.startDate,
+              startTime: formData.startTime,
+              endDate: formData.startDate, // Usar la misma fecha
+              endTime: formData.endTime,
+              description: '', // Campo opcional vacío
+              priority: 'medium' as const, // Prioridad fija
+              location: '', // Ubicación vacía
+              tags: [], // Tags vacíos
+              reminder: 15 // Recordatorio por defecto
+            };
+
             let success = false;
             if (editingSession) {
-              const result = await updateSession(editingSession.id, formData);
+              const result = await updateSession(editingSession.id, adaptedFormData);
               success = result !== null;
             } else {
-              const result = await createSession(formData);
+              const result = await createSession(adaptedFormData);
               success = result !== null;
             }
             

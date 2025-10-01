@@ -1,7 +1,7 @@
 'use client';
 
 import DashboardLayout from '@/components/layout/DashboardLayout';
-import Calendar from '@/components/calendar/Calendar';
+import { Calendar } from '@/components/calendar';
 
 export default function CalendarPage() {
   return (
