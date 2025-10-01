@@ -1,3 +1,6 @@
+
+
+
 'use client';
 
 import React from 'react';
@@ -16,20 +19,20 @@ import {
   ArrowBack as ArrowBackIcon,
   CheckCircle as CheckCircleIcon,
 } from '@mui/icons-material';
-import { useLecciones } from './hooks/useLecciones';
-import { getMaterialTypeLabel, getMaterialTypeColor, formatDuration } from './courseUtils';
+import { useMaterialEstudio } from './hooks/useMaterialEstudio';
+import { getMaterialTypeLabelWithDefault, getMaterialTypeColor } from './courseUtils';
 
-interface LessonDetailProps {
-  lessonId: string;
+interface MaterialDetailProps {
+  materialId: string;
 }
 
-export default function LessonDetail({ lessonId }: LessonDetailProps) {
+export default function MaterialDetail({ materialId }: MaterialDetailProps) {
   const router = useRouter();
-  const { leccion, loading, error } = useLecciones({ leccionId: lessonId });
+  const { material, loading, error } = useMaterialEstudio({ materialId });
 
   const handleBackClick = () => {
-    if (leccion?.cursoId) {
-      router.push(`/courses/${leccion.cursoId}`);
+    if (material?.cursoId) {
+      router.push(`/courses/${material.cursoId}`);
     } else {
       router.push('/courses');
     }
@@ -62,12 +65,12 @@ export default function LessonDetail({ lessonId }: LessonDetailProps) {
     );
   }
 
-  // Handle lesson not found
-  if (!leccion) {
+  // Handle material not found
+  if (!material) {
     return (
       <Box sx={{ textAlign: 'center', py: 8 }}>
         <Typography variant="h6" color="text.secondary">
-          Lección no encontrada
+          Material no encontrado
         </Typography>
         <Button 
           variant="contained" 
@@ -92,34 +95,29 @@ export default function LessonDetail({ lessonId }: LessonDetailProps) {
         </Typography>
       </Box>
 
-      {/* Lesson Header */}
+      {/* Material Header */}
       <Box sx={{ mb: 4 }}>
         <Box sx={{ display: 'flex', alignItems: 'center', gap: 2, mb: 2 }}>
           <Chip 
-            label={`Lección ${leccion.orden || '-'}`} 
+            label={`Material ${material.orden || '-'}`} 
             color="primary" 
             size="small"
           />
           <Chip 
-            label={getMaterialTypeLabel(leccion.tipo)} 
-            color={getMaterialTypeColor(leccion.tipo)} 
-            size="small"
-            variant="outlined"
-          />
-          <Chip 
-            label={formatDuration(leccion.duracion_minutos)} 
+            label={getMaterialTypeLabelWithDefault(material.tipo)} 
+            color={getMaterialTypeColor(material.tipo)} 
             size="small"
             variant="outlined"
           />
         </Box>
 
         <Typography variant="h4" sx={{ fontWeight: 700, mb: 2, color: 'text.primary' }}>
-          {leccion.titulo}
+          {material.titulo}
         </Typography>
 
-        {leccion.descripcion && (
+        {material.descripcion && (
           <Typography variant="body1" color="text.secondary" sx={{ mb: 2 }}>
-            {leccion.descripcion}
+            {material.descripcion}
           </Typography>
         )}
       </Box>
@@ -139,15 +137,15 @@ export default function LessonDetail({ lessonId }: LessonDetailProps) {
           overflow: 'hidden',
         }}
       >
-        {leccion.url_contenido ? (
+        {material.url_contenido ? (
           <iframe
-            src={leccion.url_contenido}
+            src={material.url_contenido}
             style={{
               width: '100%',
               height: '100%',
               border: 'none',
             }}
-            title={leccion.titulo}
+            title={material.titulo}
             allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture"
             allowFullScreen
           />
@@ -174,7 +172,7 @@ export default function LessonDetail({ lessonId }: LessonDetailProps) {
           startIcon={<CheckCircleIcon />}
           color="success"
         >
-          Marcar como Completada
+          Marcar como Completado
         </Button>
       </Box>
     </Box>

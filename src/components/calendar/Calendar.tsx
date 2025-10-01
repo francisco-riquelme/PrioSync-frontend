@@ -13,7 +13,7 @@ import {
   useTheme,
 } from '@mui/material';
 import { useUser } from '@/contexts/UserContext';
-import { useStudySessions } from '@/hooks/useStudySessions';
+import { useStudySessions } from '@/components/courses/hooks/useStudySessions';
 import { StudySession } from '@/types/studySession';
 import { CalendarEvent } from './componentTypes';
 import CalendarToolbar from './CalendarToolbar';
