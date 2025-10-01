@@ -4,9 +4,6 @@
       "maxDuration": 300
     }
   },
-  "env": {
-    "GOOGLE_GENERATIVE_AI_API_KEY": "@google-generative-ai-api-key"
-  },
   "build": {
     "env": {
       "NEXT_PUBLIC_IS_ADMIN_MODE": "true",
