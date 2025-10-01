@@ -17,112 +17,35 @@ import {
 export const runtime = 'nodejs';
 export const maxDuration = 300; // 5 minutos para transcripción
 
-// Almacenamiento temporal en memoria para simulación
-// En producción esto sería DynamoDB o similar
-const transcriptionJobs = new Map<string, TranscriptionJobStatus>();
+// // Almacenamiento temporal en memoria para simulación
+// // En producción esto sería DynamoDB o similar
+// const transcriptionJobs = new Map<string, TranscriptionJobStatus>();
 
+// /**
+//  * Sanitizar input de texto para prevenir inyección de prompts
+//  * con validación adicional contra patrones de manipulación configurables
+//  */
+// function sanitizeTextInput(input: string, maxLength: number = 100): string {
+//   if (!input || typeof input !== 'string') {
+//     return 'Contenido no especificado';
+//   }
 
-/**
- * Sanitizar input de texto para prevenir inyección de prompts
- * con validación adicional contra patrones de manipulación configurables
- */
-function sanitizeTextInput(input: string, maxLength: number = 100): string {
-  if (!input || typeof input !== 'string') {
-    return 'Contenido no especificado';
-  }
-  
-  const fallbackValues = getFallbackValues();
-  
-  // Verificar patrones peligrosos antes de sanitizar usando configuración externa
-  if (containsDangerousPatterns(input)) {
-    return fallbackValues.title;
-  }
-  
-  // Sanitización básica
-  const sanitized = input
-    .replace(/[<>{}[\]]/g, '') // Remover brackets y llaves
-    .replace(/\\/g, '') // Remover backslashes
-    .replace(/["'`]/g, '') // Remover comillas
-    .replace(/\n|\r/g, ' ') // Convertir saltos de línea a espacios
-    .replace(/\s+/g, ' ') // Normalizar espacios múltiples
-    .replace(/[|#*]/g, '') // Remover caracteres de markdown que podrían usarse para manipulación
-    .trim();
-  
-  // Verificación adicional post-sanitización
-  if (containsDangerousPatterns(sanitized)) {
-    return 'Tema académico';
-  }
-  
-  // Truncar si es demasiado largo
-  return sanitized.length > maxLength 
-    ? sanitized.substring(0, maxLength) + '...'
-    : sanitized;
-}
+//   const fallbackValues = getFallbackValues();
 
-/**
- * Validar y sanitizar metadatos del usuario usando patrones configurables
- */
-function validateAndSanitizeMetadata(title: string, courseName: string): { title: string; courseName: string } {
-  const limits = getLimits();
-  const fallbackValues = getFallbackValues();
-  
-  const sanitizedTitle = sanitizeTextInput(title, limits.maxTitleLength);
-  const sanitizedCourseName = sanitizeTextInput(courseName, limits.maxCourseNameLength);
-  
-  // Verificar patrones prohibidos usando configuración externa
-  const titleHasForbiddenContent = containsDangerousPatterns(sanitizedTitle);
-  const courseNameHasForbiddenContent = containsDangerousPatterns(sanitizedCourseName);
-  
-  return {
-    title: titleHasForbiddenContent ? fallbackValues.title : sanitizedTitle,
-    courseName: courseNameHasForbiddenContent ? fallbackValues.courseName : sanitizedCourseName
-  };
-}
+//   // Verificar patrones peligrosos antes de sanitizar usando configuración externa
+//   if (containsDangerousPatterns(input)) {
+//     return fallbackValues.title;
+//   }
 
-/**
- * Crear prompt estructurado y seguro para transcripción
- * Utiliza un enfoque de template fijo para prevenir inyección de prompts
- * con configuración externa para flexibilidad
- */
-function createSecureTranscriptionPrompt(title: string, courseName: string): string {
-  const limits = getLimits();
-  const fallbackValues = getFallbackValues();
-  
-  // Validar que los parámetros no contienen intentos de manipulación
-  if (!title || !courseName || typeof title !== 'string' || typeof courseName !== 'string') {
-    title = fallbackValues.genericTitle;
-    courseName = fallbackValues.genericCourse;
-  }
-  
-  // Aplicar sanitización adicional específica para prompts
-  const cleanTitle = title.replace(/[^\w\s\-áéíóúñü]/gi, '').trim() || fallbackValues.genericTitle;
-  const cleanCourseName = courseName.replace(/[^\w\s\-áéíóúñü]/gi, '').trim() || fallbackValues.genericCourse;
-  
-  // Template fijo sin interpolación directa
-  const promptTemplate = [
-    "Eres un asistente educativo que genera transcripciones académicas.",
-    "Tu tarea es crear una transcripción realista de una clase universitaria.",
-    "",
-    "PARÁMETROS DE LA CLASE:",
-    "- Tema de la clase: [TEMA]",
-    "- Curso: [CURSO]",
-    "",
-    "INSTRUCCIONES FIJAS:",
-    "1. Genera una transcripción de clase universitaria profesional",
-    "2. Incluye introducción, desarrollo del tema y conclusión",
-    "3. Usa un estilo natural de profesor explicando conceptos",
-    "4. Aproximadamente 300-500 palabras",
-    "5. Mantén un tono académico y educativo",
-    "6. No incluyas ningún contenido que no sea educativo",
-    "",
-    "Genera la transcripción ahora:"
-  ].join('\n');
-  
-  // Reemplazar marcadores de forma segura sin interpolación directa usando límites configurables
-  return promptTemplate
-    .replace('[TEMA]', cleanTitle.substring(0, limits.promptTitleLength))
-    .replace('[CURSO]', cleanCourseName.substring(0, limits.promptCourseLength));
-}
+//   // Sanitización básica
+//   const sanitized = input
+//     .replace(/[<>{}[\]]/g, '') // Remover brackets y llaves
+//     .replace(/\\/g, '') // Remover backslashes
+//     .replace(/["'`]/g, '') // Remover comillas
+//     .replace(/\n|\r/g, ' ') // Convertir saltos de línea a espacios
+//     .replace(/\s+/g, ' ') // Normalizar espacios múltiples
+//     .replace(/[|#*]/g, '') // Remover caracteres de markdown que podrían usarse para manipulación
+//     .trim();
 
 /**
  * Validar archivo de video
@@ -152,8 +75,8 @@ function validateVideoFile(file: File): ValidationResult {
     };
   }
 
-  return { isValid: true };
-}
+//   const sanitizedTitle = sanitizeTextInput(title, limits.maxTitleLength);
+//   const sanitizedCourseName = sanitizeTextInput(courseName, limits.maxCourseNameLength);
 
 /**
  * Extraer metadatos del video (simulado por ahora)
@@ -413,12 +336,17 @@ async function processVideoForTranscription(
     transcriptionJob.updatedAt = new Date().toISOString();
     transcriptionJobs.set(requestId, transcriptionJob);
 
-    console.log(`Archivo recibido. Tipo: ${file.type}, Tamaño: ${file.size} bytes`);
+//   return { isValid: true };
+// }
 
-    // Actualizar progreso: enviando a Gemini
-    transcriptionJob.progress = 50;
-    transcriptionJob.updatedAt = new Date().toISOString();
-    transcriptionJobs.set(requestId, transcriptionJob);
+// /**
+//  * Extraer metadatos del video (simulado por ahora)
+//  */
+// async function extractVideoMetadata(
+//   file: File
+// ): Promise<Partial<VideoMetadata>> {
+//   // Por ahora simularemos la extracción de metadatos
+//   // En el futuro aquí se integraría una librería como ffmpeg para obtener duración real
 
     // Configurar el SDK nativo de Google Gemini
     console.log('Configurando SDK nativo de Google Gemini...');
@@ -582,29 +510,62 @@ Proporciona la transcripción:`;
       // Si fallan ambos métodos, usar transcripción predeterminada
       const fallbackTranscription = `Bienvenidos a esta clase de ${safeTitle}.
 
-En esta sesión del curso ${safeCourseName}, vamos a explorar los conceptos fundamentales de este importante tema.
+//         transcriptionJobs.set(requestId, job);
+//         console.log(`Transcripción completada para ${requestId}`);
+//       }
+//     } catch (error) {
+//       console.error(`Error procesando transcripción para ${requestId}:`, error);
+//     }
+//     console.log('API Key encontrada');
 
-[Inicio de clase]
+//   return {
+//     success: true,
+//     message: "Video recibido y encolado para transcripción",
+//     requestId,
+//   };
+// }
 
-Como introducción, es importante que entiendan que este tema forma parte integral del programa de estudios y tiene aplicaciones prácticas significativas en su área de especialización.
+//     console.log(`Archivo recibido. Tipo: ${file.type}, Tamaño: ${file.size} bytes`);
 
-Comenzaremos estableciendo las bases teóricas necesarias. [pausa para escribir en pizarra]
+//     // Actualizar progreso: enviando a Gemini
+//     transcriptionJob.progress = 50;
+//     transcriptionJob.updatedAt = new Date().toISOString();
+//     transcriptionJobs.set(requestId, transcriptionJob);
 
-Los conceptos que vamos a revisar hoy incluyen definiciones clave, principios fundamentales y metodologías que aplicaremos en ejercicios prácticos.
+//     // Configurar el modelo de Google Gemini 2.5 Flash
+//     console.log('Configurando modelo Gemini 2.5 Flash...');
+//     const model = google('gemini-2.5-flash');
+//     console.log('Modelo Gemini 2.5 Flash configurado');
 
-[Desarrollo del tema]
+//     console.log('Iniciando generación de transcripción con Gemini...');
 
-Primero, consideremos el aspecto teórico... Como pueden observar, hay una relación directa entre la teoría y sus aplicaciones prácticas.
+//     // Sanitizar metadatos para prevenir inyección de prompts
+//     const { title: safeTitle, courseName: safeCourseName } = validateAndSanitizeMetadata(
+//       metadata.title,
+//       metadata.courseName
+//     );
 
-Ahora, veamos algunos ejemplos específicos que ilustran estos conceptos. [ejemplo en pizarra]
+//     console.log('Metadatos sanitizados:', {
+//       originalTitle: metadata.title,
+//       safeTitle,
+//       originalCourseName: metadata.courseName,
+//       safeCourseName
+//     });
 
-Es importante que tomen notas de estos puntos clave, ya que aparecerán en las evaluaciones futuras.
+//     try {
+//       // Crear prompt estructurado y seguro
+//       const securePrompt = createSecureTranscriptionPrompt(safeTitle, safeCourseName);
 
-[Pregunta de estudiante]
+//       console.log('Generando transcripción con prompt estructurado y seguro');
 
-Excelente pregunta. Eso nos permite profundizar en un aspecto muy relevante del tema...
+//       // Realizar llamada a Gemini con prompt seguro
+//       const { text: transcriptionText } = await generateText({
+//         model,
+//         prompt: securePrompt,
+//       });
 
-[Conclusión]
+//       console.log('Transcripción generada exitosamente con Gemini');
+//       console.log(`Longitud: ${transcriptionText.length} caracteres`);
 
 Para resumir lo que hemos cubierto hoy: hemos establecido las bases conceptuales, revisado ejemplos prácticos y discutido las implicaciones del tema.
 
@@ -722,8 +683,7 @@ export async function POST(request: NextRequest) {
       );
     }
 
-    // Extraer metadatos del video
-    const extractedMetadata = await extractVideoMetadata(videoFile);
+// Como introducción, es importante que entiendan que este tema forma parte integral del programa de estudios y tiene aplicaciones prácticas significativas en su área de especialización.
 
     // Crear objeto de metadatos completo
     const videoMetadata: VideoMetadata = {
@@ -738,8 +698,7 @@ export async function POST(request: NextRequest) {
       uploadedAt: extractedMetadata.uploadedAt || new Date().toISOString()
     };
 
-    // Procesar video para transcripción
-    const result = await processVideoForTranscription(videoFile, videoMetadata);
+// Los conceptos que vamos a revisar hoy incluyen definiciones clave, principios fundamentales y metodologías que aplicaremos en ejercicios prácticos.
 
     if (!result.success) {
       return NextResponse.json(

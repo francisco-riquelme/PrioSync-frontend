@@ -23,19 +23,7 @@ import {
   Error,
   Help,
 } from '@mui/icons-material';
-
-interface User {
-  id: number;
-  email: string;
-  verificationCode: string;
-  createdAt: string;
-  expiresAt: string;
-  isVerified: boolean;
-}
-
-interface VerificationDatabase {
-  users: User[];
-}
+import authService from '@/utils/services/auth';
 
 export default function VerificationPage() {
   const router = useRouter();
@@ -47,20 +35,9 @@ export default function VerificationPage() {
   const [countdown, setCountdown] = useState(0);
   const [canResend, setCanResend] = useState(true);
 
-  // Validación de email
-  const validateEmail = (email: string): boolean => {
-    const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
-    return emailRegex.test(email);
-  };
-
-  // Validación de código
-  const validateCode = (code: string): boolean => {
-    return /^\d{6}$/.test(code);
-  };
-
   // Verificar si el formulario es válido
   const isFormValid = (): boolean => {
-    return validateEmail(email) && validateCode(code);
+    return authService.validateEmail(email) && authService.validateConfirmationCode(code);
   };
 
   // Función para manejar la verificación
@@ -75,25 +52,21 @@ export default function VerificationPage() {
     setSuccess('');
 
     try {
-      // Simular llamada a API
-      await new Promise(resolve => setTimeout(resolve, 1500));
+      const result = await authService.confirmSignUp({
+        email,
+        confirmationCode: code,
+      });
 
-      // Verificar contra la base de datos JSON
-      const response = await fetch('/data/verification-codes.json');
-      const data: VerificationDatabase = await response.json();
-      
-      const user = data.users.find((u: User) => u.email === email);
-      
-      if (user && user.verificationCode === code) {
+      if (result.success) {
         setSuccess('¡Código verificado correctamente! Redirigiendo al dashboard...');
         // Redirigir al dashboard (página principal) después de 2 segundos
         setTimeout(() => {
           router.push('/');
         }, 2000);
       } else {
-        setError('Código incorrecto. Inténtalo de nuevo.');
+        setError(result.error || 'Código incorrecto. Inténtalo de nuevo.');
       }
-    } catch {
+    } catch (error) {
       setError('Error al verificar el código. Inténtalo de nuevo.');
     } finally {
       setLoading(false);
@@ -102,7 +75,7 @@ export default function VerificationPage() {
 
   // Función para reenviar código
   const handleResendCode = async () => {
-    if (!validateEmail(email)) {
+    if (!authService.validateEmail(email)) {
       setError('Por favor ingresa un email válido primero');
       return;
     }
@@ -112,7 +85,7 @@ export default function VerificationPage() {
     setError('');
     setSuccess('');
 
-    // Simular reenvío
+    // Simular reenvío (en una implementación real, esto llamaría a un servicio de reenvío)
     setTimeout(() => {
       setSuccess('Código reenviado a tu correo electrónico');
       setCode('');
@@ -253,6 +226,7 @@ export default function VerificationPage() {
                 value={email}
                 onChange={(e) => setEmail(e.target.value)}
                 placeholder="tu@email.com"
+                disabled={loading}
                 InputProps={{
                   startAdornment: (
                     <InputAdornment position="start">
@@ -287,6 +261,7 @@ export default function VerificationPage() {
                   }
                 }}
                 placeholder="000000"
+                disabled={loading}
                 inputProps={{
                   maxLength: 6,
                   style: {
@@ -357,6 +332,7 @@ export default function VerificationPage() {
                 <Button
                   variant="text"
                   onClick={handleResendCode}
+                  disabled={loading}
                   startIcon={<Refresh />}
                   sx={{
                     color: '#1976d2',
@@ -364,6 +340,9 @@ export default function VerificationPage() {
                     '&:hover': {
                       color: '#1565c0',
                       backgroundColor: 'transparent',
+                    },
+                    '&:disabled': {
+                      color: '#9e9e9e',
                     },
                   }}
                 >
