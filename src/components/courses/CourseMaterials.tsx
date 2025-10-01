@@ -32,7 +32,7 @@ interface CourseMaterialsProps {
 }
 
 export default function CourseMaterials({ courseId }: CourseMaterialsProps) {
-  const { materiales, loading, error, refetch } = useMaterialEstudio(courseId);
+  const { materiales, loading, error } = useMaterialEstudio(courseId);
 
   // Loading state
   if (loading) {

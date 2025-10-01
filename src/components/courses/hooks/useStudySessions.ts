@@ -37,19 +37,22 @@ export const useStudySessions = (
       });
 
       // Build filter based on provided parameters
-      const filter: any = {};
+      const filter: Record<string, unknown> = {};
 
       if (cursoId) {
-        filter.cursoId = { eq: cursoId.toString() };
+        filter["cursoId"] = { eq: cursoId.toString() };
       }
 
       if (usuarioId) {
-        filter.usuarioId = { eq: usuarioId };
+        filter["usuarioId"] = { eq: usuarioId };
       }
 
       // Get study sessions
       const sessionsRes = await SesionEstudio.list({
-        filter: Object.keys(filter).length > 0 ? filter : undefined,
+        filter:
+          Object.keys(filter).length > 0
+            ? (filter as unknown as Record<string, unknown>)
+            : undefined,
         followNextToken: true,
         maxPages: 10,
       });

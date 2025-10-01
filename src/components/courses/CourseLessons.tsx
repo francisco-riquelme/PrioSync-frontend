@@ -32,7 +32,7 @@ interface CourseLessonsProps {
 }
 
 export default function CourseLessons({ courseId }: CourseLessonsProps) {
-  const { lecciones, loading, error, refetch } = useLecciones(courseId);
+  const { lecciones, loading, error } = useLecciones(courseId);
 
   // Loading state
   if (loading) {

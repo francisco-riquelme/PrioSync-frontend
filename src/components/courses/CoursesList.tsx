@@ -14,12 +14,9 @@ import {
   Alert,
 } from '@mui/material';
 import { Search as SearchIcon } from '@mui/icons-material';
-import { useState, useEffect, useCallback } from 'react';
-import { getQueryFactories } from '@/utils/commons/queries';
-import { MainTypes } from '@/utils/api/schema';
 import { useCourseFilters } from '@/components/courses/hooks/useCourseFilters';
 import { CourseCard } from './CourseCard';
-import { Course } from '@/components/courses/hooks/useCourses';
+import { useCourse } from '@/components/courses/hooks/useCourse';
 
 export default function CoursesList() {
   const router = useRouter();
@@ -27,58 +24,10 @@ export default function CoursesList() {
   // Use custom hook for filter controls
   const { filters, actions } = useCourseFilters();
   
-  // Single source of truth para cursos
-  const [courses, setCourses] = useState<Course[]>([]);
-  const [loading, setLoading] = useState(true);
-  const [error, setError] = useState<string | null>(null);
+  // Use unified course hook to fetch all courses
+  const { courses, loading, error } = useCourse();
 
-  // Load courses function
-  const loadCourses = useCallback(async () => {
-    try {
-      setLoading(true);
-      setError(null);
-      
-      // Use the new query factories pattern
-      const { Curso } = await getQueryFactories<MainTypes, "Curso">({
-        entities: ["Curso"],
-      });
-
-      // Filter for active courses only
-      const filter = { estado: { eq: 'activo' } };
-
-      const res = await Curso.list({
-        filter,
-        followNextToken: true, // Get all results
-        maxPages: 10 // Safety limit
-      });
-      
-      // Transform the response to match the Course interface
-      const coursesData: Course[] = res.items.map((curso: any) => ({
-        id_curso: parseInt(curso.cursoId),
-        titulo: curso.titulo,
-        descripcion: curso.descripcion || '',
-        imagen_portada: curso.imagen_portada || 'https://images.unsplash.com/photo-1635070041078-e363dbe005cb?w=400&h=250&fit=crop&auto=format',
-        duracion_estimada: curso.duracion_estimada || 0,
-        nivel_dificultad: curso.nivel_dificultad || 'basico',
-        estado: curso.estado || 'activo',
-      }));
-      
-      setCourses(coursesData);
-      
-    } catch (err) {
-      console.error('Error loading courses:', err);
-      setError('Error al cargar los cursos. Por favor, intenta nuevamente.');
-    } finally {
-      setLoading(false);
-    }
-  }, []);
-
-  // Load courses on component mount
-  useEffect(() => {
-    loadCourses();
-  }, [loadCourses]);
-
-  const handleCourseClick = (courseId: number) => {
+  const handleCourseClick = (courseId: number | string) => {
     router.push(`/courses/${courseId}`);
   };
 
@@ -168,7 +117,7 @@ export default function CoursesList() {
             >
               {courses.map((course) => (
                 <CourseCard 
-                  key={course.id_curso} 
+                  key={course.cursoId} 
                   course={course} 
                   onCourseClick={handleCourseClick}
                 />

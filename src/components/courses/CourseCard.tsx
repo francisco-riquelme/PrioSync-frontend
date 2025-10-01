@@ -7,11 +7,11 @@ import {
   Button,
   Chip,
 } from '@mui/material';
-import { Course } from '@/components/courses/hooks/useCourses';
+import { Course } from '@/components/courses/hooks/useCourse';
 
 interface CourseCardProps {
   course: Course;
-  onCourseClick: (courseId: number) => void;
+  onCourseClick: (courseId: number | string) => void;
 }
 
 const formatDuration = (minutes: number) => {
@@ -39,12 +39,12 @@ export const CourseCard = ({ course, onCourseClick }: CourseCardProps) => {
         display: 'flex',
         flexDirection: 'column',
       }}
-      onClick={() => onCourseClick(course.id_curso)}
+      onClick={() => onCourseClick(course.cursoId)}
     >
       <CardMedia
         component="img"
         height="160"
-        image={course.imagen_portada}
+        image={course.imagen_portada || ''}
         alt={course.titulo}
         sx={{ backgroundColor: 'grey.200' }}
       />
@@ -62,11 +62,11 @@ export const CourseCard = ({ course, onCourseClick }: CourseCardProps) => {
           <Chip 
             label={course.nivel_dificultad} 
             size="small" 
-            color={getLevelColor(course.nivel_dificultad)}
+            color={getLevelColor(course.nivel_dificultad || '')}
             variant="outlined"
           />
           <Chip 
-            label={formatDuration(course.duracion_estimada)} 
+            label={formatDuration(course.duracion_estimada || 0)} 
             size="small" 
             variant="outlined"
           />

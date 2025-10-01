@@ -23,10 +23,8 @@ import {
   Event as EventIcon,
   VideoCall as VideoCallIcon,
 } from '@mui/icons-material';
-import { MainTypes } from '@/utils/api/schema';
 import { useStudySessions } from './hooks/useStudySessions';
 
-type StudySession = MainTypes["SesionEstudio"]["type"];
 
 interface StudySessionsTableProps {
   courseId: string;
@@ -34,7 +32,7 @@ interface StudySessionsTableProps {
 }
 
 export default function StudySessionsTable({ courseId, usuarioId }: StudySessionsTableProps) {
-  const { sessions, loading, error, refetch } = useStudySessions(courseId, usuarioId);
+  const { sessions, loading, error,  } = useStudySessions(courseId, usuarioId);
 
   const formatTime = (time: string) => {
     // Format time from HH:MM:SS to HH:MM

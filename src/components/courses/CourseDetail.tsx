@@ -8,10 +8,8 @@ import {
   Button,
   Card,
   CardMedia,
-  CardContent,
   IconButton,
   LinearProgress,
-  Chip,
   CircularProgress,
   Alert,
 } from '@mui/material';
@@ -29,11 +27,10 @@ interface CourseDetailProps {
 
 export default function CourseDetail({ courseId }: CourseDetailProps) {
   const router = useRouter();
-  const [expandedModule, setExpandedModule] = useState<string>('');
-  const [courseProgress, setCourseProgress] = useState<number>(0);
+  const [courseProgress, _setCourseProgress] = useState<number>(0);
 
   // Use the improved hook to fetch course data
-  const { course, loading, error, refetch } = useCourse(courseId);
+  const { course, loading, error } = useCourse(courseId);
 
   // Handle loading state
   if (loading) {
@@ -100,11 +97,11 @@ export default function CourseDetail({ courseId }: CourseDetailProps) {
     return `${hours} horas`;
   };
 
-  // TODO: Backend Integration - Implementar completar lección con API
-  const handleCompleteLesson = async (moduleId: string, lessonId: string) => {
-    // TODO: Implement with real API call
-    console.log('Complete lesson:', moduleId, lessonId);
-  };
+  // // TODO: Backend Integration - Implementar completar lección con API
+  // const handleCompleteLesson = async (moduleId: string, lessonId: string) => {
+  //   // TODO: Implement with real API call
+  //   console.log('Complete lesson:', moduleId, lessonId);
+  // };
 
   // TODO: Backend Integration - Implementar envío de feedback
   const handleCourseFeedback = async () => {
@@ -112,13 +109,13 @@ export default function CourseDetail({ courseId }: CourseDetailProps) {
     console.log('Course feedback');
   };
 
-  const handleModuleFeedback = async (moduleId: string) => {
-    console.log('Module feedback:', moduleId);
-  };
+  // const handleModuleFeedback = async (moduleId: string) => {
+  //   console.log('Module feedback:', moduleId);
+  // };
 
-  const handleLessonFeedback = async (moduleId: string, lessonId: string) => {
-    console.log('Lesson feedback:', moduleId, lessonId);
-  };
+  // const handleLessonFeedback = async (moduleId: string, lessonId: string) => {
+  //   console.log('Lesson feedback:', moduleId, lessonId);
+  // };
 
   // TODO: Get actual user ID from auth context
   const userId = "user-uuid-123"; // Replace with actual user ID from context
