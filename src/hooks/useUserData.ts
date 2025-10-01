@@ -1,6 +1,6 @@
 "use client";
 
-import { useUser } from "@/contexts/UserContext";
+import { UserData, useUser } from "@/contexts/UserContext";
 import { useState, useCallback, useMemo } from "react";
 
 // Hook para autenticación (preparado para AWS Cognito)
@@ -64,13 +64,15 @@ export const useCourses = () => {
 
         // Agregar actividad automáticamente si completa el curso
         if (newProgress >= 100) {
-          const course = userData?.courses.find((c) => c.courseId === courseId);
+          const course = userData?.InscripcionesCurso?.find(
+            (c) => c.cursoId === courseId
+          );
           if (course) {
-            await addActivity({
-              title: `Completado: ${course.courseName}`,
-              subtitle: "Curso Completo - Felicitaciones",
-              type: "course_completed",
-            });
+            // await addActivity({
+            //   title: `Completado: ${course.titulo}`,
+            //   subtitle: "Curso Completo - Felicitaciones",
+            //   type: "course_completed",
+            // });
           }
         }
 
@@ -83,12 +85,22 @@ export const useCourses = () => {
     [userData, updateCourseProgress, addActivity]
   );
 
-  const courses = userData?.courses || [];
+  const courses = userData?.InscripcionesCurso || [];
+
+  // Calculate progress based on estado field
+  // completado = 100%, en_progreso = 50%, inscrito = 0%, abandonado = 0%
   const totalProgress =
     courses.length > 0
       ? Math.round(
-          courses.reduce((sum, course) => sum + course.progress, 0) /
-            courses.length
+          courses.reduce((sum: number, course) => {
+            const progress =
+              course.estado === "completado"
+                ? 100
+                : course.estado === "en_progreso"
+                  ? 50
+                  : 0;
+            return sum + progress;
+          }, 0) / courses.length
         )
       : 0;
 
@@ -164,7 +176,7 @@ export const useProfile = () => {
   const [profileLoading, setProfileLoading] = useState(false);
 
   const updateProfile = useCallback(
-    async (updates: { name?: string; email?: string; avatar?: string }) => {
+    async (updates: Partial<UserData>) => {
       setProfileLoading(true);
       try {
         await updateUser(updates);
@@ -232,17 +244,20 @@ export const useDashboard = () => {
     return randomAdvice;
   }, []);
 
+  const userName = userData?.nombre
+    ? `${userData.nombre}${userData.apellido ? " " + userData.apellido : ""}`
+    : "";
+
   const dashboardData = {
     user: {
-      name: userData?.name || "",
-      greeting: `¡Hola, ${userData?.name?.split(" ")[0] || "Usuario"}!`,
+      name: userName,
+      greeting: `¡Hola, ${userData?.nombre || "Usuario"}!`,
     },
     courses: {
       list: courses,
       totalProgress,
-      inProgress: courses.filter((c) => c.progress > 0 && c.progress < 100)
-        .length,
-      completed: courses.filter((c) => c.progress >= 100).length,
+      inProgress: courses.filter((c) => c.estado === "en_progreso").length,
+      completed: courses.filter((c) => c.estado === "completado").length,
     },
     activities: {
       recent: activities.slice(0, 5),

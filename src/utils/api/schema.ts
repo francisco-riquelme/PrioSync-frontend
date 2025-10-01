@@ -225,3 +225,32 @@ export const MainSchema = a.schema({
 });
 
 export type MainTypes = ClientSchema<typeof MainSchema>;
+
+// Export commonly used types for easier importing
+export type Usuario = MainTypes["Usuario"]["type"];
+export type Curso = MainTypes["Curso"]["type"];
+export type Leccion = MainTypes["Leccion"]["type"];
+export type InscripcionCurso = MainTypes["InscripcionCurso"]["type"];
+export type SesionEstudio = MainTypes["SesionEstudio"]["type"];
+export type MaterialEstudio = MainTypes["MaterialEstudio"]["type"];
+export type Cuestionario = MainTypes["Cuestionario"]["type"];
+export type Pregunta = MainTypes["Pregunta"]["type"];
+export type Respuesta = MainTypes["Respuesta"]["type"];
+export type ProgresoMaterial = MainTypes["ProgresoMaterial"]["type"];
+export type ProgresoCuestionario = MainTypes["ProgresoCuestionario"]["type"];
+export type EvaluacionCurso = MainTypes["EvaluacionCurso"]["type"];
+
+// Export enum types
+export type EstadoInscripcionType =
+  | "en_progreso"
+  | "completado"
+  | "abandonado"
+  | "inscrito";
+export type TipoSesionType = "estudio" | "repaso" | "examen";
+export type EstadoSesionType = "programada" | "completada" | "cancelada";
+export type TipoMaterialType = "video" | "audio" | "archivo";
+export type TipoCuestionarioType = "autoevaluacion" | "prueba_final";
+export type TipoPreguntaType = "multiple" | "verdadero_falso" | "abierta";
+export type EstadoProgresoType = "pendiente" | "en_proceso" | "completado";
+export type NivelDificultadType = "basico" | "intermedio" | "avanzado";
+export type EstadoCursoType = "activo" | "inactivo";

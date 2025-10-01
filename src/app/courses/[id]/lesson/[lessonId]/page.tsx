@@ -11,7 +11,6 @@ export default async function LessonPage({
   return (
     <DashboardLayout>
       <LessonDetail 
-        courseId={resolvedParams.id} 
         lessonId={resolvedParams.lessonId} 
       />
     </DashboardLayout>
