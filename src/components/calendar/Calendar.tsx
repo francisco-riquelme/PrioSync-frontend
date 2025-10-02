@@ -13,13 +13,41 @@ import {
   useTheme,
 } from '@mui/material';
 import { useUser } from '@/contexts/UserContext';
-import { useStudySessions } from '@/hooks/useStudySessions';
+import { useStudySessions } from '@/components/courses/hooks/useStudySessions';
+import type { MainTypes } from '@/utils/api/schema';
 import { StudySession } from '@/types/studySession';
 import { CalendarEvent } from './componentTypes';
 import CalendarToolbar from './CalendarToolbar';
 import StudySessionForm from './StudySessionForm';
 import StudySessionDetails from './StudySessionDetails';
 import ConfirmDeleteDialog from './ConfirmDeleteDialog';
+
+// Type for SesionEstudio from schema
+type SesionEstudio = MainTypes["SesionEstudio"]["type"];
+
+// Helper function to convert SesionEstudio to StudySession
+const convertToStudySession = (sesion: SesionEstudio): StudySession => {
+  const startTime = new Date(`${sesion.fecha}T${sesion.hora_inicio}`);
+  const endTime = new Date(`${sesion.fecha}T${sesion.hora_fin}`);
+  
+  return {
+    id: sesion.sesionEstudioId || '',
+    title: `Sesión de ${sesion.tipo || 'estudio'}`,
+    subject: sesion.cursoId || 'Estudio Personal',
+    startTime,
+    endTime,
+    description: '',
+    location: '',
+    priority: 'medium',
+    status: sesion.estado === 'programada' ? 'planned' : 
+            sesion.estado === 'completada' ? 'completed' : 
+            sesion.estado === 'cancelada' ? 'cancelled' : 'planned',
+    reminder: sesion.recordatorios ? parseInt(sesion.recordatorios) : 15,
+    tags: [],
+    createdAt: sesion.createdAt ? new Date(sesion.createdAt) : new Date(),
+    updatedAt: sesion.updatedAt ? new Date(sesion.updatedAt) : new Date(),
+  };
+};
 
 // Configurar moment en español
 moment.locale('es');
@@ -29,14 +57,18 @@ const Calendar: React.FC = () => {
   const theme = useTheme();
   const { userData } = useUser();
   const {
-    sessions,
+    sessions: rawSessions,
     loading: sessionsLoading,
-  // error: sessionsError, // Eliminado porque no se usa
     createSession,
     updateSession,
     deleteSession,
-  // updateSessionStatus // Eliminado porque no se usa
-  } = useStudySessions();
+  } = useStudySessions(undefined, userData?.usuarioId);
+
+  // Convert backend sessions to frontend format
+  const sessions = useMemo(() => 
+    rawSessions.map(convertToStudySession), 
+    [rawSessions]
+  );
 
   const [view, setView] = useState<View>('month');
   const [date, setDate] = useState(new Date());
@@ -258,7 +290,7 @@ const Calendar: React.FC = () => {
               Mi Calendario Académico
             </Typography>
             <Typography variant="body2" color="text.secondary">
-              {userData?.name && `Calendario de ${userData.name.split(' ')[0]}`} • {userData?.courses?.length || 0} cursos activos
+              {userData?.nombre && `Calendario de ${userData.nombre.split(' ')[0]}`} • {userData?.InscripcionesCurso?.length || 0} cursos activos
             </Typography>
           </Box>
           <Box sx={{ textAlign: 'right' }}>
@@ -325,36 +357,45 @@ const Calendar: React.FC = () => {
         }}
         onSubmit={async (formData) => {
           try {
-            // Generar título automático basado en fecha y hora
-            const date = new Date(formData.startDate);
-            const dateStr = date.toLocaleDateString('es-ES', { 
-              weekday: 'short', 
-              day: 'numeric', 
-              month: 'short' 
-            });
-            const autoTitle = `Sesión de Estudio - ${dateStr} ${formData.startTime}`;
-            
-            // Adaptar los datos del formulario simplificado al formato del hook
-            const adaptedFormData = {
-              title: autoTitle,
-              subject: 'Estudio Personal', // Campo fijo para el formato simplificado
-              startDate: formData.startDate,
-              startTime: formData.startTime,
-              endDate: formData.startDate, // Usar la misma fecha
-              endTime: formData.endTime,
-              description: '', // Campo opcional vacío
-              priority: 'medium' as const, // Prioridad fija
-              location: '', // Ubicación vacía
-              tags: [], // Tags vacíos
-              reminder: 15 // Recordatorio por defecto
-            };
+            if (!userData?.usuarioId) {
+              console.error('Usuario no autenticado');
+              return false;
+            }
+
+            // Calculate duration in minutes
+            const startDateTime = new Date(`${formData.startDate}T${formData.startTime}`);
+            const endDateTime = new Date(`${formData.startDate}T${formData.endTime}`);
+            const duracion_minutos = Math.round((endDateTime.getTime() - startDateTime.getTime()) / 60000);
 
             let success = false;
+            
             if (editingSession) {
-              const result = await updateSession(editingSession.id, adaptedFormData);
+              // UPDATE: Pass single object with id
+              const result = await updateSession({
+                id: editingSession.id,
+                fecha: formData.startDate,
+                hora_inicio: formData.startTime,
+                hora_fin: formData.endTime,
+                duracion_minutos,
+                tipo: 'estudio' as const,
+                estado: 'programada' as const,
+              });
               success = result !== null;
             } else {
-              const result = await createSession(adaptedFormData);
+              // CREATE: Pass complete data
+              const result = await createSession({
+                sesionEstudioId: crypto.randomUUID(),
+                usuarioId: userData.usuarioId,
+                fecha: formData.startDate,
+                hora_inicio: formData.startTime,
+                hora_fin: formData.endTime,
+                duracion_minutos,
+                tipo: 'estudio' as const,
+                estado: 'programada' as const,
+                cursoId: undefined,
+                google_event_id: undefined,
+                recordatorios: undefined,
+              });
               success = result !== null;
             }
             

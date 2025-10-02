@@ -399,6 +399,22 @@
                 ]
               }
             },
+            "Lecciones": {
+              "name": "Lecciones",
+              "isArray": true,
+              "type": {
+                "model": "Leccion"
+              },
+              "isRequired": false,
+              "attributes": [],
+              "isArrayNullable": true,
+              "association": {
+                "connectionType": "HAS_MANY",
+                "associatedWith": [
+                  "cursoId"
+                ]
+              }
+            },
             "createdAt": {
               "name": "createdAt",
               "isArray": false,
@@ -471,6 +487,173 @@
           "primaryKeyInfo": {
             "isCustomPrimaryKey": true,
             "primaryKeyFieldName": "cursoId",
+            "sortKeyFieldNames": []
+          }
+        },
+        "Leccion": {
+          "name": "Leccion",
+          "fields": {
+            "leccionId": {
+              "name": "leccionId",
+              "isArray": false,
+              "type": "ID",
+              "isRequired": true,
+              "attributes": []
+            },
+            "titulo": {
+              "name": "titulo",
+              "isArray": false,
+              "type": "String",
+              "isRequired": true,
+              "attributes": []
+            },
+            "descripcion": {
+              "name": "descripcion",
+              "isArray": false,
+              "type": "String",
+              "isRequired": false,
+              "attributes": []
+            },
+            "duracion_minutos": {
+              "name": "duracion_minutos",
+              "isArray": false,
+              "type": "Int",
+              "isRequired": false,
+              "attributes": []
+            },
+            "tipo": {
+              "name": "tipo",
+              "isArray": false,
+              "type": {
+                "enum": "LeccionTipo"
+              },
+              "isRequired": false,
+              "attributes": []
+            },
+            "url_contenido": {
+              "name": "url_contenido",
+              "isArray": false,
+              "type": "AWSURL",
+              "isRequired": true,
+              "attributes": []
+            },
+            "orden": {
+              "name": "orden",
+              "isArray": false,
+              "type": "Int",
+              "isRequired": false,
+              "attributes": []
+            },
+            "cursoId": {
+              "name": "cursoId",
+              "isArray": false,
+              "type": "ID",
+              "isRequired": true,
+              "attributes": []
+            },
+            "Curso": {
+              "name": "Curso",
+              "isArray": false,
+              "type": {
+                "model": "Curso"
+              },
+              "isRequired": false,
+              "attributes": [],
+              "association": {
+                "connectionType": "BELONGS_TO",
+                "targetNames": [
+                  "cursoId"
+                ]
+              }
+            },
+            "MaterialesEstudio": {
+              "name": "MaterialesEstudio",
+              "isArray": true,
+              "type": {
+                "model": "MaterialEstudio"
+              },
+              "isRequired": false,
+              "attributes": [],
+              "isArrayNullable": true,
+              "association": {
+                "connectionType": "HAS_MANY",
+                "associatedWith": [
+                  "leccionId"
+                ]
+              }
+            },
+            "createdAt": {
+              "name": "createdAt",
+              "isArray": false,
+              "type": "AWSDateTime",
+              "isRequired": false,
+              "attributes": [],
+              "isReadOnly": true
+            },
+            "updatedAt": {
+              "name": "updatedAt",
+              "isArray": false,
+              "type": "AWSDateTime",
+              "isRequired": false,
+              "attributes": [],
+              "isReadOnly": true
+            }
+          },
+          "syncable": true,
+          "pluralName": "Leccions",
+          "attributes": [
+            {
+              "type": "model",
+              "properties": {}
+            },
+            {
+              "type": "key",
+              "properties": {
+                "fields": [
+                  "leccionId"
+                ]
+              }
+            },
+            {
+              "type": "auth",
+              "properties": {
+                "rules": [
+                  {
+                    "allow": "public",
+                    "provider": "apiKey",
+                    "operations": [
+                      "create",
+                      "update",
+                      "delete",
+                      "read"
+                    ]
+                  },
+                  {
+                    "allow": "private",
+                    "operations": [
+                      "create",
+                      "update",
+                      "delete",
+                      "read"
+                    ]
+                  },
+                  {
+                    "allow": "public",
+                    "provider": "iam",
+                    "operations": [
+                      "create",
+                      "update",
+                      "delete",
+                      "read"
+                    ]
+                  }
+                ]
+              }
+            }
+          ],
+          "primaryKeyInfo": {
+            "isCustomPrimaryKey": true,
+            "primaryKeyFieldName": "leccionId",
             "sortKeyFieldNames": []
           }
         },
@@ -893,6 +1076,28 @@
                 "connectionType": "BELONGS_TO",
                 "targetNames": [
                   "cursoId"
+                ]
+              }
+            },
+            "leccionId": {
+              "name": "leccionId",
+              "isArray": false,
+              "type": "ID",
+              "isRequired": false,
+              "attributes": []
+            },
+            "Leccion": {
+              "name": "Leccion",
+              "isArray": false,
+              "type": {
+                "model": "Leccion"
+              },
+              "isRequired": false,
+              "attributes": [],
+              "association": {
+                "connectionType": "BELONGS_TO",
+                "targetNames": [
+                  "leccionId"
                 ]
               }
             },
@@ -2207,6 +2412,14 @@
             "inactivo"
           ]
         },
+        "LeccionTipo": {
+          "name": "LeccionTipo",
+          "values": [
+            "video",
+            "audio",
+            "archivo"
+          ]
+        },
         "InscripcionCursoEstado": {
           "name": "InscripcionCursoEstado",
           "values": [
@@ -2235,8 +2448,9 @@
         "MaterialEstudioTipo": {
           "name": "MaterialEstudioTipo",
           "values": [
-            "pdf",
-            "text"
+            "video",
+            "audio",
+            "archivo"
           ]
         },
         "CuestionarioTipo": {

@@ -13,7 +13,7 @@ import {
   Chip,
   LinearProgress,
 } from '@mui/material';
-import { useUser } from '@/contexts/UserContext';
+import { useUser, InscripcionCurso } from '@/contexts/UserContext';
 import { useCourses, useProfile, useActivities } from '@/hooks/useUserData';
 
 export default function UserDataExample() {
@@ -30,7 +30,7 @@ export default function UserDataExample() {
   }
 
   const handleUpdateName = async () => {
-    await updateProfile({ name: 'Francisco Riquelme Updated' });
+    await updateProfile({ nombre: 'Francisco', apellido: 'Riquelme Updated' });
   };
 
   const handleUpdateCourse = async () => {
@@ -57,8 +57,8 @@ export default function UserDataExample() {
           <Typography variant="h6" gutterBottom>
             1. Datos directos del contexto (userData)
           </Typography>
-          <Typography>ID: {userData?.userId}</Typography>
-          <Typography>Nombre: {userData?.name}</Typography>
+          <Typography>ID: {userData?.usuarioId}</Typography>
+          <Typography>Nombre: {userData?.nombre}</Typography>
           <Typography>Email: {userData?.email}</Typography>
           <Typography>Avatar: {userData?.avatar}</Typography>
           <Typography>Creado: {userData?.createdAt}</Typography>
@@ -72,7 +72,7 @@ export default function UserDataExample() {
           <Typography variant="h6" gutterBottom>
             2. Usando hook de perfil
           </Typography>
-          <Typography>Perfil: {profile?.name}</Typography>
+          <Typography>Perfil: {profile?.nombre}</Typography>
           <Button variant="outlined" onClick={handleUpdateName} sx={{ mt: 1 }}>
             Actualizar Nombre
           </Button>
@@ -89,18 +89,25 @@ export default function UserDataExample() {
           <Typography>Total de cursos: {courses.length}</Typography>
           
           <Box sx={{ mt: 2 }}>
-            {courses.map((course) => (
-              <Box key={course.courseId} sx={{ mb: 2 }}>
-                <Typography variant="body2">
-                  {course.courseName}: {course.progress}%
-                </Typography>
-                <LinearProgress 
-                  variant="determinate" 
-                  value={course.progress} 
-                  sx={{ mt: 0.5 }}
-                />
-              </Box>
-            ))}
+            {courses.map((inscripcion: InscripcionCurso) => {
+              // Calculate progress based on estado
+              const progress = inscripcion.estado === 'completado' ? 100
+                            : inscripcion.estado === 'en_progreso' ? 50
+                            : 0;
+              
+              return (
+                <Box key={inscripcion.cursoId} sx={{ mb: 2 }}>
+                  <Typography variant="body2">
+                    {inscripcion.curso_titulo || inscripcion.cursoId}: {progress}%
+                  </Typography>
+                  <LinearProgress 
+                    variant="determinate" 
+                    value={progress} 
+                    sx={{ mt: 0.5 }}
+                  />
+                </Box>
+              );
+            })}
           </Box>
           
           <Button variant="outlined" onClick={handleUpdateCourse} sx={{ mt: 1 }}>

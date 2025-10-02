@@ -9,11 +9,13 @@ import { MainTypes } from '@/utils/api/schema';
 export default function ProfilePage() {
   const [state, setState] = useState("")
   
-  const getUser = async () => {
+  const getCurso = async () => {
     try {
+      //function q trae las entidades de la base de datos
       const { Curso } = await getQueryFactories<MainTypes, "Curso">({
         entities: ["Curso"],
       });
+
       const res = await Curso.list();
       setState(JSON.stringify(res, null, 2));
     } catch (error) {
@@ -23,7 +25,7 @@ export default function ProfilePage() {
   }
 
   useEffect(()=> {
-    getUser()
+    getCurso()
   },[]) 
 
   return (

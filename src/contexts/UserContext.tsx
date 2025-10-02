@@ -1,19 +1,46 @@
 'use client';
 
 import React, { createContext, useContext, useState, useEffect, ReactNode } from 'react';
+import type { MainTypes } from '@/utils/api/schema';
 
-// Tipos de datos (preparados para DynamoDB)
-export interface UserData {
-  userId: string;
-  name: string;
-  email: string;
-  avatar: string;
-  courses: CourseProgress[];
-  activities: Activity[];
-  createdAt: string;
-  updatedAt: string;
+// Import schema types
+type UsuarioSchema = MainTypes["Usuario"]["type"];
+type InscripcionCursoSchema = MainTypes["InscripcionCurso"]["type"];
+
+// Simplified InscripcionCurso for client-side (without lazy loaders)
+export interface InscripcionCurso {
+  usuarioId: string;
+  cursoId: string;
+  fecha_inscripcion?: string | null;
+  estado?: 'en_progreso' | 'completado' | 'abandonado' | 'inscrito' | null;
+  createdAt?: string | null;
+  updatedAt?: string | null;
+  
+  // Helper properties for UI display (populated from Curso data)
+  curso_titulo?: string;
 }
 
+// Extended user data with additional UI fields
+export interface UserData {
+  // Schema fields from Usuario model
+  usuarioId: string;
+  email: string;
+  nombre: string;
+  apellido?: string | null;
+  ultimo_login?: string | null;
+  isValid?: boolean | null;
+  createdAt?: string | null;
+  updatedAt?: string | null;
+  
+  // UI-specific fields
+  avatar?: string;
+  
+  // Relationships (simplified for client-side use)
+  InscripcionesCurso?: InscripcionCurso[];
+  activities?: Activity[];
+}
+
+// Legacy interface for backward compatibility
 export interface CourseProgress {
   courseId: string;
   courseName: string;
@@ -29,7 +56,7 @@ export interface Activity {
   type: 'course_completed' | 'module_completed' | 'evaluation_completed' | 'assignment_completed';
 }
 
-// Contexto
+// Context interface
 interface UserContextType {
   userData: UserData | null;
   loading: boolean;
@@ -42,38 +69,57 @@ interface UserContextType {
 
 const UserContext = createContext<UserContextType | undefined>(undefined);
 
-// Datos en duro (estructura compatible con DynamoDB)
+// Default user data aligned with schema
 const getDefaultUserData = (): UserData => ({
-  userId: 'user_francisco_riquelme',
-  name: 'Francisco Riquelme',
+  usuarioId: 'user_francisco_riquelme',
+  nombre: 'Francisco',
+  apellido: 'Riquelme',
   email: 'francisco.riquelme@duocuc.cl',
   avatar: 'FR',
-  courses: [
+  isValid: true,
+  ultimo_login: new Date().toISOString(),
+  createdAt: '2025-08-01T10:00:00Z',
+  updatedAt: new Date().toISOString(),
+  
+  InscripcionesCurso: [
     {
-      courseId: 'calculo-avanzado',
-      courseName: 'Cálculo Avanzado',
-      progress: 85,
-      lastAccessed: '2025-09-11T09:30:00Z'
+      usuarioId: 'user_francisco_riquelme',
+      cursoId: 'calculo-avanzado',
+      fecha_inscripcion: '2025-08-15T09:30:00Z',
+      estado: 'en_progreso',
+      createdAt: '2025-08-15T09:30:00Z',
+      updatedAt: '2025-09-11T09:30:00Z',
+      curso_titulo: 'Cálculo Avanzado',
     },
     {
-      courseId: 'desarrollo-software',
-      courseName: 'Desarrollo de Software',
-      progress: 65,
-      lastAccessed: '2025-09-10T14:20:00Z'
+      usuarioId: 'user_francisco_riquelme',
+      cursoId: 'desarrollo-software',
+      fecha_inscripcion: '2025-08-20T14:20:00Z',
+      estado: 'en_progreso',
+      createdAt: '2025-08-20T14:20:00Z',
+      updatedAt: '2025-09-10T14:20:00Z',
+      curso_titulo: 'Desarrollo de Software',
     },
     {
-      courseId: 'inteligencia-artificial',
-      courseName: 'Inteligencia Artificial',
-      progress: 78,
-      lastAccessed: '2025-09-09T16:45:00Z'
+      usuarioId: 'user_francisco_riquelme',
+      cursoId: 'inteligencia-artificial',
+      fecha_inscripcion: '2025-08-25T16:45:00Z',
+      estado: 'en_progreso',
+      createdAt: '2025-08-25T16:45:00Z',
+      updatedAt: '2025-09-09T16:45:00Z',
+      curso_titulo: 'Inteligencia Artificial',
     },
     {
-      courseId: 'gestion-proyectos',
-      courseName: 'Gestión de Proyectos',
-      progress: 72,
-      lastAccessed: '2025-09-08T11:15:00Z'
+      usuarioId: 'user_francisco_riquelme',
+      cursoId: 'gestion-proyectos',
+      fecha_inscripcion: '2025-09-01T11:15:00Z',
+      estado: 'completado',
+      createdAt: '2025-09-01T11:15:00Z',
+      updatedAt: '2025-09-08T11:15:00Z',
+      curso_titulo: 'Gestión de Proyectos',
     }
   ],
+  
   activities: [
     {
       id: 'activity_1',
@@ -103,9 +149,7 @@ const getDefaultUserData = (): UserData => ({
       date: '23/08/2025',
       type: 'module_completed'
     }
-  ],
-  createdAt: '2025-08-01T10:00:00Z',
-  updatedAt: new Date().toISOString()
+  ]
 });
 
 // Provider
@@ -114,7 +158,7 @@ export const UserProvider = ({ children }: { children: ReactNode }) => {
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
 
-  // Cargar datos al inicializar
+  // Load data on initialization
   useEffect(() => {
     const loadUserData = () => {
       setLoading(true);
@@ -124,7 +168,7 @@ export const UserProvider = ({ children }: { children: ReactNode }) => {
           const parsedData = JSON.parse(savedData);
           setUserData(parsedData);
         } else {
-          // Primera vez - usar datos por defecto
+          // First time - use default data
           const defaultData = getDefaultUserData();
           setUserData(defaultData);
           localStorage.setItem('priosync_user_data', JSON.stringify(defaultData));
@@ -132,7 +176,7 @@ export const UserProvider = ({ children }: { children: ReactNode }) => {
       } catch (err) {
         console.error('Error loading user data:', err);
         setError('Error al cargar datos del usuario');
-        // Fallback a datos por defecto
+        // Fallback to default data
         const defaultData = getDefaultUserData();
         setUserData(defaultData);
       } finally {
@@ -143,7 +187,7 @@ export const UserProvider = ({ children }: { children: ReactNode }) => {
     loadUserData();
   }, []);
 
-  // Guardar automáticamente cuando cambien los datos
+  // Auto-save when data changes
   useEffect(() => {
     if (userData) {
       try {
@@ -155,13 +199,13 @@ export const UserProvider = ({ children }: { children: ReactNode }) => {
     }
   }, [userData]);
 
-  // Función para actualizar usuario
+  // Update user
   const updateUser = async (updates: Partial<UserData>): Promise<void> => {
     setLoading(true);
     setError(null);
     
     try {
-      // Simular delay de API
+      // Simulate API delay
       await new Promise(resolve => setTimeout(resolve, 500));
       
       setUserData(prev => {
@@ -183,7 +227,7 @@ export const UserProvider = ({ children }: { children: ReactNode }) => {
     }
   };
 
-  // Función para actualizar progreso de curso
+  // Update course progress (updates InscripcionCurso)
   const updateCourseProgress = async (courseId: string, progress: number): Promise<void> => {
     setLoading(true);
     setError(null);
@@ -194,15 +238,19 @@ export const UserProvider = ({ children }: { children: ReactNode }) => {
       setUserData(prev => {
         if (!prev) return null;
         
-        const updatedCourses = prev.courses.map(course => 
-          course.courseId === courseId 
-            ? { ...course, progress, lastAccessed: new Date().toISOString() }
-            : course
+        const updatedInscripciones = prev.InscripcionesCurso?.map(inscripcion => 
+          inscripcion.cursoId === courseId 
+            ? { 
+                ...inscripcion, 
+                updatedAt: new Date().toISOString(),
+                // You could add custom progress field or use estado
+              }
+            : inscripcion
         );
         
         return {
           ...prev,
-          courses: updatedCourses,
+          InscripcionesCurso: updatedInscripciones,
           updatedAt: new Date().toISOString()
         };
       });
@@ -214,7 +262,7 @@ export const UserProvider = ({ children }: { children: ReactNode }) => {
     }
   };
 
-  // Función para agregar actividad
+  // Add activity
   const addActivity = async (activity: Omit<Activity, 'id' | 'date'>): Promise<void> => {
     setLoading(true);
     setError(null);
@@ -222,10 +270,10 @@ export const UserProvider = ({ children }: { children: ReactNode }) => {
     try {
       await new Promise(resolve => setTimeout(resolve, 300));
 
-      // Generar id y date solo en el cliente para evitar SSR mismatch
+      // Generate id and date only on client to avoid SSR mismatch
       let id = '';
       let date = '';
-        if (typeof window !== 'undefined') {
+      if (typeof window !== 'undefined') {
         id = `activity_${Date.now()}`;
         date = new Date().toLocaleDateString('es-ES');
       } else {
@@ -244,7 +292,7 @@ export const UserProvider = ({ children }: { children: ReactNode }) => {
 
         return {
           ...prev,
-          activities: [newActivity, ...prev.activities],
+          activities: [newActivity, ...(prev.activities || [])],
           updatedAt: typeof window !== 'undefined' ? new Date().toISOString() : prev.updatedAt
         };
       });
@@ -256,13 +304,13 @@ export const UserProvider = ({ children }: { children: ReactNode }) => {
     }
   };
 
-  // Función para refrescar datos
+  // Refresh user data
   const refreshUser = async (): Promise<void> => {
     setLoading(true);
     setError(null);
     
     try {
-      // Simular recarga desde API
+      // Simulate reload from API
       await new Promise(resolve => setTimeout(resolve, 1000));
       
       const savedData = localStorage.getItem('priosync_user_data');
@@ -294,7 +342,7 @@ export const UserProvider = ({ children }: { children: ReactNode }) => {
   );
 };
 
-// Hook personalizado para usar el contexto
+// Custom hook to use the context
 export const useUser = (): UserContextType => {
   const context = useContext(UserContext);
   if (context === undefined) {

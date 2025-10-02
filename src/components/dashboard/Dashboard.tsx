@@ -15,6 +15,7 @@ import {
 } from '@mui/material';
 import { Person as PersonIcon } from '@mui/icons-material';
 import { useDashboard } from '@/hooks/useUserData';
+import { InscripcionCurso } from '@/contexts/UserContext';
 
 export default function Dashboard() {
   const router = useRouter();
@@ -116,31 +117,38 @@ export default function Dashboard() {
               Progreso de Cursos
             </Typography>
             <Box sx={{ mt: 2 }}>
-              {dashboardData.courses.list.map((course) => (
-                <Box key={course.courseId} sx={{ mb: 2 }}>
-                  <Box sx={{ display: 'flex', justifyContent: 'space-between', mb: 0.5 }}>
-                    <Typography variant="body2" color="text.secondary">
-                      {course.courseName}
-                    </Typography>
-                    <Typography variant="body2" color="text.secondary">
-                      {course.progress}%
-                    </Typography>
-                  </Box>
-                  <LinearProgress
-                    variant="determinate"
-                    value={course.progress}
-                    sx={{
-                      height: 6,
-                      borderRadius: 3,
-                      backgroundColor: 'grey.200',
-                      '& .MuiLinearProgress-bar': {
+              {dashboardData.courses.list.map((inscripcion: InscripcionCurso) => {
+                // Calculate progress based on estado
+                const progress = inscripcion.estado === 'completado' ? 100
+                              : inscripcion.estado === 'en_progreso' ? 50
+                              : 0;
+                
+                return (
+                  <Box key={inscripcion.cursoId} sx={{ mb: 2 }}>
+                    <Box sx={{ display: 'flex', justifyContent: 'space-between', mb: 0.5 }}>
+                      <Typography variant="body2" color="text.secondary">
+                        {inscripcion.curso_titulo || inscripcion.cursoId}
+                      </Typography>
+                      <Typography variant="body2" color="text.secondary">
+                        {progress}%
+                      </Typography>
+                    </Box>
+                    <LinearProgress
+                      variant="determinate"
+                      value={progress}
+                      sx={{
+                        height: 6,
                         borderRadius: 3,
-                        backgroundColor: 'primary.main',
-                      },
-                    }}
-                  />
-                </Box>
-              ))}
+                        backgroundColor: 'grey.200',
+                        '& .MuiLinearProgress-bar': {
+                          borderRadius: 3,
+                          backgroundColor: 'primary.main',
+                        },
+                      }}
+                    />
+                  </Box>
+                );
+              })}
             </Box>
           </CardContent>
         </Card>
