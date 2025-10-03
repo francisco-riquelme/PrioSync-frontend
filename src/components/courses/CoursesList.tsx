@@ -39,82 +39,40 @@ interface Course {
   progress?: number;
 }
 
-// TODO: Backend Integration - Configuración para desarrollo y testing
-const API_SIMULATION_CONFIG = {
-  COURSES_LOAD_DELAY: 100, // ms para simular carga de cursos
-  ENROLLMENT_DELAY: 1500,  // ms para simular proceso de inscripción
-  ENABLE_API_SIMULATION: true, // flag para habilitar/deshabilitar simulación
-} as const;
+// ✅ Backend Integration - Configuración actualizada
+// const API_CONFIG = {
+//   COURSES_LOAD_DELAY: 100, // ms para simular carga de cursos (solo para UX)
+//   ENABLE_BACKEND_INTEGRATION: true, // flag principal para usar backend real
+// } as const;
 
-// TODO: Backend Integration - Mover a contexto o hook personalizado
-// Esta función simulará la obtención de cursos desde el backend
+// ✅ Backend Integration - Función real para obtener cursos desde el backend
 const getCourses = async (): Promise<Course[]> => {
-  // Simulación de delay de API
-  if (API_SIMULATION_CONFIG.ENABLE_API_SIMULATION) {
-    await new Promise(resolve => setTimeout(resolve, API_SIMULATION_CONFIG.COURSES_LOAD_DELAY));
+  try {
+    const response = await fetch('/api/courses');
+    
+    if (!response.ok) {
+      throw new Error(`Error ${response.status}: ${response.statusText}`);
+    }
+    
+    const result = await response.json();
+    
+    if (!result.success) {
+      throw new Error(result.message || 'Error al obtener cursos');
+    }
+    
+    // Mapear datos del backend al formato esperado por el componente
+    const coursesWithEnrollment = result.data.courses.map((course: Course) => ({
+      ...course,
+      // TODO: User Context Integration - Obtener estado de inscripción real del usuario
+      isEnrolled: course.id_curso <= 2, // Simulación temporal
+      progress: course.id_curso === 1 ? 65 : course.id_curso === 2 ? 20 : 0
+    }));
+    
+    return coursesWithEnrollment;
+  } catch (error) {
+    console.error('Error al cargar cursos desde el backend:', error);
+    throw error;
   }
-  
-  // TODO: Backend Integration - Reemplazar con llamada real a API
-  // const response = await fetch('/api/courses');
-  // return response.json();
-  
-  return [
-    {
-      id_curso: 1,
-      titulo: 'Cálculo Avanzado',
-      descripcion: 'Curso completo de cálculo diferencial e integral',
-      imagen_portada: 'https://images.unsplash.com/photo-1635070041078-e363dbe005cb?w=400&h=250&fit=crop&auto=format',
-      duracion_estimada: 1800, // 30 horas
-      nivel_dificultad: 'intermedio',
-      estado: 'activo',
-      isEnrolled: true,
-      progress: 65,
-    },
-    {
-      id_curso: 2,
-      titulo: 'Desarrollo de Software',
-      descripcion: 'Fundamentos de programación y desarrollo de aplicaciones',
-      imagen_portada: 'https://images.unsplash.com/photo-1461749280684-dccba630e2f6?w=400&h=250&fit=crop&auto=format',
-      duracion_estimada: 2400, // 40 horas
-      nivel_dificultad: 'basico',
-      estado: 'activo',
-      isEnrolled: true,
-      progress: 20,
-    },
-    {
-      id_curso: 3,
-      titulo: 'Inteligencia Artificial',
-      descripcion: 'Introducción a machine learning y redes neuronales',
-      imagen_portada: 'https://images.unsplash.com/photo-1677442136019-21780ecad995?w=400&h=250&fit=crop&auto=format',
-      duracion_estimada: 3600, // 60 horas
-      nivel_dificultad: 'avanzado',
-      estado: 'activo',
-      isEnrolled: false,
-      progress: 0,
-    },
-    {
-      id_curso: 4,
-      titulo: 'Gestión de Proyectos',
-      descripcion: 'Metodologías ágiles y gestión efectiva de proyectos',
-      imagen_portada: 'https://images.unsplash.com/photo-1454165804606-c3d57bc86b40?w=400&h=250&fit=crop&auto=format',
-      duracion_estimada: 1200, // 20 horas
-      nivel_dificultad: 'basico',
-      estado: 'activo',
-      isEnrolled: false,
-      progress: 0,
-    },
-    {
-      id_curso: 5,
-      titulo: 'Diseño de UX/UI',
-      descripcion: 'Principios de diseño centrado en el usuario',
-      imagen_portada: 'https://images.unsplash.com/photo-1561070791-2526d30994b5?w=400&h=250&fit=crop&auto=format',
-      duracion_estimada: 1800, // 30 horas
-      nivel_dificultad: 'intermedio',
-      estado: 'activo',
-      isEnrolled: false,
-      progress: 0,
-    },
-  ];
 };
 
 export default function CoursesList() {
@@ -211,38 +169,34 @@ export default function CoursesList() {
     router.push(`/courses/${courseId}`);
   };
 
-  // TODO: Backend Integration & User Context Integration - Función para manejar inscripción
+  // ✅ Backend Integration - Función real para manejar inscripción
   const handleEnrollCourse = async (courseId: number, event: React.MouseEvent) => {
     event.stopPropagation();
     
     try {
       setEnrollingCourseId(courseId);
       
-      // TODO: Backend Integration - Reemplazar con llamada real al API
-      // const response = await fetch(`/api/courses/${courseId}/enroll`, {
-      //   method: 'POST',
-      //   headers: {
-      //     'Content-Type': 'application/json',
-      //     'Authorization': `Bearer ${userToken}`,
-      //   },
-      //   body: JSON.stringify({
-      //     userId: user.id,
-      //     courseId: courseId,
-      //   }),
-      // });
+      // Llamada real al API de inscripción
+      const response = await fetch(`/api/courses/${courseId}/enroll`, {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({
+          userId: 1, // TODO: User Context Integration - Usar ID real del usuario
+        }),
+      });
       
-      // if (!response.ok) {
-      //   throw new Error('Error al inscribirse al curso');
-      // }
+      const result = await response.json();
       
-      // const result = await response.json();
-      
-      // Simulación de llamada al backend
-      if (API_SIMULATION_CONFIG.ENABLE_API_SIMULATION) {
-        await new Promise(resolve => setTimeout(resolve, API_SIMULATION_CONFIG.ENROLLMENT_DELAY));
+      if (!response.ok) {
+        if (response.status === 409) {
+          throw new Error('Ya estás inscrito en este curso');
+        }
+        throw new Error(result.message || 'Error al inscribirse al curso');
       }
       
-      // Actualizar estado local como single source of truth
+      // Actualizar estado local después de inscripción exitosa
       setCourses(prevCourses =>
         prevCourses.map(course =>
           course.id_curso === courseId
@@ -269,21 +223,18 @@ export default function CoursesList() {
       setMessageType('success');
       setShowMessage(true);
       
-    } catch (error) {
+    } catch (error: unknown) {
       console.error('Error al inscribirse:', error);
+      const errorMessage = error instanceof Error ? error.message : 'Error de inscripción';
       
-      setMessage('Hubo un error al inscribirse. Por favor, intenta nuevamente.');
+      // Manejo específico de errores del backend
+      if (errorMessage.includes('Ya estás inscrito')) {
+        setMessage('Ya estás inscrito en este curso.');
+      } else {
+        setMessage(errorMessage || 'Hubo un error al inscribirse. Por favor, intenta nuevamente.');
+      }
       setMessageType('error');
       setShowMessage(true);
-      
-      // TODO: Backend Integration - Manejo de errores específicos del API
-      // if (error.status === 409) {
-      //   setMessage('Ya estás inscrito en este curso.');
-      // } else if (error.status === 402) {
-      //   setMessage('Este curso requiere pago. Serás redirigido a la página de pago.');
-      // } else if (error.status === 403) {
-      //   setMessage('No tienes permisos para inscribirte en este curso.');
-      // }
       
     } finally {
       setEnrollingCourseId(null);
