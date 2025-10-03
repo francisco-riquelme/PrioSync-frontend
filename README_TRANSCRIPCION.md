@@ -1,8 +1,26 @@
-# Guía de Usuario: Sistema de Transcripción de Videos
+# Guía de Usuario: Sistema de Gestión de Cursos con IA
 
 ## Introducción
 
-Este documento proporciona instrucciones detalladas para utilizar el sistema de transcripción de videos de PrioSync, que utiliza inteligencia artificial de Google Gemini para generar transcripciones automáticas y contenido educativo enriquecido.
+Este documento proporciona instrucciones detalladas para utilizar el sistema completo de gestión de cursos de PrioSync, que incluye dos métodos principales:
+
+1. **Transcripción de Videos Individuales**: Utilizando inteligencia artificial de Google Gemini para generar transcripciones automáticas y contenido educativo enriquecido
+2. **Importación de Playlists de YouTube**: Generación automática de estructura de cursos completos a partir de playlists de YouTube con IA
+
+## Funcionalidades Principales
+
+### Transcripción de Videos
+- Transcripción automática con Google Gemini AI
+- Análisis educativo del contenido
+- Generación de material enriquecido
+- Soporte para múltiples formatos de video
+
+### Importación de Playlists YouTube
+- Importación automática de playlists completas
+- Generación inteligente de estructura de curso
+- Organización en módulos y lecciones
+- Personalización de contenido educativo
+- Límite configurable de lecciones
 
 ## Requisitos Previos
 
@@ -24,6 +42,9 @@ Debe crear un archivo `.env.local` en la carpeta raíz del proyecto con las sigu
 # Google Gemini API Configuration (OBLIGATORIO)
 GOOGLE_GENERATIVE_AI_API_KEY=su_clave_api_de_google_gemini
 
+# YouTube Data API Configuration (OBLIGATORIO para importación de playlists)
+YOUTUBE_API_KEY=su_clave_api_de_youtube
+
 # Habilitar modo administrador (OBLIGATORIO)
 NEXT_PUBLIC_IS_ADMIN_MODE=true
 ```
@@ -34,11 +55,18 @@ NEXT_PUBLIC_IS_ADMIN_MODE=true
 - **Propósito**: Clave de API para acceder a los servicios de Google Gemini
 - **Obtención**: Generar desde [Google AI Studio](https://makersuite.google.com/app/apikey)
 - **Seguridad**: Mantener confidencial, no compartir públicamente
+- **Uso**: Transcripción de videos y generación de estructura de cursos
+
+**YOUTUBE_API_KEY**:
+- **Propósito**: Clave de API para acceder a YouTube Data API v3
+- **Obtención**: Generar desde [Google Cloud Console](https://console.cloud.google.com/)
+- **Servicios requeridos**: YouTube Data API v3
+- **Uso**: Importación de metadatos de playlists y videos de YouTube
 
 **NEXT_PUBLIC_IS_ADMIN_MODE**:
-- **Propósito**: Habilita las funcionalidades de administración incluyendo transcripción
+- **Propósito**: Habilita las funcionalidades de administración incluyendo transcripción e importación
 - **Valores**: `true` (habilitar) o `false` (deshabilitar)
-- **Requerido**: Debe estar en `true` para acceder al sistema de transcripción
+- **Requerido**: Debe estar en `true` para acceder al sistema completo de gestión de cursos
 
 #### Verificación de Configuración
 
@@ -51,10 +79,31 @@ Para verificar que las variables están configuradas correctamente:
 ## Acceso al Sistema
 
 1. **Navegación**: Inicie sesión en PrioSync y diríjase a la sección de administración
-2. **Menú**: Seleccione "Cursos" > "Subir Contenido"
-3. **Ubicación**: La interfaz de carga se encuentra en `/admin/courses/upload`
+2. **Menú**: Seleccione "Cursos" > "Crear Nuevo Curso"
+3. **Ubicación**: La interfaz de gestión se encuentra en `/admin/courses/upload`
+4. **Opciones**: Encontrará dos pestañas principales:
+   - **Subir Videos**: Para transcripción de videos individuales
+   - **Importar de YouTube**: Para creación de cursos desde playlists
 
-## Proceso de Carga de Video
+## Métodos de Creación de Cursos
+
+### Método 1: Transcripción de Videos Individuales
+
+Este método permite crear contenido educativo a partir de videos individuales que usted carga al sistema.
+
+### Método 2: Importación de Playlists de YouTube
+
+Este método permite crear cursos completos a partir de playlists existentes de YouTube, generando automáticamente una estructura educativa organizada.
+
+#### Acceso a la Funcionalidad
+1. En la página de administración, seleccione la pestaña **"Importar de YouTube"**
+2. La interfaz mostrará un formulario de importación especializado
+
+#### Proceso de Importación Completo
+
+Para información detallada sobre la importación de playlists de YouTube, consulte el documento específico: [README_YOUTUBE_COURSES.md](./README_YOUTUBE_COURSES.md)
+
+---
 
 ### Paso 1: Selección del Archivo
 
@@ -258,8 +307,13 @@ Texto exacto del audio del video:
 2. Revise los logs de procesamiento
 3. Verifique la conectividad con los servicios de IA
 
+## Documentación Relacionada
+
+Para información específica sobre importación de playlists de YouTube y generación automática de cursos, consulte:
+- **[README_YOUTUBE_COURSES.md](./README_YOUTUBE_COURSES.md)** - Guía completa de importación de playlists
+
 ---
 
-**Versión del documento**: 1.0  
-**Fecha de actualización**: 30 de septiembre de 2025  
+**Versión del documento**: 2.0  
+**Fecha de actualización**: 2 de octubre de 2025  
 **Responsable**: Equipo de Desarrollo PrioSync
