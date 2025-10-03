@@ -61,16 +61,85 @@ export default function AdminCoursesUploadPage() {
     setCurrentPlaylist(playlist);
   };
 
-  const handleCourseConfirmed = (course: GeneratedCourseStructure) => {
+  const handleCourseConfirmed = async (course: GeneratedCourseStructure) => {
     console.log('Curso confirmado:', course);
     
-    // TODO: Aquí integrarías con tu API de backend para guardar el curso
-    // Por ahora solo mostramos un mensaje de éxito
-    setSuccessMessage(`Curso "${course.title}" creado exitosamente con ${course.modules.length} módulos y ${course.modules.reduce((total, module) => total + module.lessons.length, 0)} lecciones.`);
-    setShowSuccessMessage(true);
+    try {
+      // Enviar curso al backend para persistirlo
+      const response = await fetch('/api/courses', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({
+          titulo: course.title,
+          descripcion: course.description,
+          duracion_estimada: course.estimatedDuration ? 
+            parseEstimatedDuration(course.estimatedDuration) : 180, // convertir a minutos
+          nivel_dificultad: course.level === 'beginner' ? 'basico' : 
+                           course.level === 'advanced' ? 'avanzado' : 'intermedio',
+          instructor: course.instructor,
+          categoria: course.category,
+          imagen_portada: currentPlaylist?.thumbnailUrl || 'https://images.unsplash.com/photo-1516321318423-f06f85e504b3?w=400&h=250&fit=crop',
+          estado: 'activo',
+          // Metadatos adicionales del flujo de YouTube
+          source: 'youtube',
+          playlist_id: currentPlaylist?.id,
+          generated_structure: course, // Guardar estructura completa para futura referencia
+          tags: course.tags,
+          objectives: course.objectives
+        }),
+      });
+
+      const result = await response.json();
+
+      if (!response.ok) {
+        throw new Error(result.message || 'Error al guardar el curso en el backend');
+      }
+
+      // Mostrar mensaje de éxito con información del backend
+      setSuccessMessage(
+        `Curso "${course.title}" creado y guardado exitosamente!\n` +
+        `${course.modules.length} módulos y ${course.modules.reduce((total, module) => total + module.lessons.length, 0)} lecciones.\n` +
+        `ID del curso: ${result.data.id_curso}\n` +
+        `Ya está disponible en la página de cursos.`
+      );
+      setShowSuccessMessage(true);
+      
+      // Resetear el flujo
+      setCurrentPlaylist(null);
+      
+    } catch (error: unknown) {
+      console.error('Error al guardar el curso:', error);
+      const errorMessage = error instanceof Error ? error.message : 'Error desconocido';
+      
+      // Mostrar error específico
+      setSuccessMessage(
+        `Error al guardar el curso: ${errorMessage}\n` +
+        `El curso fue generado correctamente pero no se pudo guardar en el backend.`
+      );
+      setShowSuccessMessage(true);
+    }
+  };
+
+  // Función auxiliar para convertir duración estimada a minutos
+  const parseEstimatedDuration = (duration: string): number => {
+    // Buscar patrones como "2 horas", "90 minutos", "1h 30m", etc.
+    const hourMatch = duration.match(/(\d+)(?:\s*h(?:oras?)?)/i);
+    const minuteMatch = duration.match(/(\d+)(?:\s*m(?:in(?:utos?)?)?)/i);
     
-    // Resetear el flujo
-    setCurrentPlaylist(null);
+    let totalMinutes = 0;
+    
+    if (hourMatch) {
+      totalMinutes += parseInt(hourMatch[1]) * 60;
+    }
+    
+    if (minuteMatch) {
+      totalMinutes += parseInt(minuteMatch[1]);
+    }
+    
+    // Si no se pudo parsear, devolver un valor por defecto
+    return totalMinutes > 0 ? totalMinutes : 180;
   };
 
   return (
@@ -173,18 +242,23 @@ export default function AdminCoursesUploadPage() {
           </Box>
         </Paper>
 
-        {/* Mensaje de éxito */}
+        {/* Mensaje de éxito/error */}
         <Snackbar
           open={showSuccessMessage}
-          autoHideDuration={6000}
+          autoHideDuration={8000}
           onClose={() => setShowSuccessMessage(false)}
           anchorOrigin={{ vertical: 'bottom', horizontal: 'center' }}
         >
           <Alert 
             onClose={() => setShowSuccessMessage(false)} 
-            severity="success" 
-            sx={{ width: '100%' }}
-            icon={<CheckCircleIcon />}
+            severity={successMessage.includes('❌') ? 'error' : 'success'}
+            sx={{ 
+              width: '100%',
+              '& .MuiAlert-message': {
+                whiteSpace: 'pre-line' // Permitir saltos de línea en el mensaje
+              }
+            }}
+            icon={successMessage.includes('❌') ? undefined : <CheckCircleIcon />}
           >
             {successMessage}
           </Alert>
