@@ -247,7 +247,7 @@ Genera el JSON con el contenido enriquecido:`;
         enrichedContent: parsedResponse.enrichedContent,
         analysis: parsedResponse.analysis
       };
-    } catch (parseError) {
+    } catch {
       console.warn('No se pudo parsear la respuesta JSON, usando respuesta directa');
       
       // Si no se puede parsear, generar estructura básica
@@ -298,15 +298,7 @@ Los conceptos presentados en este video forman parte importante del curso y requ
   }
 }
 
-/**
- * Convertir archivo a base64
- * (Para procesamiento multimedia con Gemini)
- */
-async function fileToBase64(file: File): Promise<string> {
-  const bytes = await file.arrayBuffer();
-  const buffer = Buffer.from(bytes);
-  return buffer.toString('base64');
-}
+
 
 /**
  * Obtener tipo MIME para Gemini basado en el tipo de archivo

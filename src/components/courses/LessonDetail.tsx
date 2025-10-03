@@ -25,7 +25,6 @@ import {
   Feedback as FeedbackIcon,
   Description as DescriptionIcon,
   Quiz as QuizIcon,
-  Download as DownloadIcon,
 } from '@mui/icons-material';
 
 interface CourseModule {

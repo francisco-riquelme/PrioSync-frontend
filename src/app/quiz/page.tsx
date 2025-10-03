@@ -1,6 +1,6 @@
 'use client';
 
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useCallback } from 'react';
 import { Box } from '@mui/material';
 import DashboardLayout from '@/components/layout/DashboardLayout';
 import {
@@ -158,6 +158,53 @@ const QuizPage: React.FC = () => {
   const [showResults, setShowResults] = useState(false);
   const [quizAnalysis, setQuizAnalysis] = useState<QuizAnalysis | null>(null);
 
+  const generateQuizAnalysis = useCallback((): QuizAnalysis => {
+    const { score, percentage } = calculateScore();
+    
+    const incorrectQuestions = mockQuizData.questions
+      .filter(question => selectedAnswers[question.id] !== question.correctAnswer)
+      .map(question => question.id);
+
+    let level: QuizAnalysis['level'];
+    if (percentage >= 90) level = 'excellent';
+    else if (percentage >= 75) level = 'good';
+    else if (percentage >= 60) level = 'needs-improvement';
+    else level = 'critical';
+
+    const strengths: string[] = [];
+    const weaknesses: string[] = [];
+    
+    // Análisis simple basado en preguntas
+    if (selectedAnswers['q1'] === 1) strengths.push('JSX');
+    else weaknesses.push('JSX');
+    
+    if (selectedAnswers['q3'] === 1) strengths.push('Hooks');
+    else weaknesses.push('Hooks');
+    
+    if (selectedAnswers['q5'] === 2) strengths.push('Props vs State');
+    else weaknesses.push('Props vs State');
+
+    // Generar recomendaciones
+    const recommendations = generateRecommendations(level);
+
+    return {
+      score,
+      percentage,
+      level,
+      incorrectQuestions,
+      strengths,
+      weaknesses,
+      recommendations
+    };
+  }, [selectedAnswers]);
+
+  // Funciones de navegación
+  const handleFinishQuiz = useCallback(() => {
+    const analysis = generateQuizAnalysis();
+    setQuizAnalysis(analysis);
+    setShowResults(true);
+  }, [generateQuizAnalysis]);
+
   // Timer effect
   useEffect(() => {
     if (currentScreen !== 'quiz' || showResults) return;
@@ -165,9 +212,8 @@ const QuizPage: React.FC = () => {
     if (timeLeft <= 0) {
       handleFinishQuiz();
     }
-  }, [currentScreen, showResults, timeLeft]);
+  }, [currentScreen, showResults, timeLeft, handleFinishQuiz]);
 
-  // Funciones de navegación
   const handleStartQuiz = () => {
     setCurrentScreen('quiz');
     setTimeLeft(mockQuizData.timeLimit * 60);
@@ -190,12 +236,6 @@ const QuizPage: React.FC = () => {
     if (currentQuestionIndex < mockQuizData.questions.length - 1) {
       setCurrentQuestionIndex(prev => prev + 1);
     }
-  };
-
-  const handleFinishQuiz = () => {
-    const analysis = generateQuizAnalysis();
-    setQuizAnalysis(analysis);
-    setShowResults(true);
   };
 
   const handleRetryQuiz = () => {
@@ -237,47 +277,9 @@ const QuizPage: React.FC = () => {
     return { score: correctAnswers, percentage, passed };
   };
 
-  const generateQuizAnalysis = (): QuizAnalysis => {
-    const { score, percentage } = calculateScore();
-    
-    const incorrectQuestions = mockQuizData.questions
-      .filter(question => selectedAnswers[question.id] !== question.correctAnswer)
-      .map(question => question.id);
 
-    let level: QuizAnalysis['level'];
-    if (percentage >= 90) level = 'excellent';
-    else if (percentage >= 75) level = 'good';
-    else if (percentage >= 60) level = 'needs-improvement';
-    else level = 'critical';
 
-    const strengths: string[] = [];
-    const weaknesses: string[] = [];
-    
-    // Análisis simple basado en preguntas
-    if (selectedAnswers['q1'] === 1) strengths.push('JSX');
-    else weaknesses.push('JSX');
-    
-    if (selectedAnswers['q3'] === 1) strengths.push('Hooks');
-    else weaknesses.push('Hooks');
-    
-    if (selectedAnswers['q5'] === 2) strengths.push('Props vs State');
-    else weaknesses.push('Props vs State');
-
-    // Generar recomendaciones
-    const recommendations = generateRecommendations(level, percentage, weaknesses);
-
-    return {
-      score,
-      percentage,
-      level,
-      incorrectQuestions,
-      strengths,
-      weaknesses,
-      recommendations
-    };
-  };
-
-  const generateRecommendations = (level: string, percentage: number, weaknesses: string[]): StudyRecommendation[] => {
+  const generateRecommendations = (level: string): StudyRecommendation[] => {
     const recommendations: StudyRecommendation[] = [];
 
     if (level === 'critical' || level === 'needs-improvement') {
