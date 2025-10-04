@@ -78,7 +78,7 @@ export default function CourseDetail({ courseId }: CourseDetailProps) {
     );
   }
 
-  // ✅ Backend Integration - Calcular progreso basado en datos reales
+  // Backend Integration - Calcular progreso basado en datos reales
   const calculateProgress = () => {
     // Since we don't have modules/lessons data from the API yet,
     // we'll use a placeholder progress calculation

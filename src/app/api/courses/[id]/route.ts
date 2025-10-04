@@ -92,10 +92,14 @@ const DETAILED_COURSES: { [key: number]: Course } = {
 // GET /api/courses/[id] - Obtener detalles de un curso específico
 export async function GET(
   request: NextRequest,
-  { params }: { params: { id: string } }
+  { params }: { params: Promise<{ id: string }> }
 ) {
+  let resolvedParams: { id: string } | undefined;
+  let courseId: number;
+  
   try {
-    const courseId = parseInt(params.id);
+    resolvedParams = await params;
+    courseId = parseInt(resolvedParams.id);
     
     if (isNaN(courseId)) {
       return NextResponse.json(
@@ -123,7 +127,7 @@ export async function GET(
           course = coursesResult.data.courses.find((c: Course) => c.id_curso === courseId);
         }
       }
-    } catch (error) {
+    } catch {
       console.log('Error obteniendo cursos del endpoint principal, usando datos locales');
     }
     
@@ -153,7 +157,7 @@ export async function GET(
     });
 
   } catch (error) {
-    console.error(`Error en GET /api/courses/${params.id}:`, error);
+    console.error(`Error en GET /api/courses/${resolvedParams?.id || 'unknown'}:`, error);
     return NextResponse.json(
       {
         success: false,
@@ -168,10 +172,13 @@ export async function GET(
 // PUT /api/courses/[id] - Actualizar un curso específico
 export async function PUT(
   request: NextRequest,
-  { params }: { params: { id: string } }
+  { params }: { params: Promise<{ id: string }> }
 ) {
+  let resolvedParams: { id: string } | undefined;
+  
   try {
-    const courseId = parseInt(params.id);
+    resolvedParams = await params;
+    const courseId = parseInt(resolvedParams.id);
     
     if (isNaN(courseId)) {
       return NextResponse.json(
@@ -221,7 +228,7 @@ export async function PUT(
     });
 
   } catch (error) {
-    console.error(`Error en PUT /api/courses/${params.id}:`, error);
+    console.error(`Error en PUT /api/courses/${resolvedParams?.id || 'unknown'}:`, error);
     return NextResponse.json(
       {
         success: false,
@@ -236,10 +243,13 @@ export async function PUT(
 // DELETE /api/courses/[id] - Eliminar un curso específico
 export async function DELETE(
   request: NextRequest,
-  { params }: { params: { id: string } }
+  { params }: { params: Promise<{ id: string }> }
 ) {
+  let resolvedParams: { id: string } | undefined;
+  
   try {
-    const courseId = parseInt(params.id);
+    resolvedParams = await params;
+    const courseId = parseInt(resolvedParams.id);
     
     if (isNaN(courseId)) {
       return NextResponse.json(
@@ -275,7 +285,7 @@ export async function DELETE(
     });
 
   } catch (error) {
-    console.error(`Error en DELETE /api/courses/${params.id}:`, error);
+    console.error(`Error en DELETE /api/courses/${resolvedParams?.id || 'unknown'}:`, error);
     return NextResponse.json(
       {
         success: false,
