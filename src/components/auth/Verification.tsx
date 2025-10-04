@@ -13,6 +13,7 @@ import {
   Card,
   CardContent,
   InputAdornment,
+  Link as MuiLink,
 } from '@mui/material';
 import {
   VerifiedUser,
@@ -23,100 +24,67 @@ import {
   Error,
   Help,
 } from '@mui/icons-material';
-
-interface User {
-  id: number;
-  email: string;
-  verificationCode: string;
-  createdAt: string;
-  expiresAt: string;
-  isVerified: boolean;
-}
-
-interface VerificationDatabase {
-  users: User[];
-}
+import { useAuth } from './hooks/auth';
+import authService from '@/utils/services/auth';
+import { resendSignUpCode } from 'aws-amplify/auth';
+import Link from 'next/link';
 
 export default function VerificationPage() {
   const router = useRouter();
+  const { validateAccount, validateState, clearValidateError } = useAuth();
   const [email, setEmail] = useState('');
   const [code, setCode] = useState('');
-  const [loading, setLoading] = useState(false);
-  const [error, setError] = useState('');
-  const [success, setSuccess] = useState('');
   const [countdown, setCountdown] = useState(0);
   const [canResend, setCanResend] = useState(true);
-
-  // Validación de email
-  const validateEmail = (email: string): boolean => {
-    const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
-    return emailRegex.test(email);
-  };
-
-  // Validación de código
-  const validateCode = (code: string): boolean => {
-    return /^\d{6}$/.test(code);
-  };
+  const [resendLoading, setResendLoading] = useState(false);
+  const [resendSuccess, setResendSuccess] = useState(false);
 
   // Verificar si el formulario es válido
   const isFormValid = (): boolean => {
-    return validateEmail(email) && validateCode(code);
+    return authService.validateEmail(email) && authService.validateConfirmationCode(code);
   };
 
   // Función para manejar la verificación
   const handleVerification = async () => {
     if (!isFormValid()) {
-      setError('Por favor completa todos los campos correctamente');
       return;
     }
 
-    setLoading(true);
-    setError('');
-    setSuccess('');
+    const result = await validateAccount({
+      email,
+      confirmationCode: code,
+    });
 
-    try {
-      // Simular llamada a API
-      await new Promise(resolve => setTimeout(resolve, 1500));
-
-      // Verificar contra la base de datos JSON
-      const response = await fetch('/data/verification-codes.json');
-      const data: VerificationDatabase = await response.json();
-      
-      const user = data.users.find((u: User) => u.email === email);
-      
-      if (user && user.verificationCode === code) {
-        setSuccess('¡Código verificado correctamente! Redirigiendo al dashboard...');
-        // Redirigir al dashboard (página principal) después de 2 segundos
-        setTimeout(() => {
-          router.push('/');
-        }, 2000);
-      } else {
-        setError('Código incorrecto. Inténtalo de nuevo.');
-      }
-    } catch {
-      setError('Error al verificar el código. Inténtalo de nuevo.');
-    } finally {
-      setLoading(false);
+    if (result.success) {
+      // Redirigir al dashboard (página principal) después de 2 segundos
+      setTimeout(() => {
+        router.push('/');
+      }, 2000);
     }
   };
 
   // Función para reenviar código
   const handleResendCode = async () => {
-    if (!validateEmail(email)) {
-      setError('Por favor ingresa un email válido primero');
+    if (!authService.validateEmail(email)) {
       return;
     }
 
     setCanResend(false);
     setCountdown(60);
-    setError('');
-    setSuccess('');
+    clearValidateError();
+    setResendSuccess(false);
+    setResendLoading(true);
 
-    // Simular reenvío
-    setTimeout(() => {
-      setSuccess('Código reenviado a tu correo electrónico');
+    try {
+      await resendSignUpCode({ username: email });
+      setResendSuccess(true);
       setCode('');
-    }, 1000);
+      setTimeout(() => setResendSuccess(false), 3000);
+    } catch (error) {
+      console.error('Error resending code:', error);
+    } finally {
+      setResendLoading(false);
+    }
   };
 
   // Countdown timer
@@ -131,7 +99,7 @@ export default function VerificationPage() {
 
   // Manejar Enter en el campo de código
   const handleKeyPress = (event: React.KeyboardEvent) => {
-    if (event.key === 'Enter' && isFormValid() && !loading) {
+    if (event.key === 'Enter' && isFormValid() && !validateState.loading) {
       handleVerification();
     }
   };
@@ -222,25 +190,34 @@ export default function VerificationPage() {
             </Box>
 
             {/* Mensajes de estado */}
-            {error && (
+            {validateState.error && (
               <Alert
                 severity="error"
                 icon={<Error />}
                 sx={{ mb: 2 }}
-                onClose={() => setError('')}
+                onClose={() => clearValidateError()}
               >
-                {error}
+                {validateState.error}
               </Alert>
             )}
 
-            {success && (
+            {validateState.success && (
               <Alert
                 severity="success"
                 icon={<CheckCircle />}
                 sx={{ mb: 2 }}
-                onClose={() => setSuccess('')}
               >
-                {success}
+                ¡Código verificado correctamente! Redirigiendo al dashboard...
+              </Alert>
+            )}
+
+            {resendSuccess && (
+              <Alert
+                severity="success"
+                icon={<CheckCircle />}
+                sx={{ mb: 2 }}
+              >
+                Código reenviado a tu correo electrónico
               </Alert>
             )}
 
@@ -251,8 +228,12 @@ export default function VerificationPage() {
                 label="Correo electrónico"
                 type="email"
                 value={email}
-                onChange={(e) => setEmail(e.target.value)}
+                onChange={(e) => {
+                  setEmail(e.target.value);
+                  if (validateState.error) clearValidateError();
+                }}
                 placeholder="tu@email.com"
+                disabled={validateState.loading}
                 InputProps={{
                   startAdornment: (
                     <InputAdornment position="start">
@@ -285,8 +266,10 @@ export default function VerificationPage() {
                   if (value.length <= 6) {
                     setCode(value);
                   }
+                  if (validateState.error) clearValidateError();
                 }}
                 placeholder="000000"
+                disabled={validateState.loading}
                 inputProps={{
                   maxLength: 6,
                   style: {
@@ -326,8 +309,8 @@ export default function VerificationPage() {
               variant="contained"
               size="large"
               onClick={handleVerification}
-              disabled={!isFormValid() || loading}
-              startIcon={loading ? <CircularProgress size={20} /> : <VerifiedUser />}
+              disabled={!isFormValid() || validateState.loading}
+              startIcon={validateState.loading ? <CircularProgress size={20} /> : <VerifiedUser />}
               sx={{
                 mb: 3,
                 height: 48,
@@ -344,7 +327,7 @@ export default function VerificationPage() {
                 },
               }}
             >
-              {loading ? 'Verificando...' : 'Verificar Código'}
+              {validateState.loading ? 'Verificando...' : 'Verificar Código'}
             </Button>
 
             {/* Sección de reenvío */}
@@ -357,7 +340,8 @@ export default function VerificationPage() {
                 <Button
                   variant="text"
                   onClick={handleResendCode}
-                  startIcon={<Refresh />}
+                  disabled={validateState.loading || resendLoading}
+                  startIcon={resendLoading ? <CircularProgress size={16} /> : <Refresh />}
                   sx={{
                     color: '#1976d2',
                     textDecoration: 'underline',
@@ -365,9 +349,12 @@ export default function VerificationPage() {
                       color: '#1565c0',
                       backgroundColor: 'transparent',
                     },
+                    '&:disabled': {
+                      color: '#9e9e9e',
+                    },
                   }}
                 >
-                  Reenviar código
+                  {resendLoading ? 'Reenviando...' : 'Reenviar código'}
                 </Button>
               ) : (
                 <Typography variant="body2" color="warning.main" sx={{ fontWeight: 500 }}>
@@ -402,6 +389,27 @@ export default function VerificationPage() {
               
               <Typography variant="body2" color="text.secondary" sx={{ lineHeight: 1.5 }}>
                 Si tienes problemas para recibir el código, verifica que tu correo electrónico sea correcto y revisa tu carpeta de spam.
+              </Typography>
+            </Box>
+
+            {/* Back to login link */}
+            <Box sx={{ textAlign: 'center', mt: 3 }}>
+              <Typography variant="body2" color="text.secondary">
+                ¿Ya verificaste tu cuenta?{' '}
+                <Link href="/auth/login" passHref legacyBehavior>
+                  <MuiLink
+                    sx={{
+                      color: '#1976d2',
+                      textDecoration: 'none',
+                      fontWeight: 500,
+                      '&:hover': {
+                        textDecoration: 'underline',
+                      },
+                    }}
+                  >
+                    Iniciar sesión
+                  </MuiLink>
+                </Link>
               </Typography>
             </Box>
           </CardContent>

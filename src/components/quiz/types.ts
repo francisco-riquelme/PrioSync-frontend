@@ -5,7 +5,8 @@ export type QuizScreen =
   | "instructions"
   | "quiz"
   | "results"
-  | "recommendations";
+  | "recommendations"
+  | "review";
 
 export interface QuizState {
   currentScreen: QuizScreen;

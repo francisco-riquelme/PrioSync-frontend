@@ -195,7 +195,7 @@ export default function CourseDetail({ courseId }: CourseDetailProps) {
       </Box>
       
       {/* Contenido del curso */}
-      <CourseContent courseId={courseId} />
+      <CourseContent courseId={courseId} usuarioId={userId} />
 
       {/* Sesiones de Estudio */}
       <StudySessionsTable courseId={courseId} usuarioId={userId} />

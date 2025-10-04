@@ -12,7 +12,7 @@ import {
   Chip
 } from '@mui/material';
 import { Quiz as QuizIcon } from '@mui/icons-material';
-import { QuizQuestion as IQuizQuestion } from '@/types/quiz';
+import { QuizQuestionView as IQuizQuestion } from '@/types/quiz';
 
 interface QuizQuestionProps {
   question: IQuizQuestion;
@@ -75,7 +75,7 @@ const QuizQuestion: React.FC<QuizQuestionProps> = ({
             onChange={handleAnswerChange}
             sx={{ gap: 1 }}
           >
-            {question.options.map((option, index) => (
+            {question.options.map((option: string, index: number) => (
               <Paper
                 key={index}
                 variant="outlined"

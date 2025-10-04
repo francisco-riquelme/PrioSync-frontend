@@ -28,109 +28,81 @@ const QuizInstructions: React.FC<QuizInstructionsProps> = ({
   onStartQuiz
 }) => {
   return (
-    <Box sx={{ maxWidth: 600, mx: 'auto', p: 3 }}>
-      <Card elevation={3}>
-        <CardContent sx={{ p: 4 }}>
-          <Box sx={{ textAlign: 'center', mb: 4 }}>
-            <QuizIcon sx={{ fontSize: 64, color: 'primary.main', mb: 2 }} />
-            <Typography variant="h4" gutterBottom>
+    <Box sx={{ maxWidth: 700, mx: 'auto', p: 2 }}>
+      <Card elevation={2}>
+        <CardContent sx={{ p: 3 }}>
+          {/* Header - More compact */}
+          <Box sx={{ textAlign: 'center', mb: 2 }}>
+            <QuizIcon sx={{ fontSize: 48, color: 'primary.main', mb: 1 }} />
+            <Typography variant="h5" gutterBottom sx={{ fontWeight: 'bold' }}>
               {quizData.title}
             </Typography>
             <Chip
               label={quizData.courseName}
               color="primary"
               variant="outlined"
-              sx={{ mb: 2 }}
+              size="small"
+              sx={{ mb: 1 }}
             />
           </Box>
 
-          <Typography variant="body1" sx={{ mb: 3, textAlign: 'center' }}>
-            {quizData.description}
-          </Typography>
-
-          <Box sx={{ mb: 4 }}>
-            <Typography variant="h6" gutterBottom sx={{ display: 'flex', alignItems: 'center', gap: 1 }}>
-              <CheckCircle sx={{ color: 'primary.main' }} />
-              Instrucciones:
+          {/* Description - More compact */}
+          {quizData.description && (
+            <Typography variant="body2" sx={{ mb: 2, textAlign: 'center', color: 'text.secondary' }}>
+              {quizData.description}
             </Typography>
-            <Stack spacing={1.5} sx={{ ml: 2 }}>
-              <Box sx={{ display: 'flex', alignItems: 'center', gap: 2 }}>
-                <Typography variant="body2" sx={{ minWidth: '24px', fontWeight: 'bold', color: 'primary.main' }}>
-                  •
-                </Typography>
-                <Typography variant="body2">
-                  Este quiz tiene <strong>{quizData.questions.length} preguntas</strong> de selección múltiple
-                </Typography>
-              </Box>
-              
-              <Box sx={{ display: 'flex', alignItems: 'center', gap: 2 }}>
-                <Typography variant="body2" sx={{ minWidth: '24px', fontWeight: 'bold', color: 'primary.main' }}>
-                  •
-                </Typography>
-                <Typography variant="body2">
-                  Tienes <strong>{quizData.timeLimit} minutos</strong> para completar todas las preguntas
-                </Typography>
-              </Box>
-              
-              <Box sx={{ display: 'flex', alignItems: 'center', gap: 2 }}>
-                <Typography variant="body2" sx={{ minWidth: '24px', fontWeight: 'bold', color: 'primary.main' }}>
-                  •
-                </Typography>
-                <Typography variant="body2">
-                  Necesitas obtener al menos <strong>{quizData.passingScore}%</strong> para aprobar
-                </Typography>
-              </Box>
-              
-              <Box sx={{ display: 'flex', alignItems: 'center', gap: 2 }}>
-                <Typography variant="body2" sx={{ minWidth: '24px', fontWeight: 'bold', color: 'primary.main' }}>
-                  •
-                </Typography>
-                <Typography variant="body2">
-                  Puedes navegar entre las preguntas usando los botones de navegación
-                </Typography>
-              </Box>
-              
-              <Box sx={{ display: 'flex', alignItems: 'center', gap: 2 }}>
-                <Typography variant="body2" sx={{ minWidth: '24px', fontWeight: 'bold', color: 'primary.main' }}>
-                  •
-                </Typography>
-                <Typography variant="body2">
-                  Una vez que inicies el quiz, el temporizador comenzará automáticamente
-                </Typography>
-              </Box>
-            </Stack>
-          </Box>
+          )}
 
-          {/* Resumen estadístico */}
+          {/* Stats Row - More compact and integrated */}
           <Box sx={{ 
             display: 'flex', 
-            justifyContent: 'space-around', 
-            mb: 4, 
-            p: 2, 
-            bgcolor: 'grey.50', 
-            borderRadius: 2 
+            justifyContent: 'space-between', 
+            mb: 2, 
+            gap: 1
           }}>
-            <Box sx={{ textAlign: 'center' }}>
-              <Typography variant="h6" color="primary.main">
+            <Box sx={{ 
+              flex: 1, 
+              textAlign: 'center', 
+              p: 1.5, 
+              bgcolor: 'primary.50', 
+              borderRadius: 1 
+            }}>
+              <Typography variant="h6" color="primary.main" sx={{ fontWeight: 'bold' }}>
                 {quizData.questions.length}
               </Typography>
               <Typography variant="caption" color="text.secondary">
                 Preguntas
               </Typography>
             </Box>
-            
-            <Box sx={{ textAlign: 'center' }}>
-              <Typography variant="h6" color="primary.main" sx={{ display: 'flex', alignItems: 'center', gap: 0.5 }}>
-                <Schedule sx={{ fontSize: 18 }} />
+            <Box sx={{ 
+              flex: 1, 
+              textAlign: 'center', 
+              p: 1.5, 
+              bgcolor: 'info.50', 
+              borderRadius: 1 
+            }}>
+              <Typography variant="h6" color="info.main" sx={{ 
+                display: 'flex', 
+                alignItems: 'center', 
+                justifyContent: 'center', 
+                gap: 0.5, 
+                fontWeight: 'bold' 
+              }}>
+                <Schedule sx={{ fontSize: 16 }} />
                 {quizData.timeLimit}
               </Typography>
               <Typography variant="caption" color="text.secondary">
                 Minutos
               </Typography>
             </Box>
-            
-            <Box sx={{ textAlign: 'center' }}>
-              <Typography variant="h6" color="primary.main">
+            <Box sx={{ 
+              flex: 1, 
+              textAlign: 'center', 
+              p: 1.5, 
+              bgcolor: 'success.50', 
+              borderRadius: 1 
+            }}>
+              <Typography variant="h6" color="success.main" sx={{ fontWeight: 'bold' }}>
                 {quizData.passingScore}%
               </Typography>
               <Typography variant="caption" color="text.secondary">
@@ -139,13 +111,73 @@ const QuizInstructions: React.FC<QuizInstructionsProps> = ({
             </Box>
           </Box>
 
+          {/* Instructions - More compact */}
+          <Box sx={{ mb: 2 }}>
+            <Typography variant="subtitle1" gutterBottom sx={{ 
+              display: 'flex', 
+              alignItems: 'center', 
+              gap: 1, 
+              fontWeight: 'bold' 
+            }}>
+              <CheckCircle sx={{ color: 'primary.main', fontSize: 20 }} />
+              Instrucciones:
+            </Typography>
+            <Stack spacing={0.8} sx={{ ml: 1 }}>
+              <Typography variant="body2" sx={{ display: 'flex', alignItems: 'flex-start', gap: 1 }}>
+                <Typography component="span" sx={{ color: 'primary.main', fontWeight: 'bold', minWidth: '16px' }}>
+                  •
+                </Typography>
+                <Typography component="span">
+                  <strong>{quizData.questions.length} preguntas</strong> de selección múltiple
+                </Typography>
+              </Typography>
+              
+              <Typography variant="body2" sx={{ display: 'flex', alignItems: 'flex-start', gap: 1 }}>
+                <Typography component="span" sx={{ color: 'primary.main', fontWeight: 'bold', minWidth: '16px' }}>
+                  •
+                </Typography>
+                <Typography component="span">
+                  <strong>{quizData.timeLimit} minutos</strong> para completar
+                </Typography>
+              </Typography>
+              
+              <Typography variant="body2" sx={{ display: 'flex', alignItems: 'flex-start', gap: 1 }}>
+                <Typography component="span" sx={{ color: 'primary.main', fontWeight: 'bold', minWidth: '16px' }}>
+                  •
+                </Typography>
+                <Typography component="span">
+                  Mínimo <strong>{quizData.passingScore}%</strong> para aprobar
+                </Typography>
+              </Typography>
+              
+              <Typography variant="body2" sx={{ display: 'flex', alignItems: 'flex-start', gap: 1 }}>
+                <Typography component="span" sx={{ color: 'primary.main', fontWeight: 'bold', minWidth: '16px' }}>
+                  •
+                </Typography>
+                <Typography component="span">
+                  Navegación libre entre preguntas
+                </Typography>
+              </Typography>
+              
+              <Typography variant="body2" sx={{ display: 'flex', alignItems: 'flex-start', gap: 1 }}>
+                <Typography component="span" sx={{ color: 'primary.main', fontWeight: 'bold', minWidth: '16px' }}>
+                  •
+                </Typography>
+                <Typography component="span">
+                  Temporizador automático al iniciar
+                </Typography>
+              </Typography>
+            </Stack>
+          </Box>
+
+          {/* Start Button - More compact */}
           <Box sx={{ textAlign: 'center' }}>
             <Button
               variant="contained"
               size="large"
               onClick={onStartQuiz}
               startIcon={<PlayArrow />}
-              sx={{ px: 4, py: 1.5, fontSize: '1.1rem' }}
+              sx={{ px: 3, py: 1, fontSize: '1rem', fontWeight: 'bold' }}
             >
               Iniciar Quiz
             </Button>
