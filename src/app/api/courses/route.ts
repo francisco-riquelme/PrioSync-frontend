@@ -15,6 +15,12 @@ interface Course {
   categoria?: string;
   precio?: number;
   descuento?: number;
+  // Campos para cursos generados desde YouTube
+  source?: string;
+  playlist_id?: string;
+  generated_structure?: unknown;
+  tags?: string[];
+  objectives?: string[];
 }
 
 // Datos de ejemplo para simular una base de datos
@@ -97,6 +103,119 @@ const MOCK_COURSES: Course[] = [
     instructor: 'Mkt. Roberto Silva',
     categoria: 'Marketing',
     precio: 89.99
+  },
+  // ✅ Curso de ejemplo con estructura YouTube para testing
+  {
+    id_curso: 7,
+    titulo: 'Curso de JavaScript Desde YouTube',
+    descripcion: 'Curso completo de JavaScript creado desde una playlist de YouTube con estructura generada por IA.',
+    imagen_portada: 'https://images.unsplash.com/photo-1516321318423-f06f85e504b3?w=400&h=250&fit=crop',
+    duracion_estimada: 180, // 3 horas
+    nivel_dificultad: 'intermedio',
+    estado: 'activo',
+    fecha_creacion: '2024-03-15',
+    instructor: 'Canal Desarrollo',
+    categoria: 'Programación',
+    precio: 0,
+    // Campos específicos de YouTube
+    source: 'youtube',
+    playlist_id: 'PLtest123',
+    generated_structure: {
+      title: 'Curso de JavaScript Desde YouTube',
+      description: 'Curso completo de JavaScript creado desde una playlist de YouTube con estructura generada por IA.',
+      modules: [
+        {
+          id: 'modulo-1',
+          title: 'Fundamentos de JavaScript',
+          description: 'Conceptos básicos y sintaxis fundamental',
+          order: 1,
+          estimatedDuration: '1h 30m',
+          lessons: [
+            {
+              id: 'leccion-1',
+              title: 'Introducción a JavaScript',
+              description: 'Qué es JavaScript y cómo funciona',
+              order: 1,
+              youtubeVideoId: 'dQw4w9WgXcQ',
+              duration: '25m',
+              objectives: ['Entender qué es JavaScript', 'Configurar el entorno de desarrollo'],
+              keyTopics: ['Variables', 'Sintaxis básica', 'Consola del navegador']
+            },
+            {
+              id: 'leccion-2',
+              title: 'Variables y Tipos de Datos',
+              description: 'Declaración de variables y tipos primitivos',
+              order: 2,
+              youtubeVideoId: 'dQw4w9WgXcQ',
+              duration: '30m',
+              objectives: ['Declarar variables correctamente', 'Identificar tipos de datos'],
+              keyTopics: ['let, const, var', 'Number, String, Boolean', 'typeof operator']
+            },
+            {
+              id: 'leccion-3',
+              title: 'Operadores y Expresiones',
+              description: 'Operadores aritméticos, lógicos y de comparación',
+              order: 3,
+              youtubeVideoId: 'dQw4w9WgXcQ', 
+              duration: '35m',
+              objectives: ['Usar operadores correctamente', 'Crear expresiones complejas'],
+              keyTopics: ['Operadores aritméticos', 'Operadores lógicos', 'Precedencia']
+            }
+          ]
+        },
+        {
+          id: 'modulo-2',
+          title: 'Control de Flujo',
+          description: 'Estructuras condicionales y bucles',
+          order: 2,
+          estimatedDuration: '1h 30m',
+          lessons: [
+            {
+              id: 'leccion-4',
+              title: 'Condicionales if/else',
+              description: 'Toma de decisiones en el código',
+              order: 1,
+              youtubeVideoId: 'dQw4w9WgXcQ',
+              duration: '28m',
+              objectives: ['Implementar lógica condicional', 'Usar operadores de comparación'],
+              keyTopics: ['if statement', 'else clause', 'else if', 'ternary operator']
+            },
+            {
+              id: 'leccion-5',
+              title: 'Bucles for y while',
+              description: 'Repetición de código con bucles',
+              order: 2,
+              youtubeVideoId: 'dQw4w9WgXcQ',
+              duration: '32m',
+              objectives: ['Crear bucles eficientes', 'Evitar bucles infinitos'],
+              keyTopics: ['for loop', 'while loop', 'break y continue', 'for...of']
+            },
+            {
+              id: 'leccion-6',
+              title: 'Switch y Cases',
+              description: 'Alternativa a múltiples if/else',
+              order: 3,
+              youtubeVideoId: 'dQw4w9WgXcQ',
+              duration: '30m',
+              objectives: ['Usar switch correctamente', 'Entender cuándo usar switch vs if'],
+              keyTopics: ['switch statement', 'case clauses', 'default case', 'break statement']
+            }
+          ]
+        }
+      ],
+      tags: ['javascript', 'programación', 'desarrollo web', 'frontend'],
+      objectives: [
+        'Dominar los fundamentos de JavaScript',
+        'Escribir código JavaScript limpio y eficiente',
+        'Entender las estructuras de control básicas'
+      ]
+    },
+    tags: ['javascript', 'programación', 'desarrollo web', 'frontend'],
+    objectives: [
+      'Dominar los fundamentos de JavaScript',
+      'Escribir código JavaScript limpio y eficiente',
+      'Entender las estructuras de control básicas'
+    ]
   }
 ];
 
@@ -201,7 +320,13 @@ export async function POST(request: NextRequest) {
       fecha_creacion: new Date().toISOString().split('T')[0],
       instructor: body.instructor || 'Instructor no especificado',
       categoria: body.categoria || 'General',
-      precio: body.precio || 0
+      precio: body.precio || 0,
+      // ✅ Campos específicos para cursos de YouTube
+      source: body.source || undefined,
+      playlist_id: body.playlist_id || undefined,
+      generated_structure: body.generated_structure || undefined,
+      tags: body.tags || undefined,
+      objectives: body.objectives || undefined
     };
 
     // TODO: Guardar en base de datos real

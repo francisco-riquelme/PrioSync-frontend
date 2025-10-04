@@ -19,7 +19,6 @@ import {
   Chip,
   CircularProgress,
   Alert,
-  Backdrop,
   Snackbar,
 } from '@mui/material';
 import {
@@ -76,7 +75,7 @@ interface CourseData {
   progress?: number;
 }
 
-// ✅ Backend Integration - Función para obtener detalles del curso
+// Backend Integration - Función para obtener detalles del curso
 const getCourseDetails = async (courseId: string): Promise<CourseData | null> => {
   try {
     const response = await fetch(`/api/courses/${courseId}`);
@@ -93,12 +92,17 @@ const getCourseDetails = async (courseId: string): Promise<CourseData | null> =>
     
     const courseData = result.data;
     
-    // Si el curso tiene estructura generada, usarla para los módulos
-    if (courseData.generated_structure && courseData.generated_structure.modules) {
-      courseData.modules = courseData.generated_structure.modules;
+    // PROCESAR ESTRUCTURA YOUTUBE - Forzar asignación de módulos
+    const finalCourseData = { ...courseData };
+    
+    // Si hay generated_structure con módulos, copiarlos a modules
+    if (finalCourseData.generated_structure?.modules) {
+      finalCourseData.modules = finalCourseData.generated_structure.modules;
+    } else if (!finalCourseData.modules) {
+      finalCourseData.modules = [];
     }
     
-    return courseData;
+    return finalCourseData;
   } catch (error) {
     console.error('Error al cargar detalles del curso:', error);
     throw error;
@@ -114,7 +118,7 @@ export default function CourseDetail({ courseId }: CourseDetailProps) {
   const [expandedModule, setExpandedModule] = useState<string>('');
   const [courseProgress, setCourseProgress] = useState<number>(0);
   
-  // ✅ Backend Integration - Estados para manejo de datos
+  // Backend Integration - Estados para manejo de datos
   const [course, setCourse] = useState<CourseData | null>(null);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
@@ -122,7 +126,7 @@ export default function CourseDetail({ courseId }: CourseDetailProps) {
   const [notificationMessage, setNotificationMessage] = useState('');
   const [notificationType, setNotificationType] = useState<'success' | 'error'>('success');
 
-  // ✅ Backend Integration - Cargar datos del curso al montar el componente
+  // Backend Integration - Cargar datos del curso al montar el componente
   useEffect(() => {
     const loadCourseDetails = async () => {
       try {
@@ -145,7 +149,7 @@ export default function CourseDetail({ courseId }: CourseDetailProps) {
   // const { userProgress, loading: progressLoading, updateLessonProgress } = useCourseProgress(courseId);
   // const { submitFeedback, loading: feedbackLoading } = useCourseFeedback();
 
-  // ✅ Backend Integration - Manejar estados de loading y error
+  // Backend Integration - Manejar estados de loading y error
   if (loading) {
     return (
       <Box sx={{ display: 'flex', justifyContent: 'center', py: 8 }}>
@@ -187,7 +191,7 @@ export default function CourseDetail({ courseId }: CourseDetailProps) {
     );
   }
 
-  // ✅ Backend Integration - Calcular progreso basado en datos reales
+  // Backend Integration - Calcular progreso basado en datos reales
   const calculateProgress = () => {
     if (!course.modules || course.modules.length === 0) return 0;
     
