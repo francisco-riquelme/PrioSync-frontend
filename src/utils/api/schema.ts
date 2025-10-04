@@ -140,14 +140,17 @@ export const MainSchema = a.schema({
       descripcion: a.string(),
       tipo: TipoCuestionario,
       puntos_maximos: a.integer().default(100),
+      duracion_minutos: a.integer(),
+      intentos_permitidos: a.integer().default(1),
+      preguntas_aleatorias: a.boolean().default(false), // If true, randomize question order
+      porcentaje_aprobacion: a.integer().default(70), // Minimum percentage to pass the quiz
 
       // Relationships
-      preguntas: a.hasMany("Pregunta", "cuestionarioId"),
+      Preguntas: a.hasMany("Pregunta", "cuestionarioId"),
       cursoId: a.id().required(),
       Curso: a.belongsTo("Curso", "cursoId"),
       materialEstudioId: a.id(),
       MaterialesEstudio: a.belongsTo("MaterialEstudio", "cuestionarioId"),
-      Respuestas: a.hasMany("Respuesta", "cuestionarioId"),
       ProgresoCuestionario: a.hasMany("ProgresoCuestionario", "cuestionarioId"),
     })
     .identifier(["cuestionarioId"]),
@@ -158,31 +161,86 @@ export const MainSchema = a.schema({
       texto_pregunta: a.string().required(),
       tipo: TipoPregunta,
       peso_puntos: a.integer().default(1),
-      texto_opcion: a.string().required(),
-      es_correcta: a.boolean().default(false),
+      orden: a.integer(),
+      explicacion: a.string(),
 
       // Relationships
       cuestionarioId: a.id().required(),
       Cuestionario: a.belongsTo("Cuestionario", "cuestionarioId"),
+      Opciones: a.hasMany("OpcionPregunta", "preguntaId"),
       Respuestas: a.hasMany("Respuesta", "preguntaId"),
     })
     .identifier(["preguntaId"]),
 
+  OpcionPregunta: a
+    .model({
+      opcionId: a.id().required(),
+      texto: a.string().required(),
+      orden: a.integer(),
+      imagen: a.url(),
+      audio: a.url(),
+      video: a.url(),
+      archivo: a.url(),
+      es_correcta: a.boolean().required(),
+
+      // Relationships
+      preguntaId: a.id().required(),
+      Pregunta: a.belongsTo("Pregunta", "preguntaId"),
+      Respuestas: a.hasMany("Respuesta", "opcionId"),
+    })
+    .identifier(["opcionId"]),
+
   Respuesta: a
     .model({
       respuestaId: a.id().required(),
-      respuesta_texto: a.string(),
+      respuesta_texto: a.string(), // For open-ended questions
+      es_correcta: a.boolean(),
       fecha_respuesta: a.datetime(),
+
+      // Relationships
+      usuarioId: a.id().required(),
+      Usuario: a.belongsTo("Usuario", "usuarioId"),
+      preguntaId: a.id().required(),
+      Pregunta: a.belongsTo("Pregunta", "preguntaId"),
+      opcionId: a.id(), // For multiple choice / true-false questions
+      Opcion: a.belongsTo("OpcionPregunta", "opcionId"),
+      progresoCuestionarioId: a.string(), // Links to the quiz attempt
+      ProgresoCuestionario: a.belongsTo(
+        "ProgresoCuestionario",
+        "progresoCuestionarioId"
+      ),
+    })
+    .identifier(["respuestaId"])
+    .secondaryIndexes((index) => [
+      index("usuarioId")
+        .sortKeys(["preguntaId"])
+        .queryField("RespuestasByUsuarioAndPregunta"),
+    ]),
+
+  ProgresoCuestionario: a
+    .model({
+      progresoCuestionarioId: a.string().required(),
+      estado: EstadoProgreso,
+      puntaje_obtenido: a.integer().default(0),
+      aprobado: a.boolean(), // Whether the user passed the quiz
+      fecha_completado: a.datetime(),
+      intento_numero: a.integer().required(), // Which attempt is this (1st, 2nd, 3rd, etc.)
+      ultima_pregunta_respondida: a.integer(), // Index of last answered question (0-based)
+      recomendaciones: a.string(), // AI-generated recommendations based on quiz results
 
       // Relationships
       usuarioId: a.id().required(),
       Usuario: a.belongsTo("Usuario", "usuarioId"),
       cuestionarioId: a.id().required(),
       Cuestionario: a.belongsTo("Cuestionario", "cuestionarioId"),
-      preguntaId: a.id().required(),
-      Pregunta: a.belongsTo("Pregunta", "preguntaId"),
+      Respuestas: a.hasMany("Respuesta", "progresoCuestionarioId"), // All answers for this quiz attempt
     })
-    .identifier(["respuestaId"]),
+    .identifier(["progresoCuestionarioId"])
+    .secondaryIndexes((index) => [
+      index("usuarioId")
+        .sortKeys(["cuestionarioId", "intento_numero"])
+        .queryField("ProgresoCuestionarioByUsuarioAndCuestionario"),
+    ]),
 
   ProgresoMaterial: a
     .model({
@@ -196,19 +254,6 @@ export const MainSchema = a.schema({
       Material: a.belongsTo("MaterialEstudio", "materialEstudioId"),
     })
     .identifier(["usuarioId", "materialEstudioId"]),
-
-  ProgresoCuestionario: a
-    .model({
-      estado: EstadoProgreso,
-      puntaje_obtenido: a.integer().default(0),
-      fecha_completado: a.datetime(),
-      // Relationships
-      usuarioId: a.id().required(),
-      Usuario: a.belongsTo("Usuario", "usuarioId"),
-      cuestionarioId: a.id().required(),
-      Cuestionario: a.belongsTo("Cuestionario", "cuestionarioId"),
-    })
-    .identifier(["usuarioId", "cuestionarioId"]),
 
   EvaluacionCurso: a
     .model({
@@ -235,6 +280,7 @@ export type SesionEstudio = MainTypes["SesionEstudio"]["type"];
 export type MaterialEstudio = MainTypes["MaterialEstudio"]["type"];
 export type Cuestionario = MainTypes["Cuestionario"]["type"];
 export type Pregunta = MainTypes["Pregunta"]["type"];
+export type OpcionPregunta = MainTypes["OpcionPregunta"]["type"];
 export type Respuesta = MainTypes["Respuesta"]["type"];
 export type ProgresoMaterial = MainTypes["ProgresoMaterial"]["type"];
 export type ProgresoCuestionario = MainTypes["ProgresoCuestionario"]["type"];

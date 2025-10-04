@@ -250,7 +250,7 @@ export const useDashboard = () => {
 
   const dashboardData = {
     user: {
-      name: userName,
+      nombre: userName,
       greeting: `¡Hola, ${userData?.nombre || "Usuario"}!`,
     },
     courses: {

@@ -1,4 +1,3 @@
-// src/components/auth/RegisterForm.tsx
 "use client";
 
 import React, { useState, useEffect } from 'react';
@@ -17,7 +16,7 @@ import {
   Link as MuiLink,
 } from '@mui/material';
 import {
-  PersonAdd,
+  Login as LoginIcon,
   Email,
   Lock,
   CheckCircle,
@@ -38,95 +37,71 @@ const VALIDATION_CONFIG = {
 const ERROR_MESSAGES = {
   INVALID_EMAIL: 'Por favor ingresa un correo electrónico válido',
   PASSWORD_TOO_SHORT: `La contraseña debe tener al menos ${VALIDATION_CONFIG.PASSWORD_MIN_LENGTH} caracteres`,
-  PASSWORD_WEAK: 'La contraseña debe contener al menos una letra mayúscula, una minúscula y un número',
-  PASSWORDS_DONT_MATCH: 'Las contraseñas no coinciden',
-  REGISTRATION_FAILED: 'Error al crear la cuenta. Inténtalo de nuevo.'
+  LOGIN_FAILED: 'Error al iniciar sesión. Verifica tus credenciales.'
 } as const;
 
-export default function RegisterForm() {
+export default function LoginForm() {
   const router = useRouter();
-  const { register, registerState, clearRegisterError } = useAuth();
+  const { login, loginState, clearLoginError } = useAuth();
   const [mounted, setMounted] = useState(false);
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
-  const [confirmPassword, setConfirmPassword] = useState('');
-  const [localError, setLocalError] = useState('');
   const [fieldErrors, setFieldErrors] = useState({
     email: false,
-    password: false,
-    confirmPassword: false
+    password: false
   });
 
   useEffect(() => {
     setMounted(true);
   }, []);
 
-  const handleSignup = async (event: React.FormEvent<HTMLFormElement>) => {
+  const handleLogin = async (event: React.FormEvent<HTMLFormElement>) => {
     event.preventDefault();
-    setLocalError('');
-    clearRegisterError();
-    setFieldErrors({ email: false, password: false, confirmPassword: false });
+    clearLoginError();
+    setFieldErrors({ email: false, password: false });
 
     // Validar email
     if (!email || !authService.validateEmail(email)) {
-      setLocalError(ERROR_MESSAGES.INVALID_EMAIL);
       setFieldErrors(prev => ({ ...prev, email: true }));
       return;
     }
 
     // Validar contraseña
-    const passwordValidation = authService.validatePassword(password);
-    if (!passwordValidation.isValid) {
-      setLocalError(passwordValidation.message || ERROR_MESSAGES.PASSWORD_WEAK);
+    if (password.length < VALIDATION_CONFIG.PASSWORD_MIN_LENGTH) {
       setFieldErrors(prev => ({ ...prev, password: true }));
       return;
     }
 
-    // Validar confirmación de contraseña
-    if (password !== confirmPassword) {
-      setLocalError(ERROR_MESSAGES.PASSWORDS_DONT_MATCH);
-      setFieldErrors(prev => ({ ...prev, confirmPassword: true }));
-      return;
-    }
+    const result = await login({ email, password });
 
-    const result = await register({ email, password });
-
-    if (result.success) {
-      // Registration successful, redirect to verification page
+    if (result.success && result.isSignedIn) {
+      // Login successful, redirect to dashboard
       setTimeout(() => {
-        router.push('/auth/verification');
+        router.push('/');
       }, 1500);
     } else {
-      setFieldErrors({ email: true, password: true, confirmPassword: true });
+      setFieldErrors({ email: true, password: true });
     }
   };
 
   const clearErrors = () => {
-    setLocalError('');
-    clearRegisterError();
-    setFieldErrors({ email: false, password: false, confirmPassword: false });
+    clearLoginError();
+    setFieldErrors({ email: false, password: false });
   };
 
   const handleEmailChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     setEmail(e.target.value);
-    if (localError || registerState.error) clearErrors();
+    if (loginState.error) clearErrors();
   };
 
   const handlePasswordChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     setPassword(e.target.value);
-    if (localError || registerState.error) clearErrors();
-  };
-
-  const handleConfirmPasswordChange = (e: React.ChangeEvent<HTMLInputElement>) => {
-    setConfirmPassword(e.target.value);
-    if (localError || registerState.error) clearErrors();
+    if (loginState.error) clearErrors();
   };
 
   if (!mounted) {
     return null;
   }
-
-  const displayError = localError || registerState.error;
 
   return (
     <Box
@@ -176,7 +151,7 @@ export default function RegisterForm() {
                     justifyContent: 'center',
                   }}
                 >
-                  <PersonAdd fontSize="large" />
+                  <LoginIcon fontSize="large" />
                 </Box>
                 <Typography
                   variant="h4"
@@ -199,7 +174,7 @@ export default function RegisterForm() {
                   mb: 1,
                 }}
               >
-                Crear Nueva Cuenta
+                Iniciar Sesión
               </Typography>
               
               <Typography
@@ -209,37 +184,34 @@ export default function RegisterForm() {
                   lineHeight: 1.5,
                 }}
               >
-                Completa el formulario para comenzar
+                Ingresa tus credenciales para continuar
               </Typography>
             </Box>
 
             {/* Mensajes de estado */}
-            {displayError && (
+            {loginState.error && (
               <Alert
                 severity="error"
                 icon={<Error />}
                 sx={{ mb: 2 }}
-                onClose={() => {
-                  setLocalError('');
-                  clearRegisterError();
-                }}
+                onClose={() => clearLoginError()}
               >
-                {displayError}
+                {loginState.error}
               </Alert>
             )}
 
-            {registerState.success && (
+            {loginState.success && (
               <Alert
                 severity="success"
                 icon={<CheckCircle />}
                 sx={{ mb: 2 }}
               >
-                ¡Cuenta creada exitosamente! Redirigiendo a verificación...
+                ¡Inicio de sesión exitoso! Redirigiendo...
               </Alert>
             )}
 
             {/* Formulario */}
-            <Box component="form" onSubmit={handleSignup} sx={{ mb: 2 }}>
+            <Box component="form" onSubmit={handleLogin} sx={{ mb: 2 }}>
               <TextField
                 fullWidth
                 label="Correo electrónico"
@@ -247,7 +219,7 @@ export default function RegisterForm() {
                 value={email}
                 onChange={handleEmailChange}
                 placeholder="tu@email.com"
-                disabled={registerState.loading}
+                disabled={loginState.loading}
                 error={fieldErrors.email}
                 required
                 autoComplete="email"
@@ -280,11 +252,10 @@ export default function RegisterForm() {
                 value={password}
                 onChange={handlePasswordChange}
                 placeholder="••••••••"
-                disabled={registerState.loading}
+                disabled={loginState.loading}
                 error={fieldErrors.password}
                 required
-                autoComplete="new-password"
-                helperText="Mínimo 8 caracteres, con mayúscula, minúscula y número"
+                autoComplete="current-password"
                 InputProps={{
                   startAdornment: (
                     <InputAdornment position="start">
@@ -307,46 +278,31 @@ export default function RegisterForm() {
                 }}
               />
 
-              <TextField
-                fullWidth
-                label="Confirmar contraseña"
-                type="password"
-                value={confirmPassword}
-                onChange={handleConfirmPasswordChange}
-                placeholder="••••••••"
-                disabled={registerState.loading}
-                error={fieldErrors.confirmPassword}
-                required
-                autoComplete="new-password"
-                InputProps={{
-                  startAdornment: (
-                    <InputAdornment position="start">
-                      <Lock color="action" />
-                    </InputAdornment>
-                  ),
-                }}
-                sx={{
-                  mb: 3,
-                  '& .MuiOutlinedInput-root': {
-                    borderRadius: 2,
-                    backgroundColor: '#fafafa',
-                    '&:hover': {
-                      backgroundColor: '#ffffff',
-                    },
-                    '&.Mui-focused': {
-                      backgroundColor: '#ffffff',
-                    },
-                  },
-                }}
-              />
+              {/* Forgot Password Link */}
+              <Box sx={{ textAlign: 'right', mb: 3 }}>
+                <Link href="/auth/forgot-password" passHref legacyBehavior>
+                  <MuiLink
+                    sx={{
+                      color: '#1976d2',
+                      textDecoration: 'none',
+                      fontSize: '0.875rem',
+                      '&:hover': {
+                        textDecoration: 'underline',
+                      },
+                    }}
+                  >
+                    ¿Olvidaste tu contraseña?
+                  </MuiLink>
+                </Link>
+              </Box>
 
               <Button
                 type="submit"
                 fullWidth
                 variant="contained"
                 size="large"
-                disabled={registerState.loading}
-                startIcon={registerState.loading ? <CircularProgress size={20} /> : <PersonAdd />}
+                disabled={loginState.loading}
+                startIcon={loginState.loading ? <CircularProgress size={20} /> : <LoginIcon />}
                 sx={{
                   height: 48,
                   borderRadius: 2,
@@ -362,15 +318,15 @@ export default function RegisterForm() {
                   },
                 }}
               >
-                {registerState.loading ? 'Creando Cuenta...' : 'Crear Cuenta'}
+                {loginState.loading ? 'Iniciando sesión...' : 'Iniciar Sesión'}
               </Button>
             </Box>
 
-            {/* Login link */}
+            {/* Sign up link */}
             <Box sx={{ textAlign: 'center', mt: 3 }}>
               <Typography variant="body2" color="text.secondary">
-                ¿Ya tienes una cuenta?{' '}
-                <Link href="/auth/login" passHref legacyBehavior>
+                ¿No tienes una cuenta?{' '}
+                <Link href="/auth/register" passHref legacyBehavior>
                   <MuiLink
                     sx={{
                       color: '#1976d2',
@@ -381,7 +337,7 @@ export default function RegisterForm() {
                       },
                     }}
                   >
-                    Iniciar sesión
+                    Crear cuenta
                   </MuiLink>
                 </Link>
               </Typography>

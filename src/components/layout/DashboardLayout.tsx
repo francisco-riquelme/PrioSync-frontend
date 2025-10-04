@@ -27,6 +27,7 @@ import {
   Notifications as NotificationsIcon,
   Menu as MenuIcon,
 } from '@mui/icons-material';
+import { useAuth } from '@/components/auth/hooks/auth';
 
 const drawerWidth = 240;
 
@@ -46,6 +47,7 @@ export default function DashboardLayout({ children }: LayoutProps) {
   const [mounted, setMounted] = useState(false);
   const router = useRouter();
   const pathname = usePathname();
+  const { logout, authSession } = useAuth();
 
   useEffect(() => {
     setMounted(true);
@@ -61,6 +63,22 @@ export default function DashboardLayout({ children }: LayoutProps) {
     if (allowedPaths.includes(path)) {
       router.push(path);
     }
+  };
+
+  const handleLogout = async () => {
+    await logout();
+    router.push('/auth/login');
+  };
+
+  // Get user initials for avatar
+  const getUserInitials = () => {
+    if (authSession.user?.username) {
+      return authSession.user.username.substring(0, 2).toUpperCase();
+    }
+    if (authSession.user?.email) {
+      return authSession.user.email.substring(0, 2).toUpperCase();
+    }
+    return 'U';
   };
 
   const drawer = (
@@ -124,6 +142,7 @@ export default function DashboardLayout({ children }: LayoutProps) {
       <Box sx={{ position: 'absolute', bottom: 16, left: 0, right: 0, px: 1 }}>
         <ListItem disablePadding>
           <ListItemButton
+            onClick={handleLogout}
             sx={{
               borderRadius: 2,
               mx: 1,
@@ -187,7 +206,7 @@ export default function DashboardLayout({ children }: LayoutProps) {
           {/* Perfil de usuario */}
           <Box sx={{ display: 'flex', alignItems: 'center', gap: 1 }}>
             <Typography variant="body2" sx={{ display: { xs: 'none', sm: 'block' } }}>
-              Francisco
+              {authSession.user?.username || authSession.user?.email || 'Usuario'}
             </Typography>
             <Avatar
               sx={{
@@ -197,7 +216,7 @@ export default function DashboardLayout({ children }: LayoutProps) {
                 fontSize: '0.9rem',
               }}
             >
-              FR
+              {getUserInitials()}
             </Avatar>
           </Box>
         </Toolbar>

@@ -1,5 +1,5 @@
 import VerificationPage from '@/components/auth/Verification';
 
-export default function VerificacionPage() {
+export default function VerificationPageRoute() {
   return <VerificationPage />;
 }

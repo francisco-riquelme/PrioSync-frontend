@@ -1232,8 +1232,36 @@
               "isRequired": false,
               "attributes": []
             },
-            "preguntas": {
-              "name": "preguntas",
+            "duracion_minutos": {
+              "name": "duracion_minutos",
+              "isArray": false,
+              "type": "Int",
+              "isRequired": false,
+              "attributes": []
+            },
+            "intentos_permitidos": {
+              "name": "intentos_permitidos",
+              "isArray": false,
+              "type": "Int",
+              "isRequired": false,
+              "attributes": []
+            },
+            "preguntas_aleatorias": {
+              "name": "preguntas_aleatorias",
+              "isArray": false,
+              "type": "Boolean",
+              "isRequired": false,
+              "attributes": []
+            },
+            "porcentaje_aprobacion": {
+              "name": "porcentaje_aprobacion",
+              "isArray": false,
+              "type": "Int",
+              "isRequired": false,
+              "attributes": []
+            },
+            "Preguntas": {
+              "name": "Preguntas",
               "isArray": true,
               "type": {
                 "model": "Pregunta"
@@ -1288,22 +1316,6 @@
               "association": {
                 "connectionType": "BELONGS_TO",
                 "targetNames": [
-                  "cuestionarioId"
-                ]
-              }
-            },
-            "Respuestas": {
-              "name": "Respuestas",
-              "isArray": true,
-              "type": {
-                "model": "Respuesta"
-              },
-              "isRequired": false,
-              "attributes": [],
-              "isArrayNullable": true,
-              "association": {
-                "connectionType": "HAS_MANY",
-                "associatedWith": [
                   "cuestionarioId"
                 ]
               }
@@ -1432,17 +1444,17 @@
               "isRequired": false,
               "attributes": []
             },
-            "texto_opcion": {
-              "name": "texto_opcion",
+            "orden": {
+              "name": "orden",
               "isArray": false,
-              "type": "String",
-              "isRequired": true,
+              "type": "Int",
+              "isRequired": false,
               "attributes": []
             },
-            "es_correcta": {
-              "name": "es_correcta",
+            "explicacion": {
+              "name": "explicacion",
               "isArray": false,
-              "type": "Boolean",
+              "type": "String",
               "isRequired": false,
               "attributes": []
             },
@@ -1465,6 +1477,22 @@
                 "connectionType": "BELONGS_TO",
                 "targetNames": [
                   "cuestionarioId"
+                ]
+              }
+            },
+            "Opciones": {
+              "name": "Opciones",
+              "isArray": true,
+              "type": {
+                "model": "OpcionPregunta"
+              },
+              "isRequired": false,
+              "attributes": [],
+              "isArrayNullable": true,
+              "association": {
+                "connectionType": "HAS_MANY",
+                "associatedWith": [
+                  "preguntaId"
                 ]
               }
             },
@@ -1559,6 +1587,178 @@
             "sortKeyFieldNames": []
           }
         },
+        "OpcionPregunta": {
+          "name": "OpcionPregunta",
+          "fields": {
+            "opcionId": {
+              "name": "opcionId",
+              "isArray": false,
+              "type": "ID",
+              "isRequired": true,
+              "attributes": []
+            },
+            "texto": {
+              "name": "texto",
+              "isArray": false,
+              "type": "String",
+              "isRequired": true,
+              "attributes": []
+            },
+            "orden": {
+              "name": "orden",
+              "isArray": false,
+              "type": "Int",
+              "isRequired": false,
+              "attributes": []
+            },
+            "imagen": {
+              "name": "imagen",
+              "isArray": false,
+              "type": "AWSURL",
+              "isRequired": false,
+              "attributes": []
+            },
+            "audio": {
+              "name": "audio",
+              "isArray": false,
+              "type": "AWSURL",
+              "isRequired": false,
+              "attributes": []
+            },
+            "video": {
+              "name": "video",
+              "isArray": false,
+              "type": "AWSURL",
+              "isRequired": false,
+              "attributes": []
+            },
+            "archivo": {
+              "name": "archivo",
+              "isArray": false,
+              "type": "AWSURL",
+              "isRequired": false,
+              "attributes": []
+            },
+            "es_correcta": {
+              "name": "es_correcta",
+              "isArray": false,
+              "type": "Boolean",
+              "isRequired": true,
+              "attributes": []
+            },
+            "preguntaId": {
+              "name": "preguntaId",
+              "isArray": false,
+              "type": "ID",
+              "isRequired": true,
+              "attributes": []
+            },
+            "Pregunta": {
+              "name": "Pregunta",
+              "isArray": false,
+              "type": {
+                "model": "Pregunta"
+              },
+              "isRequired": false,
+              "attributes": [],
+              "association": {
+                "connectionType": "BELONGS_TO",
+                "targetNames": [
+                  "preguntaId"
+                ]
+              }
+            },
+            "Respuestas": {
+              "name": "Respuestas",
+              "isArray": true,
+              "type": {
+                "model": "Respuesta"
+              },
+              "isRequired": false,
+              "attributes": [],
+              "isArrayNullable": true,
+              "association": {
+                "connectionType": "HAS_MANY",
+                "associatedWith": [
+                  "opcionId"
+                ]
+              }
+            },
+            "createdAt": {
+              "name": "createdAt",
+              "isArray": false,
+              "type": "AWSDateTime",
+              "isRequired": false,
+              "attributes": [],
+              "isReadOnly": true
+            },
+            "updatedAt": {
+              "name": "updatedAt",
+              "isArray": false,
+              "type": "AWSDateTime",
+              "isRequired": false,
+              "attributes": [],
+              "isReadOnly": true
+            }
+          },
+          "syncable": true,
+          "pluralName": "OpcionPreguntas",
+          "attributes": [
+            {
+              "type": "model",
+              "properties": {}
+            },
+            {
+              "type": "key",
+              "properties": {
+                "fields": [
+                  "opcionId"
+                ]
+              }
+            },
+            {
+              "type": "auth",
+              "properties": {
+                "rules": [
+                  {
+                    "allow": "public",
+                    "provider": "apiKey",
+                    "operations": [
+                      "create",
+                      "update",
+                      "delete",
+                      "read"
+                    ]
+                  },
+                  {
+                    "allow": "private",
+                    "operations": [
+                      "create",
+                      "update",
+                      "delete",
+                      "read"
+                    ]
+                  },
+                  {
+                    "allow": "public",
+                    "provider": "iam",
+                    "operations": [
+                      "create",
+                      "update",
+                      "delete",
+                      "read"
+                    ]
+                  }
+                ]
+              }
+            }
+          ],
+          "primaryKeyInfo": {
+            "isCustomPrimaryKey": true,
+            "primaryKeyFieldName": "opcionId",
+            "sortKeyFieldNames": []
+          }
+        },
         "Respuesta": {
           "name": "Respuesta",
           "fields": {
@@ -1573,6 +1773,13 @@
               "name": "respuesta_texto",
               "isArray": false,
               "type": "String",
+              "isRequired": false,
+              "attributes": []
+            },
+            "es_correcta": {
+              "name": "es_correcta",
+              "isArray": false,
+              "type": "Boolean",
               "isRequired": false,
               "attributes": []
             },
@@ -1605,28 +1812,6 @@
                 ]
               }
             },
-            "cuestionarioId": {
-              "name": "cuestionarioId",
-              "isArray": false,
-              "type": "ID",
-              "isRequired": true,
-              "attributes": []
-            },
-            "Cuestionario": {
-              "name": "Cuestionario",
-              "isArray": false,
-              "type": {
-                "model": "Cuestionario"
-              },
-              "isRequired": false,
-              "attributes": [],
-              "association": {
-                "connectionType": "BELONGS_TO",
-                "targetNames": [
-                  "cuestionarioId"
-                ]
-              }
-            },
             "preguntaId": {
               "name": "preguntaId",
               "isArray": false,
@@ -1646,6 +1831,50 @@
                 "connectionType": "BELONGS_TO",
                 "targetNames": [
                   "preguntaId"
+                ]
+              }
+            },
+            "opcionId": {
+              "name": "opcionId",
+              "isArray": false,
+              "type": "ID",
+              "isRequired": false,
+              "attributes": []
+            },
+            "Opcion": {
+              "name": "Opcion",
+              "isArray": false,
+              "type": {
+                "model": "OpcionPregunta"
+              },
+              "isRequired": false,
+              "attributes": [],
+              "association": {
+                "connectionType": "BELONGS_TO",
+                "targetNames": [
+                  "opcionId"
+                ]
+              }
+            },
+            "progresoCuestionarioId": {
+              "name": "progresoCuestionarioId",
+              "isArray": false,
+              "type": "String",
+              "isRequired": false,
+              "attributes": []
+            },
+            "ProgresoCuestionario": {
+              "name": "ProgresoCuestionario",
+              "isArray": false,
+              "type": {
+                "model": "ProgresoCuestionario"
+              },
+              "isRequired": false,
+              "attributes": [],
+              "association": {
+                "connectionType": "BELONGS_TO",
+                "targetNames": [
+                  "progresoCuestionarioId"
                 ]
               }
             },
@@ -1678,6 +1907,17 @@
               "properties": {
                 "fields": [
                   "respuestaId"
+                ]
+              }
+            },
+            {
+              "type": "key",
+              "properties": {
+                "name": "respuestasByUsuarioIdAndPreguntaId",
+                "queryField": "RespuestasByUsuarioAndPregunta",
+                "fields": [
+                  "usuarioId",
+                  "preguntaId"
                 ]
               }
             },
@@ -1868,6 +2108,13 @@
         "ProgresoCuestionario": {
           "name": "ProgresoCuestionario",
           "fields": {
+            "progresoCuestionarioId": {
+              "name": "progresoCuestionarioId",
+              "isArray": false,
+              "type": "String",
+              "isRequired": true,
+              "attributes": []
+            },
             "estado": {
               "name": "estado",
               "isArray": false,
@@ -1884,10 +2131,38 @@
               "isRequired": false,
               "attributes": []
             },
+            "aprobado": {
+              "name": "aprobado",
+              "isArray": false,
+              "type": "Boolean",
+              "isRequired": false,
+              "attributes": []
+            },
             "fecha_completado": {
               "name": "fecha_completado",
               "isArray": false,
               "type": "AWSDateTime",
+              "isRequired": false,
+              "attributes": []
+            },
+            "intento_numero": {
+              "name": "intento_numero",
+              "isArray": false,
+              "type": "Int",
+              "isRequired": true,
+              "attributes": []
+            },
+            "ultima_pregunta_respondida": {
+              "name": "ultima_pregunta_respondida",
+              "isArray": false,
+              "type": "Int",
+              "isRequired": false,
+              "attributes": []
+            },
+            "recomendaciones": {
+              "name": "recomendaciones",
+              "isArray": false,
+              "type": "String",
               "isRequired": false,
               "attributes": []
             },
@@ -1935,6 +2210,22 @@
                 ]
               }
             },
+            "Respuestas": {
+              "name": "Respuestas",
+              "isArray": true,
+              "type": {
+                "model": "Respuesta"
+              },
+              "isRequired": false,
+              "attributes": [],
+              "isArrayNullable": true,
+              "association": {
+                "connectionType": "HAS_MANY",
+                "associatedWith": [
+                  "progresoCuestionarioId"
+                ]
+              }
+            },
             "createdAt": {
               "name": "createdAt",
               "isArray": false,
@@ -1963,8 +2254,19 @@
               "type": "key",
               "properties": {
                 "fields": [
+                  "progresoCuestionarioId"
+                ]
+              }
+            },
+            {
+              "type": "key",
+              "properties": {
+                "name": "progresoCuestionariosByUsuarioIdAndCuestionarioIdAndIntento_numero",
+                "queryField": "ProgresoCuestionarioByUsuarioAndCuestionario",
+                "fields": [
                   "usuarioId",
-                  "cuestionarioId"
+                  "cuestionarioId",
+                  "intento_numero"
                 ]
               }
             },
@@ -2007,10 +2309,8 @@
           ],
           "primaryKeyInfo": {
             "isCustomPrimaryKey": true,
-            "primaryKeyFieldName": "usuarioId",
-            "sortKeyFieldNames": [
-              "cuestionarioId"
-            ]
+            "primaryKeyFieldName": "progresoCuestionarioId",
+            "sortKeyFieldNames": []
           }
         },
         "EvaluacionCurso": {
