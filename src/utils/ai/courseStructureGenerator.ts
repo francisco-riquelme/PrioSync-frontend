@@ -152,7 +152,7 @@ FORMATO DE RESPUESTA (JSON estricto):
 
 IMPORTANTE: Responde ÚNICAMENTE con el JSON válido, sin texto adicional antes o después.`;
 
-  console.log('🤖 Generando estructura de curso con Gemini...');
+  console.log('Generando estructura de curso con Gemini...');
 
   for (let attempt = 1; attempt <= COURSE_GENERATION_CONFIG.maxRetries; attempt++) {
     try {
@@ -177,7 +177,7 @@ IMPORTANTE: Responde ÚNICAMENTE con el JSON válido, sin texto adicional antes 
       const geminiResult = result as GeminiResponse;
       const response = geminiResult.response.text();
 
-      console.log('✅ Respuesta de Gemini recibida, procesando...');
+      console.log('Respuesta de Gemini recibida, procesando...');
 
       // Extraer y parsear JSON
       const courseData = extractJSON(response);
@@ -211,14 +211,14 @@ IMPORTANTE: Responde ÚNICAMENTE con el JSON válido, sin texto adicional antes 
         });
       });
 
-      console.log('✅ Estructura de curso generada exitosamente');
+      console.log('Estructura de curso generada exitosamente');
       return courseData as GeneratedCourseStructure;
 
     } catch (error: any) { // eslint-disable-line @typescript-eslint/no-explicit-any
-      console.warn(`❌ Intento ${attempt} falló:`, error.message);
+      console.warn(`Intento ${attempt} falló:`, error.message);
       
       if (attempt === COURSE_GENERATION_CONFIG.maxRetries) {
-        console.error('💥 Todos los intentos fallaron, generando estructura de fallback');
+        console.error('Todos los intentos fallaron, generando estructura de fallback');
         return generateFallbackStructure(playlist, customization);
       }
 
@@ -237,7 +237,7 @@ function generateFallbackStructure(
   playlist: YouTubePlaylist,
   customization?: CourseCustomization
 ): GeneratedCourseStructure {
-  console.log('🔄 Generando estructura de fallback...');
+  console.log('Generando estructura de fallback...');
 
   // Dividir videos en módulos (máximo 6 videos por módulo)
   const videosPerModule = Math.ceil(playlist.videos.length / Math.min(6, Math.ceil(playlist.videos.length / 6)));
