@@ -22,6 +22,58 @@ const COURSE_GENERATION_CONFIG = {
   model: 'gemini-2.5-flash-lite'
 } as const;
 
+// Función para convertir duración de string a segundos
+function durationToSeconds(duration: string): number {
+  const parts = duration.split(':');
+  if (parts.length === 2) {
+    // Formato MM:SS
+    const [minutes, seconds] = parts.map(Number);
+    return (minutes * 60) + (seconds || 0);
+  } else if (parts.length === 3) {
+    // Formato HH:MM:SS
+    const [hours, minutes, seconds] = parts.map(Number);
+    return (hours * 3600) + (minutes * 60) + (seconds || 0);
+  }
+  return 0;
+}
+
+// Función para convertir segundos a formato legible
+function secondsToReadableFormat(totalSeconds: number): string {
+  const hours = Math.floor(totalSeconds / 3600);
+  const minutes = Math.floor((totalSeconds % 3600) / 60);
+  
+  if (hours > 0) {
+    return `${hours}h ${minutes}m`;
+  } else {
+    return `${minutes}m`;
+  }
+}
+
+// Función para recalcular duraciones de módulos basándose en la suma real de las lecciones
+function recalculateModuleDurations(courseData: GeneratedCourseStructure): GeneratedCourseStructure {
+  let totalCourseSeconds = 0;
+
+  // Recalcular duración de cada módulo
+  courseData.modules.forEach(module => {
+    let moduleSeconds = 0;
+    
+    module.lessons?.forEach(lesson => {
+      if (lesson.duration) {
+        moduleSeconds += durationToSeconds(lesson.duration);
+      }
+    });
+
+    // Actualizar duración del módulo
+    module.estimatedDuration = secondsToReadableFormat(moduleSeconds);
+    totalCourseSeconds += moduleSeconds;
+  });
+
+  // Actualizar duración total del curso
+  courseData.estimatedDuration = secondsToReadableFormat(totalCourseSeconds);
+
+  return courseData;
+}
+
 // Función para extraer JSON de respuesta de LLM con múltiples patrones
 function extractJSON(response: string): GeneratedCourseStructure {
   // Patrones para encontrar JSON en la respuesta
@@ -211,11 +263,14 @@ IMPORTANTE: Responde ÚNICAMENTE con el JSON válido, sin texto adicional antes 
         });
       });
 
-      console.log('Estructura de curso generada exitosamente');
-      return courseData as GeneratedCourseStructure;
+      // Recalcular duraciones de módulos basándose en la suma real de las lecciones
+      const finalCourseData = recalculateModuleDurations(courseData);
 
-    } catch (error: any) { // eslint-disable-line @typescript-eslint/no-explicit-any
-      console.warn(`Intento ${attempt} falló:`, error.message);
+      console.log('Estructura de curso generada exitosamente');
+      return finalCourseData as GeneratedCourseStructure;
+
+    } catch (error: unknown) { // eslint-disable-line @typescript-eslint/no-explicit-any
+      console.warn(`Intento ${attempt} falló:`, error instanceof Error ? error.message : 'Error desconocido');
       
       if (attempt === COURSE_GENERATION_CONFIG.maxRetries) {
         console.error('Todos los intentos fallaron, generando estructura de fallback');
@@ -258,17 +313,10 @@ function generateFallbackStructure(
       keyTopics: [`Tema principal: ${video.title.split(' ').slice(0, 3).join(' ')}`]
     }));
 
-    // Calcular duración total del módulo
-    const totalSeconds = moduleVideos.reduce((total, video) => {
-      const [minutes, seconds] = video.duration.split(':').map(Number);
-      return total + (minutes * 60) + (seconds || 0);
-    }, 0);
-    
-    const moduleHours = Math.floor(totalSeconds / 3600);
-    const moduleMinutes = Math.floor((totalSeconds % 3600) / 60);
-    const estimatedDuration = moduleHours > 0 
-      ? `${moduleHours}h ${moduleMinutes}m`
-      : `${moduleMinutes}m`;
+    // Calcular duración total del módulo usando la función auxiliar
+    const moduleSeconds = moduleVideos.reduce((total, video) => 
+      total + durationToSeconds(video.duration), 0
+    );
 
     modules.push({
       id: `modulo-${moduleNumber}`,
@@ -276,28 +324,21 @@ function generateFallbackStructure(
       description: `Módulo ${moduleNumber} del curso basado en la playlist: ${playlist.title}`,
       order: moduleNumber,
       lessons,
-      estimatedDuration
+      estimatedDuration: secondsToReadableFormat(moduleSeconds)
     });
   }
 
-  // Calcular duración total del curso
-  const totalCourseSeconds = playlist.videos.reduce((total, video) => {
-    const [minutes, seconds] = video.duration.split(':').map(Number);
-    return total + (minutes * 60) + (seconds || 0);
-  }, 0);
-  
-  const courseHours = Math.floor(totalCourseSeconds / 3600);
-  const courseMinutes = Math.floor((totalCourseSeconds % 3600) / 60);
-  const totalDuration = courseHours > 0 
-    ? `${courseHours}h ${courseMinutes}m`
-    : `${courseMinutes}m`;
+  // Calcular duración total del curso usando la función auxiliar
+  const totalCourseSeconds = playlist.videos.reduce((total, video) => 
+    total + durationToSeconds(video.duration), 0
+  );
 
   return {
     title: customization?.title || playlist.title,
     description: customization?.description || `Curso basado en la playlist "${playlist.title}" del canal ${playlist.channelTitle}. Este curso cubre los temas principales presentados en ${playlist.itemCount} lecciones estructuradas.`,
     category: customization?.category || 'General',
     level: customization?.level || 'intermediate',
-    estimatedDuration: totalDuration,
+    estimatedDuration: secondsToReadableFormat(totalCourseSeconds),
     instructor: customization?.instructor || playlist.channelTitle,
     objectives: customization?.customObjectives || [
       `Dominar los conceptos presentados en ${playlist.title}`,
