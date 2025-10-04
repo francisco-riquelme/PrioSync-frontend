@@ -40,10 +40,13 @@ const AVAILABLE_COURSES = [1, 2, 3, 4, 5, 6];
 // POST /api/courses/[id]/enroll - Inscribirse en un curso
 export async function POST(
   request: NextRequest,
-  { params }: { params: { id: string } }
+  { params }: { params: Promise<{ id: string }> }
 ) {
+  let resolvedParams: { id: string } | undefined;
+  
   try {
-    const courseId = parseInt(params.id);
+    resolvedParams = await params;
+    const courseId = parseInt(resolvedParams.id);
     
     if (isNaN(courseId)) {
       return NextResponse.json(
@@ -123,7 +126,7 @@ export async function POST(
     }, { status: 201 });
 
   } catch (error) {
-    console.error(`Error en POST /api/courses/${params.id}/enroll:`, error);
+    console.error(`Error en POST /api/courses/${resolvedParams?.id || 'unknown'}/enroll:`, error);
     return NextResponse.json(
       {
         success: false,
@@ -138,10 +141,13 @@ export async function POST(
 // GET /api/courses/[id]/enroll - Obtener información de inscripción
 export async function GET(
   request: NextRequest,
-  { params }: { params: { id: string } }
+  { params }: { params: Promise<{ id: string }> }
 ) {
+  let resolvedParams: { id: string } | undefined;
+  
   try {
-    const courseId = parseInt(params.id);
+    resolvedParams = await params;
+    const courseId = parseInt(resolvedParams.id);
     const { searchParams } = new URL(request.url);
     const userId = parseInt(searchParams.get('userId') || '0');
 
@@ -189,7 +195,7 @@ export async function GET(
     });
 
   } catch (error) {
-    console.error(`Error en GET /api/courses/${params.id}/enroll:`, error);
+    console.error(`Error en GET /api/courses/${resolvedParams?.id || 'unknown'}/enroll:`, error);
     return NextResponse.json(
       {
         success: false,
@@ -204,10 +210,13 @@ export async function GET(
 // DELETE /api/courses/[id]/enroll - Cancelar inscripción
 export async function DELETE(
   request: NextRequest,
-  { params }: { params: { id: string } }
+  { params }: { params: Promise<{ id: string }> }
 ) {
+  let resolvedParams: { id: string } | undefined;
+  
   try {
-    const courseId = parseInt(params.id);
+    resolvedParams = await params;
+    const courseId = parseInt(resolvedParams.id);
     const body = await request.json();
     const { userId } = body;
 
@@ -259,7 +268,7 @@ export async function DELETE(
     });
 
   } catch (error) {
-    console.error(`Error en DELETE /api/courses/${params.id}/enroll:`, error);
+    console.error(`Error en DELETE /api/courses/${resolvedParams?.id || 'unknown'}/enroll:`, error);
     return NextResponse.json(
       {
         success: false,
