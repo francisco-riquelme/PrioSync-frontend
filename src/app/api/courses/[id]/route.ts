@@ -15,6 +15,12 @@ interface Course {
   categoria?: string;
   precio?: number;
   descuento?: number;
+  // Campos para cursos generados desde YouTube
+  source?: string;
+  playlist_id?: string;
+  generated_structure?: unknown;
+  tags?: string[];
+  objectives?: string[];
   lecciones?: unknown[];
   modulos?: unknown[];
 }
@@ -102,8 +108,29 @@ export async function GET(
       );
     }
 
-    // Buscar curso en datos simulados
-    const course = DETAILED_COURSES[courseId];
+    // ✅ Backend Integration - Obtener cursos del endpoint principal para datos actualizados
+    let course: Course | undefined;
+    
+    try {
+      // Intentar obtener del endpoint principal (incluye cursos creados dinámicamente)
+      const coursesResponse = await fetch(`${request.nextUrl.protocol}//${request.nextUrl.host}/api/courses`, {
+        cache: 'no-store'
+      });
+      
+      if (coursesResponse.ok) {
+        const coursesResult = await coursesResponse.json();
+        if (coursesResult.success && coursesResult.data.courses) {
+          course = coursesResult.data.courses.find((c: Course) => c.id_curso === courseId);
+        }
+      }
+    } catch (error) {
+      console.log('Error obteniendo cursos del endpoint principal, usando datos locales');
+    }
+    
+    // Fallback: buscar en datos locales si no se encontró en el endpoint principal
+    if (!course) {
+      course = DETAILED_COURSES[courseId];
+    }
     
     if (!course) {
       return NextResponse.json(

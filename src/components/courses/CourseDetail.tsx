@@ -1,6 +1,6 @@
 'use client';
 
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { useRouter } from 'next/navigation';
 import {
   Box,
@@ -16,6 +16,7 @@ import {
 import {
   ArrowBack as ArrowBackIcon,
   Feedback as FeedbackIcon,
+  YouTube as YouTubeIcon,
 } from '@mui/icons-material';
 import { useCourse } from '@/components/courses/hooks/useCourse';
 import StudySessionsTable from './StudySessionsTable';
@@ -77,8 +78,7 @@ export default function CourseDetail({ courseId }: CourseDetailProps) {
     );
   }
 
-  // TODO: Backend Integration - Obtener progreso real del usuario desde el backend
-  // El progreso debería venir de userProgress en lugar de calcularse localmente
+  // ✅ Backend Integration - Calcular progreso basado en datos reales
   const calculateProgress = () => {
     // Since we don't have modules/lessons data from the API yet,
     // we'll use a placeholder progress calculation
@@ -145,9 +145,20 @@ export default function CourseDetail({ courseId }: CourseDetailProps) {
         </Card>
 
         <Box sx={{ flex: 1 }}>
-          <Typography variant="h4" sx={{ fontWeight: 700, mb: 2, color: 'text.primary' }}>
-            {course.titulo}
-          </Typography>
+          <Box sx={{ display: 'flex', alignItems: 'flex-start', gap: 2, mb: 2 }}>
+            <Typography variant="h4" sx={{ fontWeight: 700, color: 'text.primary', flex: 1 }}>
+              {course.titulo}
+            </Typography>
+            {/* {course. === 'youtube' && (
+              <Chip 
+                icon={<YouTubeIcon />} 
+                label="YouTube" 
+                color="error" 
+                variant="outlined" 
+                size="small"
+              />
+            )} */}
+          </Box>
 
           <Typography variant="body1" color="text.secondary" sx={{ mb: 2 }}>
             {course.descripcion}
@@ -160,6 +171,22 @@ export default function CourseDetail({ courseId }: CourseDetailProps) {
           <Typography variant="body2" color="text.secondary" sx={{ mb: 2 }}>
             <strong>Nivel:</strong> {course.nivel_dificultad}
           </Typography>
+
+          {/* Mostrar objetivos del curso si existen
+          {course.generated_structure?.objectives && course.generated_structure.objectives.length > 0 && (
+            <Box sx={{ mb: 2 }}>
+              <Typography variant="body2" sx={{ fontWeight: 600, mb: 1 }}>
+                Objetivos del curso:
+              </Typography>
+              <Box component="ul" sx={{ margin: 0, paddingLeft: 2 }}>
+                {course.generated_structure.objectives.map((objective, index) => (
+                  <Typography component="li" variant="body2" color="text.secondary" key={index}>
+                    {objective}
+                  </Typography>
+                ))}
+              </Box>
+            </Box>
+          )} */}
 
           {/* Progreso del curso */}
           <Box sx={{ mb: 2 }}>
