@@ -499,8 +499,8 @@ export default function CourseDetail({ courseId }: CourseDetailProps) {
                             <ListItemText
                               primary={`Lección ${lessonIndex + 1}: ${lesson.title}`}
                               secondary={
-                                <Box>
-                                  <Typography variant="caption" color="text.secondary">
+                                <span>
+                                  <Typography component="span" variant="caption" color="text.secondary">
                                     {lesson.duration}
                                   </Typography>
                                   {lesson.youtubeVideoId && (
@@ -512,7 +512,7 @@ export default function CourseDetail({ courseId }: CourseDetailProps) {
                                       sx={{ ml: 1 }}
                                     />
                                   )}
-                                </Box>
+                                </span>
                               }
                               sx={{
                                 '& .MuiListItemText-primary': {
