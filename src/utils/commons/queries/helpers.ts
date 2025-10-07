@@ -545,6 +545,7 @@ export function createObjectHash(
  * ```
  */
 export async function handlePagination<T>(
+  /* eslint-disable @typescript-eslint/no-explicit-any */
   operation: (params?: Record<string, unknown>) => Promise<any>,
   params: Record<string, unknown> = {},
   options: {
