@@ -31,9 +31,10 @@ export function buildRestContext<
     method: event.httpMethod || "UNKNOWN",
     path: event.path || "UNKNOWN",
     resource: event.resource || "UNKNOWN",
-    requestId: context.awsRequestId,
-    functionName: context.functionName,
-    functionVersion: context.functionVersion,
+    // Add null checks to prevent undefined values from being logged
+    requestId: context?.awsRequestId || undefined,
+    functionName: context?.functionName || undefined,
+    functionVersion: context?.functionVersion || undefined,
     stage: event.requestContext?.stage,
     sourceIp: event.requestContext?.identity?.sourceIp,
   };

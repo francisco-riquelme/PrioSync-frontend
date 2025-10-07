@@ -1,13 +1,13 @@
-import type { Context } from 'aws-lambda';
-import type { Middleware, MiddlewareChain } from '../middlewareChain';
+import type { Context } from "aws-lambda";
+import type { Middleware, MiddlewareChain } from "../middlewareChain";
 import type {
   AmplifyOutputs,
   AmplifyModelType,
   QueryFactoryResult,
-} from '../../queries/types';
-import type * as yup from 'yup';
-import type { CacheConfig } from '../../queries/types';
-import type { AppSyncResolverEvent } from 'aws-lambda/trigger/appsync-resolver';
+} from "../../queries/types";
+import type * as yup from "yup";
+import type { CacheConfig } from "../../queries/types";
+import type { AmplifyGraphQlResolverEvent } from "aws-lambda/trigger/amplify-resolver";
 
 /**
  * Enhanced error with middleware chain context
@@ -27,13 +27,13 @@ export interface MiddlewareError extends Error {
 }
 
 /**
- * GraphQL resolver event structure for AWS AppSync
- * Uses AppSync's native event type for better compatibility
+ * GraphQL resolver event structure for AWS Amplify
+ * Uses Amplify's native event type for better compatibility
  */
 export type GraphQLEvent<
   TArguments = Record<string, unknown>,
   TSource = Record<string, unknown> | null,
-> = AppSyncResolverEvent<TArguments, TSource>;
+> = AmplifyGraphQlResolverEvent<TArguments, TSource>;
 
 /**
  * GraphQL resolver response structure
@@ -254,24 +254,24 @@ export interface ValidationErrorDetail {
 // Add utility types to extract handler signature
 export type ExtractHandlerEvent<T> = T extends (
   event: infer E,
-  context: Context,
+  context: Context
 ) => unknown
   ? E
   : never;
 
 export type ExtractHandlerReturn<T> = T extends (
   event: unknown,
-  context: Context,
+  context: Context
 ) => Promise<infer R>
   ? R
   : never;
 
 export type ExtractHandlerArguments<T> =
-  ExtractHandlerEvent<T> extends AppSyncResolverEvent<infer A, unknown>
+  ExtractHandlerEvent<T> extends AmplifyGraphQlResolverEvent<infer A, unknown>
     ? A
     : Record<string, unknown>;
 
 export type ExtractHandlerSource<T> =
-  ExtractHandlerEvent<T> extends AppSyncResolverEvent<unknown, infer S>
+  ExtractHandlerEvent<T> extends AmplifyGraphQlResolverEvent<unknown, infer S>
     ? S
     : Record<string, unknown> | null;

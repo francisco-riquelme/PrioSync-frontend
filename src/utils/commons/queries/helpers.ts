@@ -1,5 +1,5 @@
 import { logger } from "../log";
-import { createHash } from "crypto";
+import { createHash } from "node:crypto";
 import type {
   OperationType,
   AmplifyModelType,
@@ -545,7 +545,6 @@ export function createObjectHash(
  * ```
  */
 export async function handlePagination<T>(
-  // eslint-disable-next-line @typescript-eslint/no-explicit-any
   operation: (params?: Record<string, unknown>) => Promise<any>,
   params: Record<string, unknown> = {},
   options: {

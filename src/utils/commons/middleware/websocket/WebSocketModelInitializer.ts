@@ -106,11 +106,12 @@ export function createWebSocketModelInitializer<
       >
     );
 
+    // Only catch model initialization errors, not errors from next()
+    let models: { [K in TSelected]: QueryFactoryResult<K, TTypes> } | undefined;
+
     try {
       // Let ClientManager handle all caching and state management
-      const models = await initializeWithTimeout();
-
-      return await next({ ...input, models });
+      models = await initializeWithTimeout();
     } catch (error) {
       const message = getErrorMessage(error);
 
@@ -130,5 +131,8 @@ export function createWebSocketModelInitializer<
         }),
       } as TReturn;
     }
+
+    // Call next() outside the try-catch so errors from other middlewares bubble up naturally
+    return await next({ ...input, models });
   };
 }

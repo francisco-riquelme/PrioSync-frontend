@@ -3,15 +3,15 @@ import type {
   RestInputWithModels,
   RestHandlerReturn,
   RestResponse,
-} from './types';
-import type { Middleware } from '../middlewareChain';
-import type { AmplifyModelType, QueryFactoryResult } from '../../queries/types';
-import type { RestAwareQueryOperations } from '../../queries/restAware';
+} from "./types";
+import type { Middleware } from "../middlewareChain";
+import type { AmplifyModelType, QueryFactoryResult } from "../../queries/types";
+import type { RestAwareQueryOperations } from "../../queries/restAware";
 import {
   initializeQueries,
   createRestAwareQueryOperations,
-} from '../../queries';
-import { buildRestContext, getErrorMessage } from './utils';
+} from "../../queries";
+import { buildRestContext, getErrorMessage } from "./utils";
 
 /**
  * Creates REST model initializer middleware
@@ -37,13 +37,13 @@ export function createRestModelInitializer<
   TSelected extends keyof TTypes & string = keyof TTypes & string,
   TReturn extends RestHandlerReturn = RestResponse,
 >(
-  config: RestModelInitializerConfig<TSchema, TTypes, TSelected>,
+  config: RestModelInitializerConfig<TSchema, TTypes, TSelected>
 ): Middleware<RestInputWithModels<TTypes, TSelected>, TReturn> {
   const {
     schema,
     amplifyOutputs,
     entities,
-    clientKey = 'default',
+    clientKey = "default",
     timeout = 5000,
     cache,
   } = config;
@@ -58,12 +58,11 @@ export function createRestModelInitializer<
       input as unknown as RestInputWithModels<
         Record<string, AmplifyModelType>,
         string
-      >,
+      >
     );
 
     // Initialize queries with cache configuration
     const rawModels = await Promise.race([
-      // Use unified initialization with cache support
       initializeQueries<TSchema, TTypes, TSelected>({
         amplifyOutputs,
         schema,
@@ -74,8 +73,8 @@ export function createRestModelInitializer<
       new Promise<never>((_, reject) =>
         setTimeout(
           () => reject(new Error(`Initialization timeout after ${timeout}ms`)),
-          timeout,
-        ),
+          timeout
+        )
       ),
     ]);
 
@@ -88,7 +87,7 @@ export function createRestModelInitializer<
       restAwareModels[modelName as TSelected] = createRestAwareQueryOperations(
         rawModel as QueryFactoryResult<string, TTypes>,
         modelName,
-        context,
+        context
       );
     }
 
@@ -96,44 +95,36 @@ export function createRestModelInitializer<
   };
 
   return async (input, next) => {
-    const context = buildRestContext(
-      input as unknown as RestInputWithModels<
-        Record<string, AmplifyModelType>,
-        string
-      >,
-    );
-
     try {
-      if (isInitialized && initPromise) {
-        const models = await initPromise;
-        return await next({ ...input, models });
-      }
-
+      // Lazy initialization: create promise on first request
       if (!initPromise) {
         initPromise = initialize(input);
       }
 
+      // Wait for initialization to complete
       const models = await initPromise;
       isInitialized = true;
 
+      // Pass models to next middleware - REST errors will bubble up naturally
       return await next({ ...input, models });
     } catch (error) {
-      const message = getErrorMessage(error);
-
+      // Only catch initialization errors - re-throw all others
       if (!isInitialized) {
+        // Reset state on initialization failure
         isInitialized = false;
         initPromise = null;
 
+        const message = getErrorMessage(error);
         return {
           statusCode: 500,
           body: JSON.stringify({
-            error: 'Model initialization failed',
+            error: "Model initialization failed",
             message,
-            ...context,
           }),
         } as TReturn;
       }
 
+      // Re-throw REST errors and other errors to be handled by RestErrorHandler
       throw error;
     }
   };

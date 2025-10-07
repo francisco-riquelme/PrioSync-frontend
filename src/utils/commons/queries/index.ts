@@ -39,4 +39,5 @@ export type {
   PaginationParams,
   PaginationResult,
   SortDirection,
+  PickModels,
 } from "./types";

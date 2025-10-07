@@ -1,13 +1,13 @@
-import { logger } from '../../log';
-import { sanitizeObject } from '../utils/sanitization';
-import type { Middleware } from '../middlewareChain';
+import { logger } from "../../log";
+import { sanitizeObject } from "../utils/sanitization";
+import type { Middleware } from "../middlewareChain";
 import type {
   RestResponse,
   RestInputWithModels,
   RestRequestLoggerConfig,
-} from './types';
-import type { AmplifyModelType } from '../../queries/types';
-import { extractEventInfo, setupStructuredLogging } from './utils';
+} from "./types";
+import type { AmplifyModelType } from "../../queries/types";
+import { extractEventInfo, setupStructuredLogging } from "./utils";
 
 /** Maximum object nesting depth for serialization */
 const MAX_DEPTH = 6;
@@ -25,15 +25,15 @@ const MAX_DEPTH = 6;
  */
 function extractResponseInfo(
   response: unknown,
-  config: RestRequestLoggerConfig,
+  config: RestRequestLoggerConfig
 ): Record<string, unknown> {
   const { excludeResponseFields = [] } = config;
 
   if (
     response &&
-    typeof response === 'object' &&
-    'statusCode' in response &&
-    'body' in response
+    typeof response === "object" &&
+    "statusCode" in response &&
+    "body" in response
   ) {
     const restResponse = response as RestResponse;
     const info: Record<string, unknown> = {
@@ -50,7 +50,7 @@ function extractResponseInfo(
         });
       } catch {
         info.bodyLength = restResponse.body.length;
-        info.body = '[Non-JSON response]';
+        info.body = "[Non-JSON response]";
       }
     }
 
@@ -94,7 +94,7 @@ function extractDetailedEventInfo<
   TSelected extends keyof TTypes = keyof TTypes,
 >(
   input: RestInputWithModels<TTypes, TSelected>,
-  config: RestRequestLoggerConfig,
+  config: RestRequestLoggerConfig
 ): Record<string, unknown> {
   const { event } = input;
   const { excludeEventFields = [], maxDepth = MAX_DEPTH } = config;
@@ -115,7 +115,7 @@ function extractDetailedEventInfo<
     } catch {
       return {
         ...basicInfo,
-        body: '[Invalid JSON]',
+        body: "[Invalid JSON]",
       };
     }
   }
@@ -148,13 +148,13 @@ export function createRestRequestLogger<
   TSelected extends keyof TTypes = keyof TTypes,
   TOutput = RestResponse,
 >(
-  config: RestRequestLoggerConfig = {},
+  config: RestRequestLoggerConfig = {}
 ): Middleware<RestInputWithModels<TTypes, TSelected>, TOutput> {
   const { defaultContext = {} } = config;
 
   return async (
     input: RestInputWithModels<TTypes, TSelected>,
-    next: (input?: RestInputWithModels<TTypes, TSelected>) => Promise<TOutput>,
+    next: (input?: RestInputWithModels<TTypes, TSelected>) => Promise<TOutput>
   ): Promise<TOutput> => {
     const startTime = Date.now();
     const { context } = input;
@@ -165,17 +165,17 @@ export function createRestRequestLogger<
         string
       >,
       true,
-      defaultContext,
+      defaultContext
     );
 
     try {
       const eventInfo = extractDetailedEventInfo(input, config);
-      logger.info('REST request received', {
+      logger.info("REST request received", {
         ...eventInfo,
         ...defaultContext,
-        requestId: context.awsRequestId,
-        functionName: context.functionName,
-        functionVersion: context.functionVersion,
+        requestId: context?.awsRequestId || undefined,
+        functionName: context?.functionName || undefined,
+        functionVersion: context?.functionVersion || undefined,
       });
 
       const result = await next(input);
@@ -184,19 +184,19 @@ export function createRestRequestLogger<
         const responseInfo = extractResponseInfo(result, config);
         const duration = Date.now() - startTime;
 
-        logger.info('REST response sent', {
+        logger.info("REST response sent", {
           ...responseInfo,
           ...defaultContext,
           duration: `${duration}ms`,
-          requestId: context.awsRequestId,
+          requestId: context?.awsRequestId || undefined,
         });
       }
 
       const duration = Date.now() - startTime;
-      logger.debug('REST request completed', {
+      logger.debug("REST request completed", {
         ...defaultContext,
         duration: `${duration}ms`,
-        requestId: context.awsRequestId,
+        requestId: context?.awsRequestId || undefined,
       });
 
       return result;

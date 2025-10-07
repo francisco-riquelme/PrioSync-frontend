@@ -1,6 +1,6 @@
-import { logger } from '../../log';
-import type { WebSocketInputWithModels, WebSocketEvent } from './types';
-import type { AmplifyModelType, QueryFactoryResult } from '../../queries/types';
+import { logger } from "../../log";
+import type { WebSocketInputWithModels, WebSocketEvent } from "./types";
+import type { AmplifyModelType, QueryFactoryResult } from "../../queries/types";
 
 /**
  * Build standardized log context for WebSocket operations
@@ -30,9 +30,10 @@ export function buildWebSocketContext<
     string,
     AmplifyModelType
   >,
+  TSelected extends string = string,
 >(
-  input: WebSocketInputWithModels<TTypes>,
-  additionalContext: Record<string, unknown> = {},
+  input: WebSocketInputWithModels<TTypes, TSelected>,
+  additionalContext: Record<string, unknown> = {}
 ): Record<string, unknown> {
   const { event, context } = input;
   const { requestContext } = event;
@@ -40,12 +41,12 @@ export function buildWebSocketContext<
   return {
     ...additionalContext,
     connectionId: requestContext.connectionId,
-    routeKey: requestContext.routeKey,
     eventType: requestContext.eventType,
     messageId: requestContext.messageId,
-    requestId: context.awsRequestId,
-    functionName: context.functionName,
-    functionVersion: context.functionVersion,
+    // Add null checks to prevent undefined values from being logged
+    requestId: context?.awsRequestId || undefined,
+    functionName: context?.functionName || undefined,
+    functionVersion: context?.functionVersion || undefined,
   };
 }
 
@@ -74,7 +75,7 @@ export function buildWebSocketContext<
  * ```
  */
 export function extractEventInfo(
-  event: WebSocketEvent,
+  event: WebSocketEvent
 ): Record<string, unknown> {
   const { requestContext, body } = event;
 
@@ -124,14 +125,14 @@ export function extractEventInfo(
  */
 export function parseJsonBody(
   body: string | undefined,
-  context: Record<string, unknown>,
+  context: Record<string, unknown>
 ): unknown {
   if (!body) return null;
 
   try {
     return JSON.parse(body);
   } catch (error) {
-    logger.warn('Failed to parse WebSocket message body', {
+    logger.warn("Failed to parse WebSocket message body", {
       ...context,
       bodyLength: body.length,
       error: error instanceof Error ? error.message : String(error),
@@ -175,7 +176,7 @@ export function setupStructuredLogging<
 >(
   input: WebSocketInputWithModels<TTypes>,
   forceStructuredLogging: boolean = true,
-  defaultContext: Record<string, unknown> = {},
+  defaultContext: Record<string, unknown> = {}
 ): void {
   if (forceStructuredLogging && !logger.isStructuredLoggingEnabled()) {
     logger.setStructuredLogging(true);
@@ -209,7 +210,7 @@ export function setupStructuredLogging<
  * ```
  */
 export function isMessageEvent(event: WebSocketEvent): boolean {
-  return event.requestContext.eventType === 'MESSAGE';
+  return event.requestContext.eventType === "MESSAGE";
 }
 
 /**
@@ -317,7 +318,7 @@ export function buildErrorContext<
 >(
   input: WebSocketInputWithModels<TTypes>,
   error: { code?: string; statusCode?: number } | null,
-  additionalContext: Record<string, unknown> = {},
+  additionalContext: Record<string, unknown> = {}
 ): Record<string, unknown> {
   const baseContext = buildWebSocketContext(input, additionalContext);
 
@@ -349,13 +350,13 @@ export function getModelsFromInput<
   TTypes extends Record<string, AmplifyModelType>,
   TSelected extends keyof TTypes & string = keyof TTypes & string,
 >(
-  input: WebSocketInputWithModels<TTypes, TSelected>,
+  input: WebSocketInputWithModels<TTypes, TSelected>
 ): {
   [K in TSelected]: QueryFactoryResult<K, TTypes>;
 } {
   if (!input.models) {
     throw new Error(
-      'Models not available. Ensure WebSocketModelInitializer middleware is used before this handler.',
+      "Models not available. Ensure WebSocketModelInitializer middleware is used before this handler."
     );
   }
 
@@ -382,7 +383,7 @@ export function getModelFromInput<
   TSelected extends keyof TTypes & string = keyof TTypes & string,
 >(
   input: WebSocketInputWithModels<TTypes, TSelected>,
-  modelName: T,
+  modelName: T
 ): QueryFactoryResult<T, TTypes> {
   const models = getModelsFromInput<TTypes, TSelected>(input);
 
@@ -390,7 +391,7 @@ export function getModelFromInput<
   if (!model) {
     const availableModels = Object.keys(models);
     throw new Error(
-      `Model '${String(modelName)}' not found. Available models: ${availableModels.join(', ')}`,
+      `Model '${String(modelName)}' not found. Available models: ${availableModels.join(", ")}`
     );
   }
 
@@ -443,7 +444,7 @@ export function getAvailableModelNames<
   try {
     const models = getModelsFromInput<TTypes, TSelected>(input);
     return Object.keys(models).filter(
-      key => models[key as TSelected],
+      (key) => models[key as TSelected]
     ) as TSelected[];
   } catch {
     return [];

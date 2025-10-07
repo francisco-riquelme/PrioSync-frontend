@@ -22,6 +22,7 @@ import type {
   PaginationResult,
   SortDirection,
   AmplifyAuthMode,
+  ModelFilter, // Add this import
 } from "./types";
 
 //#region MAIN FACTORY FUNCTION
@@ -97,6 +98,7 @@ async function createQueryFactory<
     delete: createDeleteOperation<Types, TName>(model, nameStr, cache),
     get: createGetOperation<Types, TName>(model, nameStr, cache),
     list: createListOperation<Types, TName>(model, nameStr, cache),
+    queryIndex: createIndexQueryOperation<Types, TName>(nameStr, cache),
   };
 
   return queryResult;
@@ -269,11 +271,12 @@ function createGetOperation<
   cache?: QueryCache
 ): (props: {
   input: Identifier<TName, Types>;
+  selectionSet?: SelectionSet;
 }) => Promise<ModelType<TName, Types>> {
   return async (props) => {
     try {
-      const { input } = props;
-      const cacheKey = `${nameStr}:get:${createObjectHash(input as Record<string, unknown>, nameStr)}`;
+      const { input, selectionSet } = props;
+      const cacheKey = `${nameStr}:get:${createObjectHash(input as Record<string, unknown>, nameStr)}${selectionSet ? `:${JSON.stringify(selectionSet)}` : ""}`;
 
       const cached = cache?.get<ModelType<TName, Types>>(cacheKey);
       if (cached) {
@@ -283,8 +286,15 @@ function createGetOperation<
 
       logOperation(nameStr, "get", input);
 
+      // Build request params
+      const inputObj = input as Record<string, unknown>;
+      const requestParams: Record<string, unknown> = { ...inputObj };
+      if (selectionSet) {
+        requestParams.selectionSet = selectionSet;
+      }
+
       // eslint-disable-next-line @typescript-eslint/no-explicit-any
-      const response = await (model as any).get(input);
+      const response = await (model as any).get(requestParams);
       const data = validateResponse({
         response,
         operation: "get",
@@ -294,7 +304,7 @@ function createGetOperation<
 
       cache?.set(cacheKey, data);
 
-      logSuccess("get", { nameStr, data });
+      logSuccess("get", { nameStr, data, selectionSet });
       return data as ModelType<TName, Types>;
     } catch (error) {
       throw throwError(`${nameStr} could not be retrieved`, error);
@@ -321,13 +331,14 @@ function createListOperation<
   nameStr: string,
   cache?: QueryCache
 ): (props?: {
-  filter?: Record<string, unknown>;
+  filter?: ModelFilter<ModelType<TName, Types>>;
   sortDirection?: SortDirection;
   limit?: number;
   nextToken?: string;
   authMode?: AmplifyAuthMode;
   followNextToken?: boolean;
   maxPages?: number;
+  selectionSet?: SelectionSet;
 }) => Promise<PaginationResult<ModelType<TName, Types>>> {
   return async (props = {}) => {
     try {
@@ -339,6 +350,7 @@ function createListOperation<
         authMode,
         followNextToken = false,
         maxPages = 10,
+        selectionSet,
       } = props;
 
       const cacheKeyData = {
@@ -347,6 +359,7 @@ function createListOperation<
         limit: limit || "all",
         nextToken: nextToken || "first",
         followNextToken,
+        selectionSet: selectionSet || [],
       };
       const cacheKey = `${nameStr}:list:${createObjectHash(cacheKeyData, nameStr)}`;
 
@@ -371,6 +384,7 @@ function createListOperation<
         limit,
         nextToken,
         followNextToken,
+        selectionSet,
       });
 
       const listParams: Record<string, unknown> = {};
@@ -378,6 +392,7 @@ function createListOperation<
       if (sortDirection) listParams.sortDirection = sortDirection;
       if (limit) listParams.limit = limit;
       if (authMode) listParams.authMode = authMode;
+      if (selectionSet) listParams.selectionSet = selectionSet;
 
       // Create operation function for pagination utility
       const listOperation = async (params: Record<string, unknown> = {}) => {
@@ -405,11 +420,131 @@ function createListOperation<
         hasNextToken: !!result.nextToken,
         scannedCount: result.scannedCount,
         followedPagination: followNextToken,
+        selectionSet,
       });
 
       return result;
     } catch (error) {
       throw throwError(`${nameStr} list could not be retrieved`, error);
+    }
+  };
+}
+//#endregion
+
+//#region INDEX QUERY OPERATION
+/**
+ * Creates an operation to execute named secondary index queries.
+ *
+ * Relies on Amplify client's generated `queries[queryField]` shape.
+ */
+function createIndexQueryOperation<
+  Types extends Record<string, AmplifyModelType>,
+  TName extends keyof Types & string,
+>(
+  nameStr: string,
+  cache?: QueryCache
+): (props: {
+  queryField: string;
+  input?: Record<string, unknown>;
+  filter?: ModelFilter<ModelType<TName, Types>>;
+  limit?: number;
+  nextToken?: string;
+  authMode?: AmplifyAuthMode;
+  followNextToken?: boolean;
+  maxPages?: number;
+  selectionSet?: SelectionSet;
+}) => Promise<PaginationResult<ModelType<TName, Types>>> {
+  return async (props) => {
+    const {
+      queryField,
+      input = {},
+      filter,
+      limit,
+      nextToken,
+      authMode,
+      followNextToken = false,
+      maxPages = 10,
+      selectionSet,
+    } = props;
+
+    try {
+      const manager = ClientManager.getInstance();
+      const client = await manager.getClient<{
+        models: Record<string, Record<string, unknown>>;
+      }>();
+
+      const model = client.models[nameStr];
+      if (!model) {
+        throw throwError(`Model '${nameStr}' not found in client models`);
+      }
+
+      const fn = model[queryField];
+      if (typeof fn !== "function") {
+        throw throwError(
+          `Index query '${queryField}' not found on model '${nameStr}'. Available methods: ${Object.keys(model).join(", ")}`
+        );
+      }
+
+      const opParams = (p: Record<string, unknown> = {}) => {
+        const base: Record<string, unknown> = { ...input };
+        if (filter) base.filter = filter;
+        if (limit) base.limit = limit;
+        if (authMode) base.authMode = authMode;
+        if (selectionSet) base.selectionSet = selectionSet;
+        if (p.nextToken) base.nextToken = p.nextToken;
+        return base;
+      };
+
+      const cacheKeyData = {
+        queryField,
+        input,
+        filter: filter || {},
+        limit: limit ?? "all",
+        nextToken: nextToken ?? "first",
+        followNextToken,
+        selectionSet: selectionSet || [],
+      };
+      const cacheKey = `${nameStr}:index:${createObjectHash(cacheKeyData, nameStr)}`;
+
+      if (!nextToken && !followNextToken && cache) {
+        const cached =
+          cache.get<PaginationResult<ModelType<TName, Types>>>(cacheKey);
+        if (cached) {
+          logSuccess("list", { nameStr, source: "cache", queryField });
+          return cached;
+        }
+      }
+
+      logOperation(nameStr, "list", {
+        index: queryField,
+        input,
+        filter,
+        limit,
+        selectionSet,
+      });
+
+      const op = async (p: Record<string, unknown> = {}) => fn(opParams(p));
+      const result = await handlePagination<ModelType<TName, Types>>(
+        op,
+        { nextToken },
+        { followNextToken, maxPages }
+      );
+
+      if (!nextToken && !followNextToken && cache) {
+        cache.set(cacheKey, result);
+      }
+
+      logSuccess("list", {
+        nameStr,
+        index: queryField,
+        count: result.items.length,
+        hasNextToken: !!result.nextToken,
+        selectionSet,
+      });
+
+      return result;
+    } catch (error) {
+      throw throwError(`${nameStr} index query failed`, error);
     }
   };
 }
@@ -438,3 +573,13 @@ function getModelFromClient(
   return modelRef;
 }
 //#endregion
+
+//#region SELECTION SET TYPES
+/**
+ * Selection set type for specifying which fields to retrieve.
+ * Supports dot notation for nested fields (e.g., 'author.email', 'posts.*')
+ */
+export type SelectionSet = readonly string[];
+//#endregion
+
+//#region QUERY FACTORY TYPES

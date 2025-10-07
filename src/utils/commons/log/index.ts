@@ -322,6 +322,9 @@ class Logger {
         console.debug(message);
       }
     }
+
+    // Add newline after each log message for better readability
+    console.log();
   }
 
   /**

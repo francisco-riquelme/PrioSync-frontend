@@ -9,6 +9,8 @@ import type {
   SortDirection,
   AmplifyAuthMode,
   PaginationResult,
+  ModelFilter,
+  SelectionSet,
 } from "./types";
 import { RestErrors } from "../middleware/rest/RestErrors";
 import {
@@ -38,10 +40,14 @@ export interface RestAwareQueryOperations<
    *
    * @param props - Object containing identifier input
    * @param props.input - Identifier for the record to retrieve
+   * @param props.selectionSet - Optional array of fields to retrieve (supports dot notation)
    * @returns Promise resolving to the retrieved record
    * @throws {RestError} 404 if record not found, 500 for other errors
    */
-  get(props: { input: Identifier<T, TTypes> }): Promise<ModelType<T, TTypes>>;
+  get(props: {
+    input: Identifier<T, TTypes>;
+    selectionSet?: SelectionSet;
+  }): Promise<ModelType<T, TTypes>>;
 
   /**
    * Create a new record with validation and conflict error handling.
@@ -87,13 +93,33 @@ export interface RestAwareQueryOperations<
    * @throws {RestError} 500 for any operation errors
    */
   list(props?: {
-    filter?: Record<string, unknown>;
+    filter?: ModelFilter<ModelType<T, TTypes>>;
     sortDirection?: SortDirection;
     limit?: number;
     nextToken?: string;
     authMode?: AmplifyAuthMode;
     followNextToken?: boolean;
     maxPages?: number;
+    selectionSet?: SelectionSet;
+  }): Promise<PaginationResult<ModelType<T, TTypes>>>;
+
+  /**
+   * Execute a named secondary index query with general error handling.
+   *
+   * @param props - Configuration for the index query
+   * @returns Promise resolving to paginated results
+   * @throws {RestError} 500 for any operation errors
+   */
+  queryIndex(props: {
+    queryField: string;
+    input?: Record<string, unknown>;
+    filter?: ModelFilter<ModelType<T, TTypes>>;
+    limit?: number;
+    nextToken?: string;
+    authMode?: AmplifyAuthMode;
+    followNextToken?: boolean;
+    maxPages?: number;
+    selectionSet?: SelectionSet;
   }): Promise<PaginationResult<ModelType<T, TTypes>>>;
 }
 
@@ -155,6 +181,11 @@ export function createRestAwareQueryOperations<
       context
     ),
     list: createRestAwareListOperation<TTypes, T>(rawModel, modelName, context),
+    queryIndex: createRestAwareQueryIndexOperation<TTypes, T>(
+      rawModel,
+      modelName,
+      context
+    ),
   };
 }
 
@@ -181,7 +212,10 @@ function createRestAwareGetOperation<
   rawModel: QueryFactoryResult<T, TTypes>,
   modelName: string,
   context: Record<string, unknown>
-): (props: { input: Identifier<T, TTypes> }) => Promise<ModelType<T, TTypes>> {
+): (props: {
+  input: Identifier<T, TTypes>;
+  selectionSet?: SelectionSet;
+}) => Promise<ModelType<T, TTypes>> {
   return async (props) => {
     try {
       return await rawModel.get(props);
@@ -189,7 +223,7 @@ function createRestAwareGetOperation<
       const message = getErrorMessage(error);
 
       if (isNotFoundError(message)) {
-        return RestErrors.notFound(
+        throw RestErrors.notFound(
           `${modelName} not found`,
           {
             ...context,
@@ -198,18 +232,18 @@ function createRestAwareGetOperation<
           },
           error
         );
+      } else {
+        throw RestErrors.internal(
+          `Failed to retrieve ${modelName}`,
+          {
+            ...context,
+            modelName,
+            operation: "get",
+            searchCriteria: props.input,
+          },
+          error
+        );
       }
-
-      return RestErrors.internal(
-        `Failed to retrieve ${modelName}`,
-        {
-          ...context,
-          modelName,
-          operation: "get",
-          searchCriteria: props.input,
-        },
-        error
-      );
     }
   };
 }
@@ -240,7 +274,7 @@ function createRestAwareCreateOperation<
       const message = getErrorMessage(error);
 
       if (isValidationError(message)) {
-        return RestErrors.validation(
+        throw RestErrors.validation(
           `Invalid data for ${modelName} creation`,
           {
             ...context,
@@ -249,10 +283,8 @@ function createRestAwareCreateOperation<
           },
           error
         );
-      }
-
-      if (isConflictError(message)) {
-        return RestErrors.conflict(
+      } else if (isConflictError(message)) {
+        throw RestErrors.conflict(
           `${modelName} already exists or conflicts with existing data`,
           {
             ...context,
@@ -261,18 +293,18 @@ function createRestAwareCreateOperation<
           },
           error
         );
+      } else {
+        throw RestErrors.internal(
+          `Failed to create ${modelName}`,
+          {
+            ...context,
+            modelName,
+            operation: "create",
+            inputData: props.input,
+          },
+          error
+        );
       }
-
-      return RestErrors.internal(
-        `Failed to create ${modelName}`,
-        {
-          ...context,
-          modelName,
-          operation: "create",
-          inputData: props.input,
-        },
-        error
-      );
     }
   };
 }
@@ -303,7 +335,7 @@ function createRestAwareUpdateOperation<
       const message = getErrorMessage(error);
 
       if (isNotFoundError(message)) {
-        return RestErrors.notFound(
+        throw RestErrors.notFound(
           `${modelName} not found for update`,
           {
             ...context,
@@ -312,10 +344,8 @@ function createRestAwareUpdateOperation<
           },
           error
         );
-      }
-
-      if (isValidationError(message)) {
-        return RestErrors.validation(
+      } else if (isValidationError(message)) {
+        throw RestErrors.validation(
           `Invalid data for ${modelName} update`,
           {
             ...context,
@@ -324,10 +354,8 @@ function createRestAwareUpdateOperation<
           },
           error
         );
-      }
-
-      if (isConflictError(message)) {
-        return RestErrors.conflict(
+      } else if (isConflictError(message)) {
+        throw RestErrors.conflict(
           `Update conflicts with existing ${modelName} data`,
           {
             ...context,
@@ -336,18 +364,18 @@ function createRestAwareUpdateOperation<
           },
           error
         );
+      } else {
+        throw RestErrors.internal(
+          `Failed to update ${modelName}`,
+          {
+            ...context,
+            modelName,
+            operation: "update",
+            updateData: props.input,
+          },
+          error
+        );
       }
-
-      return RestErrors.internal(
-        `Failed to update ${modelName}`,
-        {
-          ...context,
-          modelName,
-          operation: "update",
-          updateData: props.input,
-        },
-        error
-      );
     }
   };
 }
@@ -378,7 +406,7 @@ function createRestAwareDeleteOperation<
       const message = getErrorMessage(error);
 
       if (isNotFoundError(message)) {
-        return RestErrors.notFound(
+        throw RestErrors.notFound(
           `${modelName} not found for deletion`,
           {
             ...context,
@@ -387,18 +415,18 @@ function createRestAwareDeleteOperation<
           },
           error
         );
+      } else {
+        throw RestErrors.internal(
+          `Failed to delete ${modelName}`,
+          {
+            ...context,
+            modelName,
+            operation: "delete",
+            deleteCriteria: props.input,
+          },
+          error
+        );
       }
-
-      return RestErrors.internal(
-        `Failed to delete ${modelName}`,
-        {
-          ...context,
-          modelName,
-          operation: "delete",
-          deleteCriteria: props.input,
-        },
-        error
-      );
     }
   };
 }
@@ -422,25 +450,74 @@ function createRestAwareListOperation<
   modelName: string,
   context: Record<string, unknown>
 ): (props?: {
-  filter?: Record<string, unknown>;
+  filter?: ModelFilter<ModelType<T, TTypes>>;
   sortDirection?: SortDirection;
   limit?: number;
   nextToken?: string;
   authMode?: AmplifyAuthMode;
   followNextToken?: boolean;
   maxPages?: number;
+  selectionSet?: SelectionSet;
 }) => Promise<PaginationResult<ModelType<T, TTypes>>> {
   return async (props) => {
     try {
       return await rawModel.list(props);
     } catch (error) {
-      return RestErrors.internal(
+      throw RestErrors.internal(
         `Failed to list ${modelName} items`,
         {
           ...context,
           modelName,
           operation: "list",
           listParams: props,
+        },
+        error
+      );
+    }
+  };
+}
+
+/**
+ * Creates a REST-aware queryIndex operation with general error handling.
+ *
+ * @internal
+ * @template TTypes - Record of all available Amplify model types
+ * @template T - Model name as string literal
+ * @param rawModel - Original QueryFactory instance
+ * @param modelName - Human-readable model name for error messages
+ * @param context - Request context for error logging
+ * @returns Function that performs queryIndex operation with REST error handling
+ */
+function createRestAwareQueryIndexOperation<
+  TTypes extends Record<string, AmplifyModelType>,
+  T extends keyof TTypes & string,
+>(
+  rawModel: QueryFactoryResult<T, TTypes>,
+  modelName: string,
+  context: Record<string, unknown>
+): (props: {
+  queryField: string;
+  input?: Record<string, unknown>;
+  filter?: ModelFilter<ModelType<T, TTypes>>;
+  limit?: number;
+  nextToken?: string;
+  authMode?: AmplifyAuthMode;
+  followNextToken?: boolean;
+  maxPages?: number;
+  selectionSet?: SelectionSet;
+}) => Promise<PaginationResult<ModelType<T, TTypes>>> {
+  return async (props) => {
+    try {
+      return await rawModel.queryIndex(props);
+    } catch (error) {
+      throw RestErrors.internal(
+        `Failed to query ${modelName} index: ${props.queryField}`,
+        {
+          ...context,
+          modelName,
+          operation: "queryIndex",
+          queryField: props.queryField,
+          indexParams: props,
         },
         error
       );

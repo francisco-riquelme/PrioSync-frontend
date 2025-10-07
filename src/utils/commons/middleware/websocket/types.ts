@@ -1,12 +1,12 @@
-import type { Context, APIGatewayProxyEvent } from 'aws-lambda';
-import type { Middleware, MiddlewareChain } from '../middlewareChain';
+import type { Context, APIGatewayProxyWebsocketEventV2 } from "aws-lambda";
+import type { Middleware, MiddlewareChain } from "../middlewareChain";
 import type {
   AmplifyOutputs,
   AmplifyModelType,
   QueryFactoryResult,
-} from '../../queries/types';
-import type * as yup from 'yup';
-import type { CacheConfig } from '../../queries/types';
+} from "../../queries/types";
+import type * as yup from "yup";
+import type { CacheConfig } from "../../queries/types";
 
 /**
  * Enhanced error with middleware chain context
@@ -27,25 +27,9 @@ export interface MiddlewareError extends Error {
 
 /**
  * WebSocket event structure for API Gateway WebSocket APIs
- *
- * Extends the standard API Gateway proxy event with WebSocket-specific
- * request context information including connection ID and event type.
+ * Uses the official AWS Lambda WebSocket event type
  */
-export type WebSocketEvent = Omit<APIGatewayProxyEvent, 'body'> & {
-  /** WebSocket-specific request context */
-  requestContext: APIGatewayProxyEvent['requestContext'] & {
-    /** Unique identifier for the WebSocket connection */
-    connectionId: string;
-    /** Route key that triggered this event */
-    routeKey: string;
-    /** Unique identifier for the message (MESSAGE events only) */
-    messageId?: string;
-    /** Type of WebSocket event */
-    eventType: 'CONNECT' | 'DISCONNECT' | 'MESSAGE';
-  };
-  /** Message body for MESSAGE events (JSON string) */
-  body?: string;
-};
+export type WebSocketEvent = APIGatewayProxyWebsocketEventV2;
 
 /**
  * Standard WebSocket response structure
@@ -121,7 +105,7 @@ export interface WebSocketInputWithModels<
  */
 export interface IAMPolicyStatement {
   /** Whether to allow or deny the action */
-  Effect: 'Allow' | 'Deny';
+  Effect: "Allow" | "Deny";
   /** Action or actions to allow/deny */
   Action: string | string[];
   /** Resource or resources the action applies to */
