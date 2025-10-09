@@ -1,14 +1,17 @@
-import { logger } from "../../log";
-import { sanitizeObject } from "../utils/sanitization";
-import type { Middleware } from "../middlewareChain";
+import { logger } from '../../log';
+import { sanitizeObject } from '../utils/sanitization';
+import type { Middleware } from '../middlewareChain';
 import type {
   WebSocketResponse,
   WebSocketInputWithModels,
   WebSocketRequestLoggerConfig,
-  WebSocketHandlerReturn,
-} from "./types";
-import type { AmplifyModelType } from "../../queries/types";
-import { extractEventInfo, setupStructuredLogging } from "./utils";
+} from './types';
+import type { AmplifyModelType } from '../../queries/types';
+import {
+  extractEventInfo,
+  setupStructuredLogging,
+  isMessageEvent,
+} from './utils';
 
 /**
  * Maximum depth for object sanitization to prevent infinite recursion
@@ -30,15 +33,15 @@ const MAX_DEPTH = 10;
  */
 function extractResponseInfo(
   response: unknown,
-  config: WebSocketRequestLoggerConfig
+  config: WebSocketRequestLoggerConfig,
 ): Record<string, unknown> {
   const { excludeResponseFields = [] } = config;
 
   if (
     response &&
-    typeof response === "object" &&
-    "statusCode" in response &&
-    "body" in response
+    typeof response === 'object' &&
+    'statusCode' in response &&
+    'body' in response
   ) {
     const wsResponse = response as WebSocketResponse;
     const info: Record<string, unknown> = {
@@ -55,7 +58,7 @@ function extractResponseInfo(
         });
       } catch {
         info.bodyLength = wsResponse.body.length;
-        info.body = "[Non-JSON response]";
+        info.body = '[Non-JSON response]';
       }
     }
 
@@ -100,36 +103,36 @@ function extractDetailedEventInfo<
   TSelected extends keyof TTypes & string = keyof TTypes & string,
 >(
   input: WebSocketInputWithModels<TTypes, TSelected>,
-  config: WebSocketRequestLoggerConfig
+  config: WebSocketRequestLoggerConfig,
 ): Record<string, unknown> {
   const { event } = input;
   const {
-    logMessageBody = true, // Changed from false to true
+    logMessageBody = true,
     excludeEventFields = [],
     maxDepth = MAX_DEPTH,
   } = config;
 
   const basicInfo = extractEventInfo(event);
 
-  if (
-    logMessageBody &&
-    event.requestContext.eventType === "MESSAGE" &&
-    event.body
-  ) {
-    try {
-      const parsedBody = JSON.parse(event.body);
-      return {
-        ...basicInfo,
-        body: sanitizeObject(parsedBody, {
-          excludeFields: excludeEventFields,
-          maxDepth,
-        }),
-      };
-    } catch {
-      return {
-        ...basicInfo,
-        body: "[Invalid JSON]",
-      };
+  if (logMessageBody && isMessageEvent(event)) {
+    const bodyStr = (event as { body?: string }).body;
+
+    if (bodyStr) {
+      try {
+        const parsedBody = JSON.parse(bodyStr);
+        return {
+          ...basicInfo,
+          body: sanitizeObject(parsedBody, {
+            excludeFields: excludeEventFields,
+            maxDepth,
+          }),
+        };
+      } catch {
+        return {
+          ...basicInfo,
+          body: '[Invalid JSON]',
+        };
+      }
     }
   }
 
@@ -206,17 +209,17 @@ export function createWebSocketRequestLogger<
     AmplifyModelType
   >,
   TSelected extends keyof TTypes & string = keyof TTypes & string,
-  TOutput = WebSocketHandlerReturn,
+  TOutput = WebSocketResponse,
 >(
-  config: WebSocketRequestLoggerConfig = {}
+  config: WebSocketRequestLoggerConfig = {},
 ): Middleware<WebSocketInputWithModels<TTypes, TSelected>, TOutput> {
   const { defaultContext = {} } = config;
 
   return async (
     input: WebSocketInputWithModels<TTypes, TSelected>,
     next: (
-      input?: WebSocketInputWithModels<TTypes, TSelected>
-    ) => Promise<TOutput>
+      input?: WebSocketInputWithModels<TTypes, TSelected>,
+    ) => Promise<TOutput>,
   ): Promise<TOutput> => {
     const startTime = Date.now();
     const { context } = input;
@@ -227,12 +230,12 @@ export function createWebSocketRequestLogger<
         string
       >,
       true,
-      defaultContext
+      defaultContext,
     );
 
     try {
       const eventInfo = extractDetailedEventInfo(input, config);
-      logger.info("WebSocket request received", {
+      logger.info('WebSocket request received', {
         ...eventInfo,
         ...defaultContext,
         requestId: context?.awsRequestId || undefined,
@@ -246,7 +249,7 @@ export function createWebSocketRequestLogger<
         const responseInfo = extractResponseInfo(result, config);
         const duration = Date.now() - startTime;
 
-        logger.info("WebSocket response sent", {
+        logger.info('WebSocket response sent', {
           ...responseInfo,
           ...defaultContext,
           duration: `${duration}ms`,
@@ -255,7 +258,7 @@ export function createWebSocketRequestLogger<
       }
 
       const duration = Date.now() - startTime;
-      logger.debug("WebSocket request completed", {
+      logger.debug('WebSocket request completed', {
         ...defaultContext,
         duration: `${duration}ms`,
         requestId: context?.awsRequestId || undefined,

@@ -1,6 +1,7 @@
+/* eslint-disable max-lines */
 // QueryFactory.ts - Type-safe CRUD operations for AWS Amplify Data models
-import { throwError } from "../error";
-import { ClientManager } from "./ClientManager";
+import { throwError } from '../error';
+import { ClientManager } from './ClientManager';
 import {
   logOperation,
   logSuccess,
@@ -8,8 +9,12 @@ import {
   extractIdentifier,
   createObjectHash,
   handlePagination,
-} from "./helpers";
-import { getGlobalCache, type QueryCache } from "./cache";
+  buildListParams,
+  buildIndexParams,
+  checkQueryCache,
+  setQueryCache,
+} from './helpers';
+import { getGlobalCache, type QueryCache } from './cache';
 import type {
   AmplifyModelType,
   QueryFactoryConfig,
@@ -23,7 +28,7 @@ import type {
   SortDirection,
   AmplifyAuthMode,
   ModelFilter, // Add this import
-} from "./types";
+} from './types';
 
 //#region MAIN FACTORY FUNCTION
 /**
@@ -62,7 +67,7 @@ export function QueryFactory<
   Types extends Record<string, AmplifyModelType>,
   TName extends keyof Types & string,
 >(
-  config: QueryFactoryConfig<TName>
+  config: QueryFactoryConfig<TName>,
 ): Promise<QueryFactoryResult<TName, Types>> {
   return createQueryFactory<Types, TName>(config);
 }
@@ -81,9 +86,9 @@ async function createQueryFactory<
   Types extends Record<string, AmplifyModelType>,
   TName extends keyof Types & string,
 >(
-  config: QueryFactoryConfig<TName>
+  config: QueryFactoryConfig<TName>,
 ): Promise<QueryFactoryResult<TName, Types>> {
-  const { name, clientKey = "default", cache: cacheConfig } = config;
+  const { name, clientKey = 'default', cache: cacheConfig } = config;
   const nameStr = String(name);
 
   const cache = cacheConfig ? getGlobalCache(cacheConfig) : undefined;
@@ -123,27 +128,37 @@ function createCreateOperation<
 >(
   model: unknown,
   nameStr: string,
-  cache?: QueryCache
+  cache?: QueryCache,
 ): (props: {
   input: CreateInput<TName, Types>;
+  selectionSet?: SelectionSet;
 }) => Promise<ModelType<TName, Types>> {
-  return async (props) => {
+  return async props => {
     try {
-      const { input } = props;
-      logOperation(nameStr, "create", input);
+      const { input, selectionSet } = props;
+      logOperation(nameStr, 'create', input);
+
+      // Build request params - ensure input is treated as object
+      const requestParams: Record<string, unknown> = Object.assign(
+        {},
+        input as Record<string, unknown>,
+      );
 
       // eslint-disable-next-line @typescript-eslint/no-explicit-any
-      const response = await (model as any).create(input);
+      const response = await (model as any).create(
+        requestParams,
+        selectionSet ? { selectionSet } : undefined,
+      );
       const data = validateResponse({
         response,
-        operation: "create",
+        operation: 'create',
         name: nameStr,
         input,
       });
 
       cache?.invalidatePattern(`${nameStr}:list`);
 
-      logSuccess("create", { nameStr });
+      logSuccess('create', { nameStr });
       return data as ModelType<TName, Types>;
     } catch (error) {
       throw throwError(`${nameStr} could not be created`, error);
@@ -168,32 +183,42 @@ function createUpdateOperation<
 >(
   model: unknown,
   nameStr: string,
-  cache?: QueryCache
+  cache?: QueryCache,
 ): (props: {
   input: UpdateInput<TName, Types>;
+  selectionSet?: SelectionSet;
 }) => Promise<ModelType<TName, Types>> {
-  return async (props) => {
+  return async props => {
     try {
-      const { input } = props;
-      logOperation(nameStr, "update", input);
+      const { input, selectionSet } = props;
+      logOperation(nameStr, 'update', input);
+
+      // Build request params - ensure input is treated as object
+      const requestParams: Record<string, unknown> = Object.assign(
+        {},
+        input as Record<string, unknown>,
+      );
 
       // eslint-disable-next-line @typescript-eslint/no-explicit-any
-      const response = await (model as any).update(input);
+      const response = await (model as any).update(
+        requestParams,
+        selectionSet ? { selectionSet } : undefined,
+      );
       const data = validateResponse({
         response,
-        operation: "update",
+        operation: 'update',
         name: nameStr,
         input,
       });
 
       const identifier = extractIdentifier(
         input as Record<string, unknown>,
-        nameStr
+        nameStr,
       );
       cache?.delete(`${nameStr}:get:${createObjectHash(identifier, nameStr)}`);
       cache?.invalidatePattern(`${nameStr}:list`);
 
-      logSuccess("update", { nameStr });
+      logSuccess('update', { nameStr });
       return data as ModelType<TName, Types>;
     } catch (error) {
       throw throwError(`${nameStr} could not be updated`, error);
@@ -218,32 +243,42 @@ function createDeleteOperation<
 >(
   model: unknown,
   nameStr: string,
-  cache?: QueryCache
+  cache?: QueryCache,
 ): (props: {
   input: DeleteInput<TName, Types>;
+  selectionSet?: SelectionSet;
 }) => Promise<ModelType<TName, Types>> {
-  return async (props) => {
+  return async props => {
     try {
-      const { input } = props;
-      logOperation(nameStr, "delete", input);
+      const { input, selectionSet } = props;
+      logOperation(nameStr, 'delete', input);
+
+      // Build request params - ensure input is treated as object
+      const requestParams: Record<string, unknown> = Object.assign(
+        {},
+        input as Record<string, unknown>,
+      );
 
       // eslint-disable-next-line @typescript-eslint/no-explicit-any
-      const response = await (model as any).delete(input);
+      const response = await (model as any).delete(
+        requestParams,
+        selectionSet ? { selectionSet } : undefined,
+      );
       const data = validateResponse({
         response,
-        operation: "delete",
+        operation: 'delete',
         name: nameStr,
         input,
       });
 
       const identifier = extractIdentifier(
         input as Record<string, unknown>,
-        nameStr
+        nameStr,
       );
       cache?.delete(`${nameStr}:get:${createObjectHash(identifier, nameStr)}`);
       cache?.invalidatePattern(`${nameStr}:list`);
 
-      logSuccess("delete", { nameStr });
+      logSuccess('delete', { nameStr });
       return data as ModelType<TName, Types>;
     } catch (error) {
       throw throwError(`${nameStr} could not be deleted`, error);
@@ -268,43 +303,43 @@ function createGetOperation<
 >(
   model: unknown,
   nameStr: string,
-  cache?: QueryCache
+  cache?: QueryCache,
 ): (props: {
   input: Identifier<TName, Types>;
   selectionSet?: SelectionSet;
 }) => Promise<ModelType<TName, Types>> {
-  return async (props) => {
+  return async props => {
     try {
       const { input, selectionSet } = props;
-      const cacheKey = `${nameStr}:get:${createObjectHash(input as Record<string, unknown>, nameStr)}${selectionSet ? `:${JSON.stringify(selectionSet)}` : ""}`;
+      const cacheKey = `${nameStr}:get:${createObjectHash(input as Record<string, unknown>, nameStr)}${selectionSet ? `:${JSON.stringify(selectionSet)}` : ''}`;
 
       const cached = cache?.get<ModelType<TName, Types>>(cacheKey);
       if (cached) {
-        logSuccess("get", { nameStr, source: "cache" });
+        logSuccess('get', { nameStr, source: 'cache' });
         return cached;
       }
 
-      logOperation(nameStr, "get", input);
+      logOperation(nameStr, 'get', input);
 
       // Build request params
       const inputObj = input as Record<string, unknown>;
       const requestParams: Record<string, unknown> = { ...inputObj };
-      if (selectionSet) {
-        requestParams.selectionSet = selectionSet;
-      }
 
       // eslint-disable-next-line @typescript-eslint/no-explicit-any
-      const response = await (model as any).get(requestParams);
+      const response = await (model as any).get(
+        requestParams,
+        selectionSet ? { selectionSet } : undefined,
+      );
       const data = validateResponse({
         response,
-        operation: "get",
+        operation: 'get',
         name: nameStr,
         input,
       });
 
       cache?.set(cacheKey, data);
 
-      logSuccess("get", { nameStr, data, selectionSet });
+      logSuccess('get', { nameStr, data, selectionSet });
       return data as ModelType<TName, Types>;
     } catch (error) {
       throw throwError(`${nameStr} could not be retrieved`, error);
@@ -329,7 +364,7 @@ function createListOperation<
 >(
   model: unknown,
   nameStr: string,
-  cache?: QueryCache
+  cache?: QueryCache,
 ): (props?: {
   filter?: ModelFilter<ModelType<TName, Types>>;
   sortDirection?: SortDirection;
@@ -353,75 +388,58 @@ function createListOperation<
         selectionSet,
       } = props;
 
-      const cacheKeyData = {
-        filter: filter || {},
-        sortDirection: sortDirection || "asc",
-        limit: limit || "all",
-        nextToken: nextToken || "first",
-        followNextToken,
-        selectionSet: selectionSet || [],
-      };
-      const cacheKey = `${nameStr}:list:${createObjectHash(cacheKeyData, nameStr)}`;
-
-      // Only cache simple queries (no pagination, no filters)
-      if (!nextToken && !filter && !followNextToken && cache) {
-        const cached =
-          cache.get<PaginationResult<ModelType<TName, Types>>>(cacheKey);
-        if (cached) {
-          logSuccess("list", {
-            count: cached.items.length,
-            nameStr,
-            source: "cache",
-            hasNextToken: !!cached.nextToken,
-          });
-          return cached;
-        }
+      // Check cache
+      const isCacheable = !nextToken && !filter && !followNextToken && !!cache;
+      const cached = checkQueryCache<PaginationResult<ModelType<TName, Types>>>(
+        {
+          nameStr,
+          cacheType: 'list',
+          isCacheable,
+          hashData: { limit, sortDirection, selectionSet },
+          cache,
+        },
+      );
+      if (cached) {
+        logSuccess('list', { count: cached.items.length, source: 'cache' });
+        return cached;
       }
 
-      logOperation(nameStr, "list", {
+      logOperation(nameStr, 'list');
+
+      // Build params and execute pagination
+      const listParams = buildListParams({
         filter,
         sortDirection,
         limit,
-        nextToken,
-        followNextToken,
+        authMode,
         selectionSet,
       });
-
-      const listParams: Record<string, unknown> = {};
-      if (filter) listParams.filter = filter;
-      if (sortDirection) listParams.sortDirection = sortDirection;
-      if (limit) listParams.limit = limit;
-      if (authMode) listParams.authMode = authMode;
-      if (selectionSet) listParams.selectionSet = selectionSet;
-
-      // Create operation function for pagination utility
-      const listOperation = async (params: Record<string, unknown> = {}) => {
-        // eslint-disable-next-line @typescript-eslint/no-explicit-any
-        return (model as any).list(
-          Object.keys(params).length > 0 ? params : undefined
-        );
-      };
-
-      // Use pagination utility
       const result = await handlePagination<ModelType<TName, Types>>(
-        listOperation,
+        async (params = {}) =>
+          (
+            model as {
+              list: (p?: Record<string, unknown>) => Promise<{
+                data: ModelType<TName, Types>[];
+                errors?: unknown[];
+                nextToken?: string;
+              }>;
+            }
+          ).list(params),
         { ...listParams, nextToken },
-        { followNextToken, maxPages }
+        { followNextToken, maxPages },
       );
 
-      // Only cache simple queries
-      if (!nextToken && !filter && !followNextToken && cache) {
-        cache.set(cacheKey, result);
-      }
-
-      logSuccess("list", {
-        count: result.items.length,
+      // Cache result if eligible
+      setQueryCache({
         nameStr,
-        hasNextToken: !!result.nextToken,
-        scannedCount: result.scannedCount,
-        followedPagination: followNextToken,
-        selectionSet,
+        cacheType: 'list',
+        isCacheable,
+        hashData: { limit, sortDirection, selectionSet },
+        result,
+        cache,
       });
+
+      logSuccess('list', { count: result.items.length });
 
       return result;
     } catch (error) {
@@ -442,7 +460,7 @@ function createIndexQueryOperation<
   TName extends keyof Types & string,
 >(
   nameStr: string,
-  cache?: QueryCache
+  cache?: QueryCache,
 ): (props: {
   queryField: string;
   input?: Record<string, unknown>;
@@ -454,7 +472,7 @@ function createIndexQueryOperation<
   maxPages?: number;
   selectionSet?: SelectionSet;
 }) => Promise<PaginationResult<ModelType<TName, Types>>> {
-  return async (props) => {
+  return async props => {
     const {
       queryField,
       input = {},
@@ -468,6 +486,22 @@ function createIndexQueryOperation<
     } = props;
 
     try {
+      // Check cache
+      const isCacheable = !nextToken && !followNextToken && !!cache;
+      const cached = checkQueryCache<PaginationResult<ModelType<TName, Types>>>(
+        {
+          nameStr,
+          cacheType: 'index',
+          isCacheable,
+          hashData: { queryField, input, filter, limit, selectionSet },
+          cache,
+        },
+      );
+      if (cached) {
+        logSuccess('list', { source: 'cache' });
+        return cached;
+      }
+
       const manager = ClientManager.getInstance();
       const client = await manager.getClient<{
         models: Record<string, Record<string, unknown>>;
@@ -479,68 +513,39 @@ function createIndexQueryOperation<
       }
 
       const fn = model[queryField];
-      if (typeof fn !== "function") {
+      if (typeof fn !== 'function') {
         throw throwError(
-          `Index query '${queryField}' not found on model '${nameStr}'. Available methods: ${Object.keys(model).join(", ")}`
+          `Index query '${queryField}' not found on model '${nameStr}'. Available methods: ${Object.keys(model).join(', ')}`,
         );
       }
 
-      const opParams = (p: Record<string, unknown> = {}) => {
-        const base: Record<string, unknown> = { ...input };
-        if (filter) base.filter = filter;
-        if (limit) base.limit = limit;
-        if (authMode) base.authMode = authMode;
-        if (selectionSet) base.selectionSet = selectionSet;
-        if (p.nextToken) base.nextToken = p.nextToken;
-        return base;
-      };
+      logOperation(nameStr, 'list');
 
-      const cacheKeyData = {
-        queryField,
-        input,
-        filter: filter || {},
-        limit: limit ?? "all",
-        nextToken: nextToken ?? "first",
-        followNextToken,
-        selectionSet: selectionSet || [],
-      };
-      const cacheKey = `${nameStr}:index:${createObjectHash(cacheKeyData, nameStr)}`;
-
-      if (!nextToken && !followNextToken && cache) {
-        const cached =
-          cache.get<PaginationResult<ModelType<TName, Types>>>(cacheKey);
-        if (cached) {
-          logSuccess("list", { nameStr, source: "cache", queryField });
-          return cached;
-        }
-      }
-
-      logOperation(nameStr, "list", {
-        index: queryField,
-        input,
-        filter,
-        limit,
-        selectionSet,
-      });
-
-      const op = async (p: Record<string, unknown> = {}) => fn(opParams(p));
       const result = await handlePagination<ModelType<TName, Types>>(
-        op,
+        async (p = {}) =>
+          fn(
+            buildIndexParams(input, {
+              filter,
+              limit,
+              authMode,
+              selectionSet,
+              nextToken: p.nextToken as string | undefined,
+            }),
+          ),
         { nextToken },
-        { followNextToken, maxPages }
+        { followNextToken, maxPages },
       );
 
-      if (!nextToken && !followNextToken && cache) {
-        cache.set(cacheKey, result);
-      }
-
-      logSuccess("list", {
+      setQueryCache({
         nameStr,
-        index: queryField,
-        count: result.items.length,
-        hasNextToken: !!result.nextToken,
-        selectionSet,
+        cacheType: 'index',
+        isCacheable,
+        hashData: { queryField, input, filter, limit, selectionSet },
+        result,
+        cache,
       });
+
+      logSuccess('list', { count: result.items.length });
 
       return result;
     } catch (error) {
@@ -562,12 +567,12 @@ function createIndexQueryOperation<
  */
 function getModelFromClient(
   client: { models: Record<string, unknown> },
-  nameStr: string
+  nameStr: string,
 ): unknown {
   const modelRef = client.models[nameStr];
   if (!modelRef) {
     throw throwError(
-      `Model "${nameStr}" not found in client models. Available models: ${Object.keys(client.models).join(", ")}`
+      `Model "${nameStr}" not found in client models. Available models: ${Object.keys(client.models).join(', ')}`,
     );
   }
   return modelRef;

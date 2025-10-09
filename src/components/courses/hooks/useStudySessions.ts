@@ -3,18 +3,88 @@
 import { useState, useEffect, useCallback } from "react";
 import { getQueryFactories } from "@/utils/commons/queries";
 import { MainTypes } from "@/utils/api/schema";
+import type { SelectionSet } from "aws-amplify/data";
 
-// Import SesionEstudio type from MainTypes
+// Import types from MainTypes
 type SesionEstudio = MainTypes["SesionEstudio"]["type"];
+
+// Define selection sets as const arrays
+const sessionWithRelationsSelectionSet = [
+  "sesionEstudioId",
+  "fecha",
+  "hora_inicio",
+  "hora_fin",
+  "duracion_minutos",
+  "tipo",
+  "estado",
+  "google_event_id",
+  "recordatorios",
+  "usuarioId",
+  "cursoId",
+  "leccionId",
+  "Usuario.usuarioId",
+  "Usuario.email",
+  "Usuario.nombre",
+  "Usuario.apellido",
+  "Usuario.ultimo_login",
+  "Usuario.isValid",
+  "Curso.cursoId",
+  "Curso.titulo",
+  "Curso.descripcion",
+  "Curso.imagen_portada",
+  "Curso.duracion_estimada",
+  "Curso.nivel_dificultad",
+  "Curso.estado",
+  "Curso.progreso_estimado",
+  "Leccion.leccionId",
+  "Leccion.titulo",
+  "Leccion.descripcion",
+  "Leccion.duracion_minutos",
+  "Leccion.tipo",
+  "Leccion.url_contenido",
+  "Leccion.completada",
+  "Leccion.orden",
+  "Leccion.moduloId",
+] as const;
+
+const basicSessionSelectionSet = [
+  "sesionEstudioId",
+  "fecha",
+  "hora_inicio",
+  "hora_fin",
+  "duracion_minutos",
+  "tipo",
+  "estado",
+  "google_event_id",
+  "recordatorios",
+  "usuarioId",
+  "cursoId",
+  "leccionId",
+] as const;
+
+// Use SelectionSet to infer proper types
+type SessionWithRelations = SelectionSet<
+  SesionEstudio,
+  typeof sessionWithRelationsSelectionSet
+>;
+type BasicSession = SelectionSet<
+  SesionEstudio,
+  typeof basicSessionSelectionSet
+>;
+
+// Extract nested types for easier access
+type UsuarioFromSession = NonNullable<SessionWithRelations["Usuario"]>;
+type CursoFromSession = NonNullable<SessionWithRelations["Curso"]>;
+type LeccionFromSession = NonNullable<SessionWithRelations["Leccion"]>;
 
 // Type for creating a new session (without id and timestamps)
 export type CreateSesionEstudioInput = MainTypes["SesionEstudio"]["createType"];
 
 // Type for updating a session (partial fields except id)
 export type UpdateSesionEstudioInput = Partial<
-  Omit<SesionEstudio, "id" | "createdAt" | "updatedAt">
+  Omit<SesionEstudio, "sesionEstudioId" | "createdAt" | "updatedAt">
 > & {
-  id: string;
+  sesionEstudioId: string;
 };
 
 export interface UseStudySessionsReturn {
@@ -32,13 +102,40 @@ export interface UseStudySessionsReturn {
   getSession: (id: string) => Promise<SesionEstudio | null>;
 }
 
+interface UseStudySessionsParams {
+  cursoId?: string | number;
+  usuarioId?: string;
+}
+
+/**
+ * Hook for managing study sessions with full CRUD operations
+ * Always uses full selectionSet for complete data with relations
+ */
 export const useStudySessions = (
-  cursoId?: string | number,
-  usuarioId?: string
+  params?: UseStudySessionsParams | string | number
 ): UseStudySessionsReturn => {
   const [sessions, setSessions] = useState<SesionEstudio[]>([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
+
+  // Normalize params to object format
+  const normalizedParams: UseStudySessionsParams = (() => {
+    if (!params) {
+      return {};
+    }
+
+    if (typeof params === "object" && !Array.isArray(params)) {
+      return params;
+    }
+
+    if (typeof params === "string" || typeof params === "number") {
+      return { cursoId: params };
+    }
+
+    return {};
+  })();
+
+  const { cursoId, usuarioId } = normalizedParams;
 
   // Load study sessions (READ)
   const loadSessions = useCallback(async () => {
@@ -65,7 +162,7 @@ export const useStudySessions = (
         filter["usuarioId"] = { eq: usuarioId };
       }
 
-      // Get study sessions
+      // Always use full selectionSet for list operations
       const sessionsRes = await SesionEstudio.list({
         filter:
           Object.keys(filter).length > 0
@@ -73,6 +170,7 @@ export const useStudySessions = (
             : undefined,
         followNextToken: true,
         maxPages: 10,
+        selectionSet: sessionWithRelationsSelectionSet,
       });
 
       // Sort by fecha and hora_inicio
@@ -82,7 +180,7 @@ export const useStudySessions = (
         return dateA.getTime() - dateB.getTime();
       });
 
-      setSessions(sortedSessions);
+      setSessions(sortedSessions as unknown as SesionEstudio[]);
     } catch (err) {
       console.error("Error loading study sessions:", err);
       setError(
@@ -136,10 +234,10 @@ export const useStudySessions = (
           entities: ["SesionEstudio"],
         });
 
-        const { id, ...updateData } = data;
+        const { sesionEstudioId, ...updateData } = data;
         const updatedSession = await SesionEstudio.update({
           input: {
-            sesionEstudioId: id,
+            sesionEstudioId,
             ...updateData,
           },
         });
@@ -202,10 +300,13 @@ export const useStudySessions = (
           entities: ["SesionEstudio"],
         });
 
+        // Always use full selectionSet for single session fetch
         const session = await SesionEstudio.get({
           input: { sesionEstudioId: id },
+          selectionSet: sessionWithRelationsSelectionSet,
         });
-        return session;
+
+        return session as unknown as SesionEstudio;
       } catch (err) {
         console.error("Error fetching study session:", err);
         setError(

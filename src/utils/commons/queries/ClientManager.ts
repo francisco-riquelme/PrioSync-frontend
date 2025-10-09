@@ -1,13 +1,13 @@
 // ClientManager.ts
-import { generateClient } from "aws-amplify/data";
-import { Amplify } from "aws-amplify";
-import { logger } from "../log";
+import { generateClient } from 'aws-amplify/data';
+import { Amplify } from 'aws-amplify';
+import { logger } from '../log';
 import type {
   QueryFactoryResult,
   AmplifyModelType,
   CacheConfig,
   AmplifyOutputs,
-} from "./types";
+} from './types';
 
 //#region GLOBAL STATE AND UTILITIES
 /**
@@ -36,7 +36,7 @@ function extractIdentifierFields<
 >(schema: TSchema, entityName: string): string[] {
   try {
     const model = schema.models[entityName];
-    if (!model || typeof model !== "object") {
+    if (!model || typeof model !== 'object') {
       logger.warn(`Model ${entityName} not found in schema`);
       return [`${entityName.toLowerCase()}Id`];
     }
@@ -48,7 +48,7 @@ function extractIdentifierFields<
       return modelAny.identifier;
     }
 
-    if (modelAny.identifier && typeof modelAny.identifier === "string") {
+    if (modelAny.identifier && typeof modelAny.identifier === 'string') {
       return [modelAny.identifier];
     }
 
@@ -65,7 +65,7 @@ function extractIdentifierFields<
   } catch (error) {
     logger.warn(
       `Failed to extract identifier for ${entityName}, using convention`,
-      { error }
+      { error },
     );
     return [`${entityName.toLowerCase()}Id`];
   }
@@ -104,7 +104,7 @@ export class ClientManager {
     TSchema extends { models: Record<string, unknown> } = {
       models: Record<string, unknown>;
     },
-  >(clientKey: string = "default", schema?: TSchema): ClientManager {
+  >(clientKey: string = 'default', schema?: TSchema): ClientManager {
     if (!ClientManager.instances.has(clientKey)) {
       ClientManager.instances.set(clientKey, new ClientManager(clientKey));
     }
@@ -148,7 +148,7 @@ export class ClientManager {
       amplifyOutputs,
       schema,
       entities,
-      clientKey = "default",
+      clientKey = 'default',
       cache,
     } = config;
 
@@ -166,7 +166,7 @@ export class ClientManager {
           initializationPromise = null;
           const errorMessage =
             error instanceof Error ? error.message : String(error);
-          logger.error("Failed to initialize Amplify system", {
+          logger.error('Failed to initialize Amplify system', {
             error: errorMessage,
           });
           throw error;
@@ -177,7 +177,7 @@ export class ClientManager {
 
     // Get entity names to initialize
     const schemaModelNames = Object.keys(schema.models || {}).filter(
-      (key): key is string => typeof key === "string"
+      (key): key is string => typeof key === 'string',
     );
 
     const entitiesToInitialize: TSelected[] = entities
@@ -225,9 +225,9 @@ export class ClientManager {
    * Primarily used for testing scenarios.
    */
   public static resetAll(): void {
-    ClientManager.instances.forEach((manager) => manager.reset());
+    ClientManager.instances.forEach(manager => manager.reset());
     ClientManager.instances.clear();
-    logger.debug("All clients reset");
+    logger.debug('All clients reset');
   }
   //#endregion
 
@@ -239,7 +239,7 @@ export class ClientManager {
    * @param schema - Schema to use for typing
    */
   public setSchema<TSchema extends { models: Record<string, unknown> }>(
-    schema: TSchema
+    schema: TSchema,
   ): void {
     this.schema = schema;
   }
@@ -270,7 +270,7 @@ export class ClientManager {
     // Check if Amplify has been configured globally
     if (!globalAmplifyOutputs) {
       throw new Error(
-        "Amplify not configured. Call ClientManager.initializeQueries() with amplifyOutputs first."
+        'Amplify not configured. Call ClientManager.initializeQueries() with amplifyOutputs first.',
       );
     }
 
@@ -280,7 +280,7 @@ export class ClientManager {
     // After initialization, client should not be null
     if (this.client === null) {
       throw new Error(
-        `Client initialization failed for key: ${this.clientKey}`
+        `Client initialization failed for key: ${this.clientKey}`,
       );
     }
 
@@ -367,7 +367,7 @@ export class ClientManager {
     // Ensure Amplify is configured
     if (!globalAmplifyOutputs) {
       throw new Error(
-        "Amplify not configured. Call ClientManager.initializeQueries() with amplifyOutputs first."
+        'Amplify not configured. Call ClientManager.initializeQueries() with amplifyOutputs first.',
       );
     }
 
@@ -398,8 +398,8 @@ export class ClientManager {
     TSelected extends keyof TTypes & string,
   >(config: {
     entities: readonly TSelected[];
-    cache?: CacheConfig;
-    createMissing?: boolean;
+    cache?: CacheConfig | undefined;
+    createMissing?: boolean | undefined;
   }): Promise<{
     queries: Record<string, unknown>;
     missing: string[];
@@ -424,9 +424,9 @@ export class ClientManager {
 
     // Create missing entities if requested
     if (createMissing && missing.length > 0) {
-      const { QueryFactory } = await import("./QueryFactory");
+      const { QueryFactory } = await import('./QueryFactory');
 
-      logger.info(`Creating query factories for: ${missing.join(", ")}`, {
+      logger.info(`Creating query factories for: ${missing.join(', ')}`, {
         missing,
         clientKey: this.clientKey,
       });
@@ -446,7 +446,7 @@ export class ClientManager {
           const errorMessage =
             error instanceof Error ? error.message : String(error);
           throw new Error(
-            `Failed to initialize entity "${entityKey}": ${errorMessage}`
+            `Failed to initialize entity "${entityKey}": ${errorMessage}`,
           );
         }
       }
@@ -480,7 +480,7 @@ export class ClientManager {
             error: message,
           });
           throw new Error(
-            `Failed to generate client '${this.clientKey}': ${message}`
+            `Failed to generate client '${this.clientKey}': ${message}`,
           );
         }
       })();

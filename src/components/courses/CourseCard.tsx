@@ -7,10 +7,10 @@ import {
   Button,
   Chip,
 } from '@mui/material';
-import { Course } from '@/components/courses/hooks/useCourse';
+import { FilteredCourse } from '@/components/courses/hooks/useCourseFilters';
 
 interface CourseCardProps {
-  course: Course;
+  course: FilteredCourse;
   onCourseClick: (courseId: number | string) => void;
 }
 

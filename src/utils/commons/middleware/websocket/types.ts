@@ -1,12 +1,12 @@
-import type { Context, APIGatewayProxyWebsocketEventV2 } from "aws-lambda";
-import type { Middleware, MiddlewareChain } from "../middlewareChain";
+import type { Context, APIGatewayProxyWebsocketEventV2 } from 'aws-lambda';
+import type { Middleware, MiddlewareChain } from '../middlewareChain';
 import type {
   AmplifyOutputs,
   AmplifyModelType,
   QueryFactoryResult,
-} from "../../queries/types";
-import type * as yup from "yup";
-import type { CacheConfig } from "../../queries/types";
+} from '../../queries/types';
+import type * as yup from 'yup';
+import type { CacheConfig } from '../../queries/types';
 
 /**
  * Enhanced error with middleware chain context
@@ -27,7 +27,7 @@ export interface MiddlewareError extends Error {
 
 /**
  * WebSocket event structure for API Gateway WebSocket APIs
- * Uses the official AWS Lambda WebSocket event type
+ * For regular WebSocket routes (MESSAGE, CONNECT, DISCONNECT)
  */
 export type WebSocketEvent = APIGatewayProxyWebsocketEventV2;
 
@@ -98,61 +98,6 @@ export interface WebSocketInputWithModels<
 }
 
 /**
- * IAM policy statement structure
- *
- * Represents a single statement in an IAM policy document,
- * used for WebSocket API authorization.
- */
-export interface IAMPolicyStatement {
-  /** Whether to allow or deny the action */
-  Effect: "Allow" | "Deny";
-  /** Action or actions to allow/deny */
-  Action: string | string[];
-  /** Resource or resources the action applies to */
-  Resource: string | string[];
-  /** Optional conditions for the statement */
-  Condition?: Record<string, unknown>;
-}
-
-/**
- * IAM policy document structure
- *
- * Complete IAM policy document for WebSocket API authorization,
- * containing version information and policy statements.
- */
-export interface IAMPolicyDocument {
-  /** IAM policy language version */
-  Version: string;
-  /** Array of policy statements */
-  Statement: IAMPolicyStatement[];
-}
-
-/**
- * WebSocket authorizer response structure
- *
- * Response format for WebSocket custom authorizer functions,
- * including principal ID, policy document, and optional context.
- */
-export interface AuthorizerResponse {
-  /** Unique identifier for the principal being authorized */
-  principalId: string;
-  /** IAM policy document defining permissions */
-  policyDocument: IAMPolicyDocument;
-  /** Optional context data passed to the handler */
-  context?: Record<string, string | number | boolean>;
-  /** Optional usage identifier for API throttling */
-  usageIdentifierKey?: string;
-}
-
-/**
- * Union type for WebSocket handler return values
- *
- * WebSocket handlers can return either a standard response or
- * an authorizer response depending on the handler type.
- */
-export type WebSocketHandlerReturn = WebSocketResponse | AuthorizerResponse;
-
-/**
  * WebSocket-specific middleware chain type
  *
  * Type alias for middleware chains that work with WebSocket inputs
@@ -168,7 +113,7 @@ export type WebSocketMiddlewareChain<
     AmplifyModelType
   >,
   TSelected extends keyof TTypes & string = keyof TTypes & string,
-  TReturn = WebSocketHandlerReturn,
+  TReturn = WebSocketResponse,
 > = MiddlewareChain<WebSocketInputWithModels<TTypes, TSelected>, TReturn>;
 
 /**
@@ -187,7 +132,7 @@ export type WebSocketMiddleware<
     AmplifyModelType
   >,
   TSelected extends keyof TTypes & string = keyof TTypes & string,
-  TReturn = WebSocketHandlerReturn,
+  TReturn = WebSocketResponse,
 > = Middleware<WebSocketInputWithModels<TTypes, TSelected>, TReturn>;
 
 /**
@@ -280,7 +225,7 @@ export interface WebSocketRequestValidationConfig {
  * used for detailed error reporting.
  */
 export interface ValidationErrorDetail {
-  /** Field name that failed validation */
+  /** field name that failed validation */
   field: string;
   /** Human-readable error message */
   message: string;

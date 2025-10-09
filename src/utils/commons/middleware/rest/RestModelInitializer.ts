@@ -3,15 +3,15 @@ import type {
   RestInputWithModels,
   RestHandlerReturn,
   RestResponse,
-} from "./types";
-import type { Middleware } from "../middlewareChain";
-import type { AmplifyModelType, QueryFactoryResult } from "../../queries/types";
-import type { RestAwareQueryOperations } from "../../queries/restAware";
+} from './types';
+import type { Middleware } from '../middlewareChain';
+import type { AmplifyModelType, QueryFactoryResult } from '../../queries/types';
+import type { RestAwareQueryOperations } from '../../queries/restAware';
 import {
   initializeQueries,
   createRestAwareQueryOperations,
-} from "../../queries";
-import { buildRestContext, getErrorMessage } from "./utils";
+} from '../../queries';
+import { buildRestContext, getErrorMessage } from './utils';
 
 /**
  * Creates REST model initializer middleware
@@ -37,13 +37,13 @@ export function createRestModelInitializer<
   TSelected extends keyof TTypes & string = keyof TTypes & string,
   TReturn extends RestHandlerReturn = RestResponse,
 >(
-  config: RestModelInitializerConfig<TSchema, TTypes, TSelected>
+  config: RestModelInitializerConfig<TSchema, TTypes, TSelected>,
 ): Middleware<RestInputWithModels<TTypes, TSelected>, TReturn> {
   const {
     schema,
     amplifyOutputs,
     entities,
-    clientKey = "default",
+    clientKey = 'default',
     timeout = 5000,
     cache,
   } = config;
@@ -58,7 +58,7 @@ export function createRestModelInitializer<
       input as unknown as RestInputWithModels<
         Record<string, AmplifyModelType>,
         string
-      >
+      >,
     );
 
     // Initialize queries with cache configuration
@@ -73,8 +73,8 @@ export function createRestModelInitializer<
       new Promise<never>((_, reject) =>
         setTimeout(
           () => reject(new Error(`Initialization timeout after ${timeout}ms`)),
-          timeout
-        )
+          timeout,
+        ),
       ),
     ]);
 
@@ -87,7 +87,7 @@ export function createRestModelInitializer<
       restAwareModels[modelName as TSelected] = createRestAwareQueryOperations(
         rawModel as QueryFactoryResult<string, TTypes>,
         modelName,
-        context
+        context,
       );
     }
 
@@ -118,7 +118,7 @@ export function createRestModelInitializer<
         return {
           statusCode: 500,
           body: JSON.stringify({
-            error: "Model initialization failed",
+            error: 'Model initialization failed',
             message,
           }),
         } as TReturn;

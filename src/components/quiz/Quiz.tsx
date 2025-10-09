@@ -1,6 +1,6 @@
 'use client';
 
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useCallback } from 'react';
 import { Box, Stack } from '@mui/material';
 import {
   QuizInstructions,
@@ -14,9 +14,9 @@ import QuizAttemptsTable from './QuizAttemptsTable';
 import QuizReview from './QuizReview';
 import { useQuiz } from './hooks/useQuiz';
 import { useUser } from '@/contexts/UserContext';
-import { QuizAnalysis, StudyRecommendation } from '@/types/quiz';
+import { QuizAnalysis, StudyRecommendation, QuizQuestionView } from '@/types/quiz';
 import { QuizScreen } from './types';
-import { QuizAttempt } from './hooks/useQuiz';
+import { QuizAttempt } from './hooks/useQuizAttempts';
 
 export interface QuizProps {
   cuestionarioId?: string;
@@ -35,6 +35,7 @@ const Quiz: React.FC<QuizProps> = ({ cuestionarioId, cursoId }) => {
     error,
     submitQuiz,
     submitAnswer,
+    startQuizAttempt,
     continueAttempt,
     clearCurrentAttempt,
     attempts,
@@ -58,6 +59,24 @@ const Quiz: React.FC<QuizProps> = ({ cuestionarioId, cursoId }) => {
   const [reviewAttempt, setReviewAttempt] = useState<QuizAttempt | null>(null);
   const [reviewAnswers, setReviewAnswers] = useState<Record<string, number>>({});
 
+  // Define handleFinishQuiz before it's used in useEffect
+  const handleFinishQuiz = useCallback(async () => {
+    if (!quiz) return;
+
+    try {
+      // Submit quiz and get analysis
+      const analysis = await submitQuiz(selectedAnswers);
+      setQuizAnalysis(analysis);
+      setShowResults(true);
+      
+      // Refresh attempts to show the completed quiz
+      await refreshAttempts();
+    } catch (err) {
+      console.error("Error finishing quiz:", err);
+      alert("Error al finalizar el cuestionario");
+    }
+  }, [quiz, submitQuiz, selectedAnswers, refreshAttempts]);
+
   // Initialize timer when quiz loads
   useEffect(() => {
     if (quiz) {
@@ -72,13 +91,22 @@ const Quiz: React.FC<QuizProps> = ({ cuestionarioId, cursoId }) => {
     if (timeLeft <= 0) {
       handleFinishQuiz();
     }
-  }, [currentScreen, showResults, timeLeft]);
+  }, [currentScreen, showResults, timeLeft, handleFinishQuiz]);
 
   // Funciones de navegación
-  const handleStartQuiz = () => {
-    setCurrentScreen('quiz');
-    if (quiz) {
-      setTimeLeft(quiz.timeLimit * 60);
+  const handleStartQuiz = async () => {
+    try {
+      // Start a new quiz attempt
+      await startQuizAttempt();
+      
+      // Set screen and timer
+      setCurrentScreen('quiz');
+      if (quiz) {
+        setTimeLeft(quiz.timeLimit * 60);
+      }
+    } catch (err) {
+      console.error("Error starting quiz attempt:", err);
+      alert("Error al iniciar el cuestionario. Por favor, intenta nuevamente.");
     }
   };
 
@@ -92,7 +120,7 @@ const Quiz: React.FC<QuizProps> = ({ cuestionarioId, cursoId }) => {
 
     // Get the question to find the opcionId
     if (quiz) {
-      const question = quiz.questions.find(q => q.id === questionId);
+      const question = quiz.questions.find((q: QuizQuestionView) => q.id === questionId);
       if (question && question.opcionIds && question.opcionIds[answerIndex]) {
         const opcionId = question.opcionIds[answerIndex];
         
@@ -102,7 +130,7 @@ const Quiz: React.FC<QuizProps> = ({ cuestionarioId, cursoId }) => {
           
           // Check if all questions are now answered
           const allQuestionsAnswered = quiz.questions.every(
-            q => updatedAnswers[q.id] !== undefined
+            (q: QuizQuestionView) => updatedAnswers[q.id] !== undefined
           );
           
           // If all questions answered, automatically finish the quiz
@@ -129,23 +157,6 @@ const Quiz: React.FC<QuizProps> = ({ cuestionarioId, cursoId }) => {
   const handleNextQuestion = () => {
     if (quiz && currentQuestionIndex < quiz.questions.length - 1) {
       setCurrentQuestionIndex(prev => prev + 1);
-    }
-  };
-
-  const handleFinishQuiz = async () => {
-    if (!quiz) return;
-
-    try {
-      // Submit quiz and get analysis
-      const analysis = await submitQuiz(selectedAnswers);
-      setQuizAnalysis(analysis);
-      setShowResults(true);
-      
-      // Refresh attempts to show the completed quiz
-      await refreshAttempts();
-    } catch (err) {
-      console.error("Error finishing quiz:", err);
-      alert("Error al finalizar el cuestionario");
     }
   };
 

@@ -56,20 +56,11 @@ export {
   getErrorMessage,
   getErrorStack,
   parseJsonBody,
-  parseJsonBodyWithFallback,
-  createValidationError,
   getRequestId,
   buildErrorContext,
+  getModelsFromInput,
   createSuccessResponse,
   createErrorResponse,
-  HTTP_STATUS,
-  ERROR_CODES,
-  isDevelopment,
-  initializeRestMiddleware,
-  getModelsFromInput,
-  getModelFromInput,
-  hasModel,
-  getAvailableModelNames,
 } from './utils';
 
 export {
@@ -96,9 +87,3 @@ export type {
 } from './types';
 
 export type { RestError, RestErrorContext } from './RestErrors';
-
-export {
-  throwError,
-  extractErrorMessage,
-  createErrorContext,
-} from '../../error';

@@ -1,5 +1,5 @@
-import { LRUCache } from "lru-cache";
-import type { CacheConfig, CacheStats } from "./types";
+import { LRUCache } from 'lru-cache';
+import type { CacheConfig, CacheStats } from './types';
 
 /**
  * Query cache with LRU eviction and memory limits
@@ -13,7 +13,7 @@ export class QueryCache {
 
   constructor(config: CacheConfig = {}) {
     this.enabled = config.enabled ?? true;
-    this.keyPrefix = config.keyPrefix || "query";
+    this.keyPrefix = config.keyPrefix || 'query';
 
     // eslint-disable-next-line @typescript-eslint/no-explicit-any
     this.cache = new LRUCache<string, any>({
@@ -85,7 +85,7 @@ export class QueryCache {
       }
     }
 
-    keysToDelete.forEach((key) => this.cache.delete(key));
+    keysToDelete.forEach(key => this.cache.delete(key));
   }
 
   /**
@@ -121,7 +121,7 @@ export function getGlobalCache(config?: CacheConfig): QueryCache {
     globalCache = new QueryCache({
       maxSize: 50 * 1024 * 1024, // 50MB total for all models
       ttl: 5 * 60 * 1000, // 5 minutes
-      keyPrefix: "global",
+      keyPrefix: 'global',
       ...config,
     });
   }

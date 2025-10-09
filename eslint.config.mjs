@@ -20,6 +20,10 @@ const eslintConfig = [
       "next-env.d.ts",
       "test-transcription-api.js",
       "test-transcription-complete.js",
+      "**/*.test.ts",
+      "**/*.test.tsx",
+      "**/*.test.js",
+      "**/*.test.jsx",
     ],
   },
 ];

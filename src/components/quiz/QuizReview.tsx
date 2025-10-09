@@ -17,7 +17,7 @@ import {
   ArrowBack 
 } from '@mui/icons-material';
 import { QuizQuestionView, QuizDataView } from '@/types/quiz';
-import { QuizAttempt } from './hooks/useQuiz';
+import { QuizAttempt } from './hooks/useQuizAttempts';
 
 interface QuizReviewProps {
   quiz: QuizDataView;

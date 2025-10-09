@@ -1,6 +1,7 @@
 'use client';
 
 import { useRouter } from 'next/navigation';
+import { useEffect } from 'react';
 import {
   Box,
   Typography,
@@ -12,23 +13,35 @@ import {
   InputLabel,
   CircularProgress,
   Alert,
+  Button,
 } from '@mui/material';
-import { Search as SearchIcon } from '@mui/icons-material';
+import { Search as SearchIcon, Clear as ClearIcon } from '@mui/icons-material';
 import { useCourseFilters } from '@/components/courses/hooks/useCourseFilters';
 import { CourseCard } from './CourseCard';
-import { useCourse } from '@/components/courses/hooks/useCourse';
 
 export default function CoursesList() {
   const router = useRouter();
   
-  // Use custom hook for filter controls
-  const { filters, actions } = useCourseFilters();
-  
-  // Use unified course hook to fetch all courses
-  const { courses, loading, error } = useCourse();
+  // Use custom hook for filter controls and filtered courses
+  const { 
+    filters, 
+    actions, 
+    filteredCourses, 
+    loading, 
+    error 
+  } = useCourseFilters();
+
+  // Apply filters when component mounts or filters change
+  useEffect(() => {
+    actions.applyFilters();
+  }, [filters.searchTerm, filters.levelFilter, filters.durationFilter]);
 
   const handleCourseClick = (courseId: number | string) => {
     router.push(`/courses/${courseId}`);
+  };
+
+  const handleClearFilters = () => {
+    actions.resetFilters();
   };
 
   return (
@@ -45,8 +58,8 @@ export default function CoursesList() {
         Cursos
       </Typography>
 
-      {/* Filtros (non-functional UI) */}
-      <Box sx={{ display: 'flex', gap: 2, mb: 4, flexWrap: 'wrap' }}>
+      {/* Filtros */}
+      <Box sx={{ display: 'flex', gap: 2, mb: 4, flexWrap: 'wrap', alignItems: 'center' }}>
         <TextField
           placeholder="Buscar cursos..."
           value={filters.searchTerm}
@@ -83,11 +96,20 @@ export default function CoursesList() {
             onChange={(e) => actions.setDurationFilter(e.target.value)}
           >
             <MenuItem value="todos">Todos</MenuItem>
-            <MenuItem value="corto">Corto (&lt;20h)</MenuItem>
-            <MenuItem value="medio">Medio (20-40h)</MenuItem>
-            <MenuItem value="largo">Largo (&gt;40h)</MenuItem>
+            <MenuItem value="corto">Corto (&lt;30h)</MenuItem>
+            <MenuItem value="medio">Medio (30-120h)</MenuItem>
+            <MenuItem value="largo">Largo (&gt;120h)</MenuItem>
           </Select>
         </FormControl>
+
+        <Button
+          variant="outlined"
+          startIcon={<ClearIcon />}
+          onClick={handleClearFilters}
+          sx={{ minWidth: 120 }}
+        >
+          Limpiar
+        </Button>
       </Box>
 
       {/* Estados de loading y error */}
@@ -107,7 +129,7 @@ export default function CoursesList() {
       {!loading && !error && (
         <>
           {/* Lista de cursos */}
-          {courses.length > 0 ? (
+          {filteredCourses.length > 0 ? (
             <Box 
               sx={{ 
                 display: 'grid',
@@ -115,7 +137,7 @@ export default function CoursesList() {
                 gap: 3
               }}
             >
-              {courses.map((course) => (
+              {filteredCourses.map((course) => (
                 <CourseCard 
                   key={course.cursoId} 
                   course={course} 
@@ -126,7 +148,10 @@ export default function CoursesList() {
           ) : (
             <Box sx={{ textAlign: 'center', py: 8 }}>
               <Typography variant="h6" color="text.secondary">
-                No hay cursos disponibles en este momento
+                No se encontraron cursos con los filtros aplicados
+              </Typography>
+              <Typography variant="body2" color="text.secondary" sx={{ mt: 1 }}>
+                Intenta ajustar los filtros o limpiar la búsqueda
               </Typography>
             </Box>
           )}

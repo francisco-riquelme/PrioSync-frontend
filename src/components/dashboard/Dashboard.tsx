@@ -14,16 +14,22 @@ import {
   CircularProgress,
 } from '@mui/material';
 import { Person as PersonIcon } from '@mui/icons-material';
-import { useAuth } from '@/components/auth/hooks/auth';
-import { useUsuario } from '@/components/courses/hooks/useUsuario';
-import { MainTypes } from '@/utils/api/schema';
-
-type InscripcionCurso = MainTypes["InscripcionCurso"]["type"];
 
 export default function Dashboard() {
   const router = useRouter();
-  const { authSession } = useAuth();
-  const { usuario, inscripciones, loading, error } = useUsuario(authSession.user?.userId);
+  
+  // Static user data for now
+  const usuario = {
+    nombre: 'Usuario',
+    apellido: null,
+  };
+
+  const cursos = [
+    { cursoId: '1', titulo: 'Curso de Ejemplo 1', progreso_estimado: 45 },
+    { cursoId: '2', titulo: 'Curso de Ejemplo 2', progreso_estimado: 70 },
+    { cursoId: '3', titulo: 'Curso de Ejemplo 3', progreso_estimado: 20 },
+  ];
+
   const [aiAdvice, setAiAdvice] = useState<string>('**Evalúa tu conocimiento activamente sin consultar tus apuntes para identificar lagunas y reforzar el aprendizaje.**');
   const [loadingAdvice, setLoadingAdvice] = useState(false);
 
@@ -64,29 +70,9 @@ export default function Dashboard() {
     router.push('/profile');
   };
 
-  // Show loading state
-  if (loading || authSession.isLoading || !usuario) {
-    return (
-      <Box sx={{ display: 'flex', justifyContent: 'center', alignItems: 'center', height: '50vh' }}>
-        <CircularProgress />
-      </Box>
-    );
-  }
-
-  // Show error state
-  if (error) {
-    return (
-      <Box sx={{ display: 'flex', justifyContent: 'center', alignItems: 'center', height: '50vh' }}>
-        <Typography color="error">{error}</Typography>
-      </Box>
-    );
-  }
 
   // Prepare user data
-  const userName = usuario?.nombre
-    ? `${usuario.nombre}${usuario.apellido ? " " + usuario.apellido : ""}`
-    : "Usuario";
-  const greeting = `¡Hola, ${usuario?.nombre || "Usuario"}!`;
+  const greeting = `¡Hola, ${usuario.nombre}!`;
 
   return (
     <Box>
@@ -159,22 +145,20 @@ export default function Dashboard() {
               Progreso de Cursos
             </Typography>
             <Box sx={{ mt: 2 }}>
-              {inscripciones.length === 0 ? (
+              {cursos.length === 0 ? (
                 <Typography variant="body2" color="text.secondary">
-                  No tienes cursos inscritos aún.
+                  No tienes cursos creados aún.
                 </Typography>
               ) : (
-                inscripciones.map((inscripcion: InscripcionCurso) => {
-                  // Calculate progress based on estado
-                  const progress = inscripcion.estado === 'completado' ? 100
-                                : inscripcion.estado === 'en_progreso' ? 50
-                                : 0;
+                cursos.map((curso) => {
+                  // Use progreso_estimado from curso or default to 0
+                  const progress = curso.progreso_estimado || 0;
                   
                   return (
-                    <Box key={inscripcion.cursoId} sx={{ mb: 2 }}>
+                    <Box key={curso.cursoId} sx={{ mb: 2 }}>
                       <Box sx={{ display: 'flex', justifyContent: 'space-between', mb: 0.5 }}>
                         <Typography variant="body2" color="text.secondary">
-                          {inscripcion.cursoId}
+                          {curso.titulo}
                         </Typography>
                         <Typography variant="body2" color="text.secondary">
                           {progress}%

@@ -23,7 +23,7 @@ import {
   Replay,
   Visibility,
 } from '@mui/icons-material';
-import { QuizAttempt } from './hooks/useQuiz';
+import { QuizAttempt } from './hooks/useQuizAttempts';
 
 interface QuizAttemptsTableProps {
   attempts: QuizAttempt[];

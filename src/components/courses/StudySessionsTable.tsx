@@ -32,7 +32,11 @@ interface StudySessionsTableProps {
 }
 
 export default function StudySessionsTable({ courseId, usuarioId }: StudySessionsTableProps) {
-  const { sessions, loading, error,  } = useStudySessions(courseId, usuarioId);
+  // Fix: Pass parameters as an object to match the updated hook interface
+  const { sessions, loading, error } = useStudySessions({ 
+    cursoId: courseId, 
+    usuarioId 
+  });
 
   const formatTime = (time: string) => {
     // Format time from HH:MM:SS to HH:MM

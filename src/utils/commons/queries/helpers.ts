@@ -1,12 +1,16 @@
-import { logger } from "../log";
-import { createHash } from "node:crypto";
+/* eslint-disable max-lines */
+import { logger } from '../log';
+import CryptoJS from 'crypto-js';
 import type {
   OperationType,
   AmplifyModelType,
   CacheConfig,
   QueryFactoryResult,
-} from "./types";
-import { ClientManager } from "./ClientManager";
+  SortDirection,
+  AmplifyAuthMode,
+} from './types';
+import { ClientManager } from './ClientManager';
+import type { QueryCache } from './cache';
 
 //#region IDENTIFIER AND DATA EXTRACTION UTILITIES
 /**
@@ -35,7 +39,7 @@ import { ClientManager } from "./ClientManager";
  */
 export const extractIdentifier = (
   input: Record<string, unknown>,
-  entityName: string
+  entityName: string,
 ): Record<string, unknown> => {
   const identifierFields = ClientManager.getIdentifierFields(entityName);
   const identifier: Record<string, unknown> = {};
@@ -62,7 +66,7 @@ export const extractIdentifier = (
     Object.keys(identifier).length < identifierFields.length
   ) {
     const missingFields = identifierFields.filter(
-      (field) => !(field in identifier)
+      field => !(field in identifier),
     );
     logger.warn(`Incomplete composite key for ${entityName}`, {
       found: Object.keys(identifier),
@@ -96,18 +100,18 @@ export const extractIdentifier = (
 export const logOperation = (
   nameStr: string,
   operation: OperationType,
-  data?: unknown
+  data?: unknown,
 ): void => {
   const presentParticiple =
-    operation === "create"
-      ? "Creating"
-      : operation === "update"
-        ? "Updating"
-        : operation === "delete"
-          ? "Deleting"
-          : operation === "get"
-            ? "Getting"
-            : "Listing";
+    operation === 'create'
+      ? 'Creating'
+      : operation === 'update'
+        ? 'Updating'
+        : operation === 'delete'
+          ? 'Deleting'
+          : operation === 'get'
+            ? 'Getting'
+            : 'Listing';
 
   logger.info(`${presentParticiple} ${nameStr}`, {
     operation,
@@ -134,18 +138,18 @@ export const logOperation = (
  */
 export const logSuccess = (
   operation: OperationType,
-  additionalInfo?: unknown
+  additionalInfo?: unknown,
 ): void => {
   const pastTense =
-    operation === "create"
-      ? "created"
-      : operation === "update"
-        ? "updated"
-        : operation === "delete"
-          ? "deleted"
-          : operation === "get"
-            ? "retrieved"
-            : "listed";
+    operation === 'create'
+      ? 'created'
+      : operation === 'update'
+        ? 'updated'
+        : operation === 'delete'
+          ? 'deleted'
+          : operation === 'get'
+            ? 'retrieved'
+            : 'listed';
 
   logger.info(`Successfully ${pastTense}`, {
     operation,
@@ -200,7 +204,7 @@ export const validateResponse = <R>(props: {
   }
 
   // Validate that response has the expected structure
-  if (typeof response !== "object" || !("data" in response)) {
+  if (typeof response !== 'object' || !('data' in response)) {
     const errorMsg = `Invalid response structure for ${name} ${operation}`;
     logger.error(errorMsg, { response, input });
     throw new Error(errorMsg);
@@ -210,14 +214,14 @@ export const validateResponse = <R>(props: {
 
   // Check for GraphQL errors
   if (errors && errors.length > 0) {
-    const errorMessages = errors.map((error) => {
+    const errorMessages = errors.map(error => {
       const message =
-        (error as { message?: string })?.message || "Unknown error";
+        (error as { message?: string })?.message || 'Unknown error';
       const errorMessage = `GraphQL error during ${name} ${operation}: ${message}`;
       logger.error(errorMessage, { specificError: error, input });
       return errorMessage;
     });
-    throw new Error(errorMessages.join("\n"));
+    throw new Error(errorMessages.join('\n'));
   }
 
   // Validate data presence
@@ -279,7 +283,7 @@ export function getQueryFactories<
 }): Promise<{
   [K in TSelected]: QueryFactoryResult<K, TTypes>;
 }> {
-  const { clientKey = "default", ...rest } = config;
+  const { clientKey = 'default', ...rest } = config;
   const manager = ClientManager.getInstance(clientKey);
   return manager.getQueryFactories<TTypes, TSelected>(rest);
 }
@@ -328,7 +332,7 @@ export function getErrorMessage(error: unknown): string {
  * ```
  */
 export function isNotFoundError(message: string): boolean {
-  return message.includes("No data returned for");
+  return message.includes('No data returned for');
 }
 
 /**
@@ -392,7 +396,7 @@ export function isValidationError(message: string): boolean {
     /constraint/i,
     /format/i,
   ];
-  return validationPatterns.some((pattern) => pattern.test(message));
+  return validationPatterns.some(pattern => pattern.test(message));
 }
 
 /**
@@ -454,7 +458,7 @@ export function isConflictError(message: string): boolean {
     /resource.*conflict/i,
     /operation.*conflict/i,
   ];
-  return conflictPatterns.some((pattern) => pattern.test(message));
+  return conflictPatterns.some(pattern => pattern.test(message));
 }
 //#endregion
 
@@ -481,7 +485,7 @@ export function isConflictError(message: string): boolean {
  */
 export function createObjectHash(
   obj: Record<string, unknown>,
-  entityName: string
+  entityName: string,
 ): string {
   try {
     const identifierFields = ClientManager.getIdentifierFields(entityName);
@@ -497,17 +501,157 @@ export function createObjectHash(
       Object.keys(identifierData).length > 0 ? identifierData : obj;
 
     const keys = Object.keys(dataToHash).sort();
-    const pairs = keys.map((key) => `${key}:${String(dataToHash[key])}`);
-    const serialized = pairs.join("|");
+    const pairs = keys.map(key => `${key}:${String(dataToHash[key])}`);
+    const serialized = pairs.join('|');
 
-    return createHash("sha256").update(serialized).digest("hex");
+    return CryptoJS.SHA256(serialized).toString();
   } catch (error) {
     logger.warn(
       `Hash generation failed for ${entityName}, falling back to JSON`,
-      { error }
+      { error },
     );
-    return createHash("sha256").update(JSON.stringify(obj)).digest("hex");
+    return CryptoJS.SHA256(JSON.stringify(obj)).toString();
   }
+}
+//#endregion
+
+//#region QUERY PARAMETER BUILDERS
+/**
+ * Builds parameters object for list operations.
+ *
+ * @param params - Configuration for list parameters
+ * @returns Object containing only the defined parameters
+ *
+ * @example
+ * ```typescript
+ * const params = buildListParams({
+ *   filter: { status: { eq: 'active' } },
+ *   limit: 50,
+ *   sortDirection: 'desc'
+ * });
+ * // Returns: { filter: {...}, limit: 50, sortDirection: 'desc' }
+ * ```
+ */
+export function buildListParams(params: {
+  filter?: unknown | undefined;
+  sortDirection?: SortDirection | undefined;
+  limit?: number | undefined;
+  authMode?: AmplifyAuthMode | undefined;
+  selectionSet?: readonly string[] | undefined;
+}): Record<string, unknown> {
+  const result: Record<string, unknown> = {};
+  if (params.filter) result.filter = params.filter;
+  if (params.sortDirection) result.sortDirection = params.sortDirection;
+  if (params.limit) result.limit = params.limit;
+  if (params.authMode) result.authMode = params.authMode;
+  if (params.selectionSet) result.selectionSet = params.selectionSet;
+  return result;
+}
+
+/**
+ * Builds parameters for index query operations.
+ *
+ * @param input - Base input object for the query
+ * @param params - Additional parameters to merge
+ * @returns Combined parameter object
+ *
+ * @example
+ * ```typescript
+ * const params = buildIndexParams(
+ *   { userId: "123" },
+ *   { limit: 20, filter: { active: { eq: true } } }
+ * );
+ * // Returns: { userId: "123", limit: 20, filter: {...} }
+ * ```
+ */
+export function buildIndexParams(
+  input: Record<string, unknown>,
+  params: {
+    filter?: unknown | undefined;
+    limit?: number | undefined;
+    authMode?: AmplifyAuthMode | undefined;
+    selectionSet?: readonly string[] | undefined;
+    nextToken?: string | undefined;
+  },
+): Record<string, unknown> {
+  const base: Record<string, unknown> = { ...input };
+  if (params.filter) base.filter = params.filter;
+  if (params.limit) base.limit = params.limit;
+  if (params.authMode) base.authMode = params.authMode;
+  if (params.selectionSet) base.selectionSet = params.selectionSet;
+  if (params.nextToken) base.nextToken = params.nextToken;
+  return base;
+}
+//#endregion
+
+//#region CACHE UTILITIES
+/**
+ * Generic cache check for query operations.
+ *
+ * Checks the cache for a previously stored query result based on
+ * the operation type and hash of query parameters.
+ *
+ * @template T - Type of the cached result
+ * @param config - Cache check configuration
+ * @returns Cached result if available, null otherwise
+ *
+ * @example
+ * ```typescript
+ * const cached = checkQueryCache<PaginationResult<User>>({
+ *   nameStr: "User",
+ *   cacheType: "list",
+ *   isCacheable: true,
+ *   hashData: { limit: 50 },
+ *   cache: queryCache
+ * });
+ * ```
+ */
+export function checkQueryCache<T>(config: {
+  nameStr: string;
+  cacheType: 'list' | 'index';
+  isCacheable: boolean;
+  hashData: Record<string, unknown>;
+  cache?: QueryCache | undefined;
+}): T | null {
+  if (!config.isCacheable || !config.cache) return null;
+
+  const cacheKey = `${config.nameStr}:${config.cacheType}:${createObjectHash(config.hashData, config.nameStr)}`;
+  return config.cache.get<T>(cacheKey) || null;
+}
+
+/**
+ * Generic cache set for query operations.
+ *
+ * Stores a query result in the cache if caching is eligible based
+ * on the operation type and parameters.
+ *
+ * @template T - Type of the result to cache
+ * @param config - Cache set configuration
+ *
+ * @example
+ * ```typescript
+ * setQueryCache({
+ *   nameStr: "User",
+ *   cacheType: "list",
+ *   isCacheable: true,
+ *   hashData: { limit: 50 },
+ *   result: { items: [...], scannedCount: 50 },
+ *   cache: queryCache
+ * });
+ * ```
+ */
+export function setQueryCache<T>(config: {
+  nameStr: string;
+  cacheType: 'list' | 'index';
+  isCacheable: boolean;
+  hashData: Record<string, unknown>;
+  result: T;
+  cache?: QueryCache | undefined;
+}): void {
+  if (!config.isCacheable || !config.cache) return;
+
+  const cacheKey = `${config.nameStr}:${config.cacheType}:${createObjectHash(config.hashData, config.nameStr)}`;
+  config.cache.set(cacheKey, config.result);
 }
 //#endregion
 
@@ -545,13 +689,16 @@ export function createObjectHash(
  * ```
  */
 export async function handlePagination<T>(
-  /* eslint-disable @typescript-eslint/no-explicit-any */
-  operation: (params?: Record<string, unknown>) => Promise<any>,
+  operation: (params?: Record<string, unknown>) => Promise<{
+    data: T[];
+    errors?: unknown[];
+    nextToken?: string;
+  }>,
   params: Record<string, unknown> = {},
   options: {
     followNextToken?: boolean;
     maxPages?: number;
-  } = {}
+  } = {},
 ): Promise<{
   items: T[];
   nextToken?: string;
@@ -573,13 +720,13 @@ export async function handlePagination<T>(
     const { data, errors, nextToken: responseNextToken } = response;
 
     if (errors && errors.length > 0) {
-      const { throwError } = await import("../error");
-      throw throwError("Pagination operation failed", errors);
+      const { throwError } = await import('../error');
+      throw throwError('Pagination operation failed', errors);
     }
 
     if (!Array.isArray(data)) {
-      const { throwError } = await import("../error");
-      throw throwError("Invalid pagination response format");
+      const { throwError } = await import('../error');
+      throw throwError('Invalid pagination response format');
     }
 
     const items = data as T[];
@@ -590,7 +737,7 @@ export async function handlePagination<T>(
 
     if (pageCount >= maxPages) {
       logger.warn(
-        `Pagination stopped at ${maxPages} pages to prevent infinite loop`
+        `Pagination stopped at ${maxPages} pages to prevent infinite loop`,
       );
       break;
     }
@@ -598,7 +745,7 @@ export async function handlePagination<T>(
 
   return {
     items: allItems,
-    nextToken: currentToken as string | undefined,
+    ...(currentToken ? { nextToken: currentToken as string } : {}),
     scannedCount: totalScanned,
   };
 }

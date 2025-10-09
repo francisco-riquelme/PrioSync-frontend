@@ -21,15 +21,22 @@ import { getMaterialTypeLabel, getMaterialTypeColor, formatDuration } from './co
 
 interface LessonDetailProps {
   lessonId: string;
+  cursoId?: string; // Make this optional since we can get it from the lesson data
 }
 
-export default function LessonDetail({ lessonId }: LessonDetailProps) {
+export default function LessonDetail({ lessonId, cursoId }: LessonDetailProps) {
   const router = useRouter();
-  const { leccion, loading, error } = useLecciones({ leccionId: lessonId });
+  const { leccion, curso, loading, error } = useLecciones({ 
+    leccionId: lessonId,
+    includeCurso: true // Include course data in the query
+  });
 
   const handleBackClick = () => {
-    if (leccion?.cursoId) {
-      router.push(`/courses/${leccion.cursoId}`);
+    // Use cursoId from lesson data if not provided as prop
+    const targetCursoId = cursoId || curso?.cursoId;
+    
+    if (targetCursoId) {
+      router.push(`/courses/${targetCursoId}`);
     } else {
       router.push('/courses');
     }

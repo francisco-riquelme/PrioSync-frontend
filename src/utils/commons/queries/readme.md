@@ -62,12 +62,12 @@ Extended query operations with HTTP-specific error handling.
 ### Initialization
 
 ```typescript
-import { initializeQueries } from "@your-org/amplify-shared-utilities/queries";
+import { initializeQueries } from '@your-org/amplify-shared-utilities/queries';
 
 const queries = await initializeQueries({
   amplifyOutputs,
   schema,
-  entities: ["User", "Course", "Enrollment"],
+  entities: ['User', 'Course', 'Enrollment'],
   cache: { enabled: true, maxSize: 50 * 1024 * 1024 },
 });
 ```
@@ -79,13 +79,13 @@ const queries = await initializeQueries({
 const user = await queries.User.create({ input: userData });
 
 // Get (cache-enabled)
-const user = await queries.User.get({ input: { userId: "123" } });
+const user = await queries.User.get({ input: { userId: '123' } });
 
 // Update
 const updatedUser = await queries.User.update({ input: updateData });
 
 // Delete
-await queries.User.delete({ input: { userId: "123" } });
+await queries.User.delete({ input: { userId: '123' } });
 
 // List
 const result = await queries.User.list({ limit: 50 });
@@ -94,11 +94,11 @@ const result = await queries.User.list({ limit: 50 });
 ### Auto-Initializing Query Factories
 
 ```typescript
-import { getQueryFactories } from "@your-org/amplify-shared-utilities/queries";
+import { getQueryFactories } from '@your-org/amplify-shared-utilities/queries';
 
 // Automatically initializes missing entities
 const queries = await getQueryFactories({
-  entities: ["User", "Course"],
+  entities: ['User', 'Course'],
   cache: { enabled: true },
 });
 
@@ -111,10 +111,10 @@ const users = await queries.User.list();
 import {
   getExistingQueryFactories,
   areEntitiesInitialized,
-} from "@your-org/amplify-shared-utilities/queries";
+} from '@your-org/amplify-shared-utilities/queries';
 
-if (areEntitiesInitialized(["User"])) {
-  const queries = getExistingQueryFactories({ entities: ["User"] });
+if (areEntitiesInitialized(['User'])) {
+  const queries = getExistingQueryFactories({ entities: ['User'] });
   if (queries.User) {
     const users = await queries.User.list();
   }
@@ -187,14 +187,14 @@ interface CacheConfig {
 ## REST-Aware Operations
 
 ```typescript
-import { createRestAwareQueryOperations } from "@your-org/amplify-shared-utilities/queries";
+import { createRestAwareQueryOperations } from '@your-org/amplify-shared-utilities/queries';
 
-const restQueries = createRestAwareQueryOperations(queries.User, "User", {
-  requestId: "req-123",
+const restQueries = createRestAwareQueryOperations(queries.User, 'User', {
+  requestId: 'req-123',
 });
 
 // Throws appropriate HTTP errors
-const user = await restQueries.get({ input: { userId: "123" } });
+const user = await restQueries.get({ input: { userId: '123' } });
 ```
 
 ## Next.js Integration
@@ -203,13 +203,13 @@ const user = await restQueries.get({ input: { userId: "123" } });
 
 ```typescript
 // _app.tsx or layout.tsx
-import { ClientManager } from "@your-org/amplify-shared-utilities/queries";
+import { ClientManager } from '@your-org/amplify-shared-utilities/queries';
 
 const initializeApp = async () => {
   await ClientManager.initializeQueries({
     amplifyOutputs,
     schema,
-    entities: ["User", "Course", "Enrollment"],
+    entities: ['User', 'Course', 'Enrollment'],
     cache: { enabled: true, maxSize: 50 * 1024 * 1024 },
   });
 };
@@ -221,13 +221,13 @@ initializeApp();
 
 ```typescript
 // pages/users.tsx
-import { getQueryFactories } from "@your-org/amplify-shared-utilities/queries";
+import { getQueryFactories } from '@your-org/amplify-shared-utilities/queries';
 
 export default function UsersPage() {
   useEffect(() => {
     const loadUsers = async () => {
       const queries = await getQueryFactories({
-        entities: ["User"],
+        entities: ['User'],
         cache: { enabled: true },
       });
 
@@ -243,9 +243,9 @@ export default function UsersPage() {
 ### Server-Side Rendering
 
 ```typescript
-export const getServerSideProps: GetServerSideProps = async (context) => {
+export const getServerSideProps: GetServerSideProps = async context => {
   const queries = await getQueryFactories({
-    entities: ["Course"],
+    entities: ['Course'],
   });
 
   const courseId = context.params?.id as string;
@@ -294,7 +294,7 @@ try {
     maxPages: 100,
   });
 } catch (error) {
-  if (error.message.includes("Pagination stopped")) {
+  if (error.message.includes('Pagination stopped')) {
     // Hit pagination safety limit
   } else {
     // Other error
@@ -305,7 +305,7 @@ try {
 ## Cache Statistics
 
 ```typescript
-import { getGlobalCache } from "@your-org/amplify-shared-utilities/queries";
+import { getGlobalCache } from '@your-org/amplify-shared-utilities/queries';
 
 const cache = getGlobalCache();
 const stats = cache.getStats();

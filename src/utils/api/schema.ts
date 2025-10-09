@@ -342,5 +342,5 @@ export const MainSchema = a.schema({
     })
     .identifier(["usuarioId", "cursoId"]),
 });
-
-export type MainTypes = ClientSchema<typeof MainSchema>;
+export type SmallTypes = Pick<ClientSchema<typeof MainSchema>, "Video">;
+export type MainTypes = Omit<ClientSchema<typeof MainSchema>, "Video">;

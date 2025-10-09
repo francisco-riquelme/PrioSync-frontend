@@ -21,6 +21,7 @@
     "@mui/lab": "^7.0.0-beta.17",
     "@mui/material": "^7.3.2",
     "aws-amplify": "^6.15.6",
+    "crypto-js": "^4.2.0",
     "husky": "^9.1.7",
     "lru-cache": "^11.2.2",
     "moment": "^2.30.1",

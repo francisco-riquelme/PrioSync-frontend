@@ -1,6 +1,13 @@
-import { logger } from "../../log";
-import type { GraphQLInputWithModels, GraphQLEvent } from "./types";
-import type { AmplifyModelType, QueryFactoryResult } from "../../queries/types";
+import { logger } from '../../log';
+import type { Context } from 'aws-lambda';
+import {
+  setupStructuredLoggingWith,
+  buildErrorContextWith,
+  getModelsFromInput as sharedGetModelsFromInput,
+} from '../utils/common';
+import type { InputWithModels } from '../utils/common';
+import type { GraphQLInputWithModels, GraphQLEvent } from './types';
+import type { AmplifyModelType, QueryFactoryResult } from '../../queries/types';
 
 /**
  * Build standardized log context for GraphQL operations
@@ -32,31 +39,17 @@ export function buildGraphQLContext<
   >,
 >(
   input: GraphQLInputWithModels<TTypes>,
-  additionalContext: Record<string, unknown> = {}
+  additionalContext: Record<string, unknown> = {},
 ): Record<string, unknown> {
   const { event, context } = input;
 
   return {
     ...additionalContext,
-    // Use Amplify event properties directly (no 'info' property)
-    fieldName: event?.fieldName || undefined,
-    parentTypeName: event?.typeName || undefined,
-    username:
-      event?.identity && "username" in event.identity
-        ? event.identity.username
-        : undefined,
-    sub:
-      event?.identity && "sub" in event.identity
-        ? event.identity.sub
-        : undefined,
-    cognitoIdentityId:
-      event?.identity && "cognitoIdentityId" in event.identity
-        ? event.identity.cognitoIdentityId
-        : undefined,
-    // Add null checks to prevent undefined values from being logged
-    requestId: context?.awsRequestId || undefined,
-    functionName: context?.functionName || undefined,
-    functionVersion: context?.functionVersion || undefined,
+    fieldName: event?.fieldName,
+    parentTypeName: event?.typeName,
+    requestId: context?.awsRequestId,
+    functionName: context?.functionName,
+    functionVersion: context?.functionVersion,
   };
 }
 
@@ -74,8 +67,6 @@ export function buildGraphQLContext<
 export function extractEventInfo(event: GraphQLEvent): Record<string, unknown> {
   const { arguments: args, identity } = event;
 
-  // AmplifyGraphQlResolverEvent doesn't have 'info' property
-  // It has typeName and fieldName directly on the event
   return {
     fieldName: event.fieldName,
     parentTypeName: event.typeName,
@@ -83,7 +74,7 @@ export function extractEventInfo(event: GraphQLEvent): Record<string, unknown> {
     argumentCount: args ? Object.keys(args).length : 0,
     hasIdentity: !!identity,
     username:
-      identity && "username" in identity ? identity.username : undefined,
+      identity && 'username' in identity ? identity.username : undefined,
     hasVariables: false, // Amplify events don't have variables in the same way
     variableCount: 0,
   };
@@ -102,17 +93,17 @@ export function extractEventInfo(event: GraphQLEvent): Record<string, unknown> {
  */
 export function extractArguments(
   event: GraphQLEvent,
-  context: Record<string, unknown>
+  context: Record<string, unknown>,
 ): Record<string, unknown> | null {
   if (!event.arguments || Object.keys(event.arguments).length === 0) {
-    logger.debug("No arguments provided for GraphQL operation", context);
+    logger.debug('No arguments provided for GraphQL operation', context);
     return null;
   }
 
   try {
     return event.arguments;
   } catch (error) {
-    logger.warn("Failed to extract GraphQL arguments", {
+    logger.warn('Failed to extract GraphQL arguments', {
       ...context,
       error: error instanceof Error ? error.message : String(error),
     });
@@ -141,15 +132,28 @@ export function setupStructuredLogging<
 >(
   input: GraphQLInputWithModels<TTypes>,
   forceStructuredLogging: boolean = true,
-  defaultContext: Record<string, unknown> = {}
+  defaultContext: Record<string, unknown> = {},
 ): void {
-  if (forceStructuredLogging && !logger.isStructuredLoggingEnabled()) {
-    logger.setStructuredLogging(true);
-  }
-
-  logger.setContext({
-    ...buildGraphQLContext(input, defaultContext),
-  });
+  type TSelected = keyof TTypes & string;
+  type TArgs = Record<string, unknown>;
+  type TSrc = Record<string, unknown> | null;
+  const typedInput = input as unknown as InputWithModels<
+    TTypes,
+    TSelected,
+    GraphQLEvent<TArgs, TSrc>,
+    Context
+  >;
+  const buildContext = (
+    i: InputWithModels<TTypes, TSelected, GraphQLEvent<TArgs, TSrc>, Context>,
+    extra?: Record<string, unknown>,
+  ) =>
+    buildGraphQLContext(i as unknown as GraphQLInputWithModels<TTypes>, extra);
+  setupStructuredLoggingWith<
+    TTypes,
+    TSelected,
+    GraphQLEvent<TArgs, TSrc>,
+    Context
+  >(typedInput, buildContext, forceStructuredLogging, defaultContext);
 }
 
 /**
@@ -174,19 +178,28 @@ export function buildErrorContext<
 >(
   input: GraphQLInputWithModels<TTypes>,
   error: { code?: string; statusCode?: number } | null,
-  additionalContext: Record<string, unknown> = {}
+  additionalContext: Record<string, unknown> = {},
 ): Record<string, unknown> {
-  const baseContext = buildGraphQLContext(input, additionalContext);
-
-  if (error) {
-    return {
-      ...baseContext,
-      errorCode: error.code,
-      statusCode: error.statusCode,
-    };
-  }
-
-  return baseContext;
+  type TSelected = keyof TTypes & string;
+  type TArgs = Record<string, unknown>;
+  type TSrc = Record<string, unknown> | null;
+  const typedInput = input as unknown as InputWithModels<
+    TTypes,
+    TSelected,
+    GraphQLEvent<TArgs, TSrc>,
+    Context
+  >;
+  const buildContext = (
+    i: InputWithModels<TTypes, TSelected, GraphQLEvent<TArgs, TSrc>, Context>,
+    extra?: Record<string, unknown>,
+  ) =>
+    buildGraphQLContext(i as unknown as GraphQLInputWithModels<TTypes>, extra);
+  return buildErrorContextWith<
+    TTypes,
+    TSelected,
+    GraphQLEvent<TArgs, TSrc>,
+    Context
+  >(typedInput, buildContext, error, additionalContext);
 }
 
 /**
@@ -206,15 +219,27 @@ export function getModelsFromInput<
   TTypes extends Record<string, AmplifyModelType>,
   TSelected extends keyof TTypes & string = keyof TTypes & string,
 >(
-  input: GraphQLInputWithModels<TTypes, TSelected>
+  input: GraphQLInputWithModels<TTypes, TSelected>,
 ): {
   [K in TSelected]: QueryFactoryResult<K, TTypes>;
 } {
-  if (!input.models) {
-    throw new Error(
-      "Models not available. Ensure GraphQLModelInitializer middleware is used before this handler."
-    );
-  }
-
-  return input.models;
+  type TArgs = Record<string, unknown>;
+  type TSrc = Record<string, unknown> | null;
+  const typedInput = input as unknown as InputWithModels<
+    TTypes,
+    TSelected,
+    GraphQLEvent<TArgs, TSrc>,
+    Context
+  >;
+  return sharedGetModelsFromInput<
+    TTypes,
+    TSelected,
+    GraphQLEvent<TArgs, TSrc>,
+    Context
+  >(
+    typedInput,
+    'Models not available. Ensure GraphQLModelInitializer middleware is used before this handler.',
+  ) as unknown as {
+    [K in TSelected]: QueryFactoryResult<K, TTypes>;
+  };
 }

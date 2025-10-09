@@ -1,172 +1,82 @@
-import { logger } from "../../log";
-import { sanitizeObject } from "../utils/sanitization";
-import type { Middleware } from "../middlewareChain";
+import { logger } from '../../log';
+import { sanitizeObject } from '../utils/sanitization';
+import type { Middleware } from '../middlewareChain';
 import type {
   GraphQLInputWithModels,
   GraphQLRequestLoggerConfig,
   GraphQLHandlerReturn,
-} from "./types";
-import type { AmplifyModelType } from "../../queries/types";
-import { extractEventInfo, setupStructuredLogging } from "./utils";
+} from './types';
+import type { AmplifyModelType } from '../../queries/types';
+import { extractEventInfo, setupStructuredLogging } from './utils';
 
-const MAX_DEPTH = 10;
-
-function extractResponseInfo(
+function summarizeResponse(
   response: unknown,
-  config: GraphQLRequestLoggerConfig
+  config: GraphQLRequestLoggerConfig,
 ): Record<string, unknown> {
-  const { excludeResponseFields = [] } = config;
+  const { excludeResponseFields = [], maxDepth = 5 } = config;
 
-  const info: Record<string, unknown> = {
-    responseType: typeof response,
-    isNull: response === null,
-    isUndefined: response === undefined,
-  };
-
-  if (response === null || response === undefined) {
-    return info;
-  }
-
+  if (response === null) return { responseType: 'null', isNull: true };
+  if (response === undefined)
+    return { responseType: 'undefined', isUndefined: true };
   if (Array.isArray(response)) {
-    info.isArray = true;
-    info.length = response.length;
-    if (response.length > 0) {
-      info.sampleItem = sanitizeObject(response[0], {
-        excludeFields: excludeResponseFields,
-        maxDepth: MAX_DEPTH,
-      });
-    }
-  } else if (typeof response === "object") {
-    info.isObject = true;
-    info.response = sanitizeObject(response as Record<string, unknown>, {
-      excludeFields: excludeResponseFields,
-      maxDepth: MAX_DEPTH,
-    });
-  } else {
-    info.response = response;
-  }
-
-  return info;
-}
-
-function addEventArguments<
-  TTypes extends Record<string, AmplifyModelType>,
-  TSelected extends keyof TTypes & string = keyof TTypes & string,
->(
-  event: GraphQLInputWithModels<TTypes, TSelected>["event"],
-  config: GraphQLRequestLoggerConfig,
-  detailedInfo: Record<string, unknown>
-): void {
-  const { excludeEventFields = [], logArguments = true } = config;
-
-  if (logArguments && event.arguments) {
-    detailedInfo.arguments = sanitizeObject(event.arguments, {
-      excludeFields: excludeEventFields,
-      maxDepth: MAX_DEPTH,
-    });
-  }
-}
-
-function addEventVariables<
-  TTypes extends Record<string, AmplifyModelType>,
-  TSelected extends keyof TTypes & string = keyof TTypes & string,
->(
-  event: GraphQLInputWithModels<TTypes, TSelected>["event"],
-  config: GraphQLRequestLoggerConfig,
-  detailedInfo: Record<string, unknown>
-): void {
-  const { excludeEventFields = [], logVariables = true } = config;
-
-  if (logVariables) {
-    detailedInfo.variables = {};
-  }
-}
-
-function addEventIdentity<
-  TTypes extends Record<string, AmplifyModelType>,
-  TSelected extends keyof TTypes & string = keyof TTypes & string,
->(
-  event: GraphQLInputWithModels<TTypes, TSelected>["event"],
-  config: GraphQLRequestLoggerConfig,
-  detailedInfo: Record<string, unknown>
-): void {
-  const { excludeEventFields = [], logIdentity = true } = config;
-
-  if (logIdentity && event.identity) {
-    detailedInfo.identity = sanitizeObject(event.identity, {
-      excludeFields: excludeEventFields,
-      maxDepth: MAX_DEPTH,
-    });
-  }
-}
-
-function addEventSelectionSet<
-  TTypes extends Record<string, AmplifyModelType>,
-  TSelected extends keyof TTypes & string = keyof TTypes & string,
->(
-  event: GraphQLInputWithModels<TTypes, TSelected>["event"],
-  config: GraphQLRequestLoggerConfig,
-  detailedInfo: Record<string, unknown>
-): void {
-  const { logSelectionSet = false } = config;
-
-  if (logSelectionSet) {
-    detailedInfo.selectionSet = {
-      selectionSetList: [],
-      selectionSetGraphQL: "",
+    return {
+      responseType: 'array',
+      isArray: true,
+      length: response.length,
+      sample:
+        response.length > 0
+          ? sanitizeObject(response[0] as Record<string, unknown>, {
+              excludeFields: excludeResponseFields,
+              maxDepth,
+            })
+          : undefined,
     };
   }
+  if (typeof response === 'object') {
+    return {
+      responseType: 'object',
+      isObject: true,
+      response: sanitizeObject(response as Record<string, unknown>, {
+        excludeFields: excludeResponseFields,
+        maxDepth,
+      }),
+    };
+  }
+  return { responseType: typeof response, response };
 }
 
-function addEventSourceAndStash<
+function summarizeEvent<
   TTypes extends Record<string, AmplifyModelType>,
   TSelected extends keyof TTypes & string = keyof TTypes & string,
 >(
-  event: GraphQLInputWithModels<TTypes, TSelected>["event"],
+  event: GraphQLInputWithModels<TTypes, TSelected>['event'],
   config: GraphQLRequestLoggerConfig,
-  detailedInfo: Record<string, unknown>
-): void {
-  const { excludeEventFields = [] } = config;
+): Record<string, unknown> {
+  const {
+    excludeEventFields = [],
+    maxDepth = 5,
+    logArguments = true,
+    logIdentity = true,
+  } = config;
 
-  if (event.source) {
-    detailedInfo.source = sanitizeObject(event.source, {
+  const base = extractEventInfo(event);
+  const out: Record<string, unknown> = { ...base };
+
+  if (logArguments && event?.arguments) {
+    out.arguments = sanitizeObject(event.arguments, {
       excludeFields: excludeEventFields,
-      maxDepth: MAX_DEPTH,
+      maxDepth,
     });
   }
-}
 
-function extractDetailedEventInfo<
-  TTypes extends Record<string, AmplifyModelType> = Record<
-    string,
-    AmplifyModelType
-  >,
-  TSelected extends keyof TTypes & string = keyof TTypes & string,
->(
-  input: GraphQLInputWithModels<TTypes, TSelected>,
-  config: GraphQLRequestLoggerConfig
-): Record<string, unknown> {
-  const { event } = input;
+  if (logIdentity && event?.identity) {
+    out.identity = sanitizeObject(event.identity, {
+      excludeFields: excludeEventFields,
+      maxDepth,
+    });
+  }
 
-  logger.debug("Event structure received", {
-    hasEvent: !!event,
-    hasArguments: !!event?.arguments,
-    hasIdentity: !!event?.identity,
-    hasSource: !!event?.source,
-    eventKeys: event ? Object.keys(event) : [],
-    middleware: "GraphQLRequestLogger",
-  });
-
-  const baseInfo = extractEventInfo(event);
-  const detailedInfo: Record<string, unknown> = { ...baseInfo };
-
-  addEventArguments(event, config, detailedInfo);
-  addEventVariables(event, config, detailedInfo);
-  addEventIdentity(event, config, detailedInfo);
-  addEventSelectionSet(event, config, detailedInfo);
-  addEventSourceAndStash(event, config, detailedInfo);
-
-  return detailedInfo;
+  return out;
 }
 
 export function createGraphQLRequestLogger<
@@ -177,51 +87,33 @@ export function createGraphQLRequestLogger<
   TSelected extends keyof TTypes & string = keyof TTypes & string,
   TReturn extends GraphQLHandlerReturn = GraphQLHandlerReturn,
 >(
-  config: GraphQLRequestLoggerConfig = {}
+  config: GraphQLRequestLoggerConfig = {},
 ): Middleware<GraphQLInputWithModels<TTypes, TSelected>, TReturn> {
   const { defaultContext = {} } = config;
 
   return async (
     input: GraphQLInputWithModels<TTypes, TSelected>,
-    next: () => Promise<TReturn>
+    next: () => Promise<TReturn>,
   ): Promise<TReturn> => {
-    const startTime = Date.now();
-
-    logger.debug("GraphQLRequestLogger middleware started", {
-      middleware: "GraphQLRequestLogger",
-      hasEvent: !!input.event,
-      hasContext: !!input.context,
-      hasModels: !!input.models,
-      modelCount: Object.keys(input.models || {}).length,
-    });
+    const start = Date.now();
 
     try {
-      logger.debug("Setting up structured logging", {
-        middleware: "GraphQLRequestLogger",
-      });
-
       setupStructuredLogging(input as GraphQLInputWithModels<TTypes>, true, {
         ...defaultContext,
-        middleware: "GraphQLRequestLogger",
+        middleware: 'GraphQLRequestLogger',
       });
 
-      logger.debug("Extracting detailed event info", {
-        middleware: "GraphQLRequestLogger",
-      });
-
-      const eventInfo = extractDetailedEventInfo(input, config);
-
-      logger.info("GraphQL request started", {
+      const eventInfo = summarizeEvent(input.event, config);
+      logger.info('GraphQL request started', {
         event: eventInfo,
         timestamp: new Date().toISOString(),
       });
 
       const result = await next();
-      const duration = Date.now() - startTime;
+      const duration = Date.now() - start;
 
-      const responseInfo = extractResponseInfo(result, config);
-
-      logger.info("GraphQL request completed", {
+      const responseInfo = summarizeResponse(result, config);
+      logger.info('GraphQL request completed', {
         response: responseInfo,
         duration,
         success: true,
@@ -229,22 +121,14 @@ export function createGraphQLRequestLogger<
 
       return result;
     } catch (error) {
-      logger.error("GraphQLRequestLogger middleware failed", {
+      const duration = Date.now() - start;
+      logger.error('GraphQL request failed', {
         error: error instanceof Error ? error.message : String(error),
         stack: error instanceof Error ? error.stack : undefined,
-        middleware: "GraphQLRequestLogger",
-      });
-
-      const duration = Date.now() - startTime;
-      const errorMessage =
-        error instanceof Error ? error.message : String(error);
-
-      logger.error("GraphQL request failed", {
-        error: errorMessage,
         duration,
         success: false,
+        middleware: 'GraphQLRequestLogger',
       });
-
       throw error;
     }
   };

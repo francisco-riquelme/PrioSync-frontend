@@ -2,7 +2,7 @@
  * WebSocket Middleware Module
  *
  * This module provides a comprehensive set of middleware components for AWS API Gateway WebSocket APIs.
- * It includes error handling, request logging, validation, middleware chain utilities, and authorization
+ * It includes error handling, request logging, validation, and middleware chain utilities
  * specifically designed for WebSocket connections.
  *
  * @module WebSocketMiddleware
@@ -23,12 +23,10 @@ export {
 // WebSocket model initialization
 export { createWebSocketModelInitializer } from './WebSocketModelInitializer';
 
-// WebSocket middleware chain and authorization
+// WebSocket middleware chain
 export {
   createWebSocketChain,
   wrapWebSocketHandler,
-  createAllowPolicy,
-  createDenyPolicy,
 } from './WebSocketMiddlewareChain';
 
 // WebSocket utilities
@@ -38,13 +36,11 @@ export {
   parseJsonBody,
   setupStructuredLogging,
   isMessageEvent,
+  getConnectionId,
   getErrorMessage,
   getErrorStack,
   buildErrorContext,
   getModelsFromInput,
-  getModelFromInput,
-  hasModel,
-  getAvailableModelNames,
 } from './utils';
 
 // All WebSocket types
@@ -55,12 +51,6 @@ export type {
   WebSocketModelInstance,
   WebSocketBaseInput,
   WebSocketInputWithModels,
-  WebSocketHandlerReturn,
-
-  // IAM Policy types
-  IAMPolicyDocument,
-  IAMPolicyStatement,
-  AuthorizerResponse,
 
   // Middleware types
   WebSocketMiddlewareChain,

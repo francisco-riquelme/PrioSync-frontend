@@ -1,13 +1,13 @@
-import { throwError } from "../../error";
-import { ClientManager } from "../../queries/ClientManager";
-import { logger } from "../../log";
+import { throwError } from '../../error';
+import { ClientManager } from '../../queries/ClientManager';
+import { logger } from '../../log';
 import type {
   GraphQLModelInitializerConfig,
   GraphQLInputWithModels,
   GraphQLHandlerReturn,
-} from "./types";
-import type { Middleware } from "../middlewareChain";
-import type { AmplifyModelType, QueryFactoryResult } from "../../queries/types";
+} from './types';
+import type { Middleware } from '../middlewareChain';
+import type { AmplifyModelType, QueryFactoryResult } from '../../queries/types';
 
 const modelsCache = new Map<string, Record<string, unknown>>();
 const initializationPromises = new Map<
@@ -17,9 +17,9 @@ const initializationPromises = new Map<
 
 function createCacheKey(
   clientKey: string,
-  entities?: readonly string[]
+  entities?: readonly string[],
 ): string {
-  const entityKey = entities ? [...entities].sort().join(",") : "all";
+  const entityKey = entities ? [...entities].sort().join(',') : 'all';
   return `${clientKey}-${entityKey}`;
 }
 
@@ -28,24 +28,24 @@ async function initializeModelsWithTimeout<
   TTypes extends Record<string, AmplifyModelType>,
   TSelected extends keyof TTypes & string,
 >(
-  config: GraphQLModelInitializerConfig<TSchema, TTypes, TSelected>
+  config: GraphQLModelInitializerConfig<TSchema, TTypes, TSelected>,
 ): Promise<{ [K in TSelected]: QueryFactoryResult<K, TTypes> }> {
   const {
     schema,
     amplifyOutputs,
     entities,
-    clientKey = "default",
+    clientKey = 'default',
     timeout = 5000,
     cache,
   } = config;
 
-  logger.info("Starting GraphQL model initialization", {
+  logger.info('Starting GraphQL model initialization', {
     clientKey,
-    entities: entities || "all",
+    entities: entities || 'all',
     timeout,
     cacheEnabled: !!cache?.enabled,
     schemaModels: Object.keys(schema?.models || {}),
-    middleware: "GraphQLModelInitializer",
+    middleware: 'GraphQLModelInitializer',
   });
 
   const initPromise = ClientManager.initializeQueries({
@@ -63,36 +63,36 @@ async function initializeModelsWithTimeout<
   });
 
   try {
-    logger.debug("Waiting for model initialization", {
+    logger.debug('Waiting for model initialization', {
       clientKey,
       timeout,
-      middleware: "GraphQLModelInitializer",
+      middleware: 'GraphQLModelInitializer',
     });
 
     const models = await Promise.race([initPromise, timeoutPromise]);
 
-    logger.info("Model initialization completed successfully", {
+    logger.info('Model initialization completed successfully', {
       initializedModels: Object.keys(models || {}),
       modelCount: Object.keys(models || {}).length,
       clientKey,
-      middleware: "GraphQLModelInitializer",
+      middleware: 'GraphQLModelInitializer',
     });
 
     return models as { [K in TSelected]: QueryFactoryResult<K, TTypes> };
   } catch (error) {
-    logger.error("Model initialization failed", {
+    logger.error('Model initialization failed', {
       error: error instanceof Error ? error.message : String(error),
       clientKey,
-      entities: entities || "all",
+      entities: entities || 'all',
       timeout,
       cacheEnabled: !!cache?.enabled,
-      middleware: "GraphQLModelInitializer",
+      middleware: 'GraphQLModelInitializer',
     });
 
-    throwError("GraphQL model initialization failed", {
+    throwError('GraphQL model initialization failed', {
       originalError: error,
       clientKey,
-      entities: entities || "all",
+      entities: entities || 'all',
       timeout,
       cacheEnabled: !!cache?.enabled,
     });
@@ -105,27 +105,27 @@ export function createGraphQLModelInitializer<
   TSelected extends keyof TTypes & string = keyof TTypes & string,
   TReturn extends GraphQLHandlerReturn = GraphQLHandlerReturn,
 >(
-  config: GraphQLModelInitializerConfig<TSchema, TTypes, TSelected>
+  config: GraphQLModelInitializerConfig<TSchema, TTypes, TSelected>,
 ): Middleware<GraphQLInputWithModels<TTypes, TSelected>, TReturn> {
-  const { clientKey = "default", entities } = config;
+  const { clientKey = 'default', entities } = config;
   const cacheKey = createCacheKey(clientKey, entities);
 
-  logger.debug("Creating GraphQL model initializer middleware", {
+  logger.debug('Creating GraphQL model initializer middleware', {
     clientKey,
-    entities: entities || "all",
+    entities: entities || 'all',
     cacheKey,
-    middleware: "GraphQLModelInitializer",
+    middleware: 'GraphQLModelInitializer',
   });
 
   return async (
     input: GraphQLInputWithModels<TTypes, TSelected>,
-    next: () => Promise<TReturn>
+    next: () => Promise<TReturn>,
   ): Promise<TReturn> => {
-    logger.debug("GraphQL model initializer middleware execution started", {
+    logger.debug('GraphQL model initializer middleware execution started', {
       cacheKey,
       hasModels: !!input.models,
       availableModels: Object.keys(input.models || {}),
-      middleware: "GraphQLModelInitializer",
+      middleware: 'GraphQLModelInitializer',
     });
 
     let models: { [K in TSelected]: QueryFactoryResult<K, TTypes> } | undefined;
@@ -136,24 +136,24 @@ export function createGraphQLModelInitializer<
         | undefined;
 
       if (!models) {
-        logger.debug("Models not cached, checking initialization status", {
+        logger.debug('Models not cached, checking initialization status', {
           cacheKey,
-          middleware: "GraphQLModelInitializer",
+          middleware: 'GraphQLModelInitializer',
         });
 
         let initPromise = initializationPromises.get(cacheKey);
 
         if (!initPromise) {
-          logger.info("Starting new model initialization", {
+          logger.info('Starting new model initialization', {
             cacheKey,
-            middleware: "GraphQLModelInitializer",
+            middleware: 'GraphQLModelInitializer',
           });
           initPromise = initializeModelsWithTimeout(config);
           initializationPromises.set(cacheKey, initPromise);
         } else {
-          logger.debug("Waiting for existing initialization", {
+          logger.debug('Waiting for existing initialization', {
             cacheKey,
-            middleware: "GraphQLModelInitializer",
+            middleware: 'GraphQLModelInitializer',
           });
         }
 
@@ -162,17 +162,17 @@ export function createGraphQLModelInitializer<
             [K in TSelected]: QueryFactoryResult<K, TTypes>;
           };
           modelsCache.set(cacheKey, models);
-          logger.info("Models cached successfully", {
+          logger.info('Models cached successfully', {
             cacheKey,
             modelCount: Object.keys(models || {}).length,
             modelNames: Object.keys(models || {}),
-            middleware: "GraphQLModelInitializer",
+            middleware: 'GraphQLModelInitializer',
           });
         } catch (error) {
-          logger.error("Clearing failed initialization from cache", {
+          logger.error('Clearing failed initialization from cache', {
             cacheKey,
             error: error instanceof Error ? error.message : String(error),
-            middleware: "GraphQLModelInitializer",
+            middleware: 'GraphQLModelInitializer',
           });
           initializationPromises.delete(cacheKey);
           modelsCache.delete(cacheKey);
@@ -181,32 +181,32 @@ export function createGraphQLModelInitializer<
           initializationPromises.delete(cacheKey);
         }
       } else {
-        logger.debug("Using cached models", {
+        logger.debug('Using cached models', {
           cacheKey,
           modelCount: Object.keys(models || {}).length,
           modelNames: Object.keys(models || {}),
-          middleware: "GraphQLModelInitializer",
+          middleware: 'GraphQLModelInitializer',
         });
       }
 
       input.models = models;
 
-      logger.debug("Proceeding to next middleware", {
+      logger.debug('Proceeding to next middleware', {
         cacheKey,
         modelCount: Object.keys(models || {}).length,
-        middleware: "GraphQLModelInitializer",
+        middleware: 'GraphQLModelInitializer',
       });
     } catch (error) {
-      logger.error("GraphQL model initialization failed", {
+      logger.error('GraphQL model initialization failed', {
         originalError: error,
         cacheKey,
-        middleware: "GraphQLModelInitializer",
+        middleware: 'GraphQLModelInitializer',
       });
 
-      throwError("GraphQL model initialization failed", {
+      throwError('GraphQL model initialization failed', {
         originalError: error,
         cacheKey,
-        middleware: "GraphQLModelInitializer",
+        middleware: 'GraphQLModelInitializer',
       });
     }
 

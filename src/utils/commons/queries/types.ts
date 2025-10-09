@@ -1,3 +1,4 @@
+/* eslint-disable max-lines */
 // types.ts - Library-compatible version
 
 //#region AMPLIFY MODEL TYPES
@@ -35,7 +36,7 @@ export interface AmplifyModelType {
 export type ModelType<
   T extends string,
   Types extends Record<T, AmplifyModelType>,
-> = Types[T] extends AmplifyModelType ? Types[T]["type"] : never;
+> = Types[T] extends AmplifyModelType ? Types[T]['type'] : never;
 
 /**
  * Extracts the create input type from Amplify model definitions.
@@ -47,7 +48,7 @@ export type ModelType<
 export type CreateInput<
   T extends string,
   Types extends Record<T, AmplifyModelType>,
-> = Types[T] extends AmplifyModelType ? Types[T]["createType"] : never;
+> = Types[T] extends AmplifyModelType ? Types[T]['createType'] : never;
 
 /**
  * Extracts the update input type from Amplify model definitions.
@@ -59,7 +60,7 @@ export type CreateInput<
 export type UpdateInput<
   T extends string,
   Types extends Record<T, AmplifyModelType>,
-> = Types[T] extends AmplifyModelType ? Types[T]["updateType"] : never;
+> = Types[T] extends AmplifyModelType ? Types[T]['updateType'] : never;
 
 /**
  * Extracts the delete input type from Amplify model definitions.
@@ -71,7 +72,7 @@ export type UpdateInput<
 export type DeleteInput<
   T extends string,
   Types extends Record<T, AmplifyModelType>,
-> = Types[T] extends AmplifyModelType ? Types[T]["deleteType"] : never;
+> = Types[T] extends AmplifyModelType ? Types[T]['deleteType'] : never;
 
 /**
  * Extracts the identifier type from Amplify model definitions.
@@ -85,7 +86,7 @@ export type DeleteInput<
 export type Identifier<
   T extends string,
   Types extends Record<T, AmplifyModelType>,
-> = Types[T] extends AmplifyModelType ? Types[T]["identifier"] : never;
+> = Types[T] extends AmplifyModelType ? Types[T]['identifier'] : never;
 //#endregion
 
 //#region AMPLIFY CONFIGURATION TYPES
@@ -94,7 +95,7 @@ export type Identifier<
  *
  * @typedef {("iam" | "userPool" | "oidc" | "lambda" | "apiKey")} AmplifyAuthMode
  */
-export type AmplifyAuthMode = "iam" | "userPool" | "oidc" | "lambda" | "apiKey";
+export type AmplifyAuthMode = 'iam' | 'userPool' | 'oidc' | 'lambda' | 'apiKey';
 
 /**
  * AWS Amplify configuration outputs structure.
@@ -127,7 +128,7 @@ export interface AmplifyOutputs {
  *
  * @typedef {("create" | "update" | "delete" | "get" | "list")} OperationType
  */
-export type OperationType = "create" | "update" | "delete" | "get" | "list";
+export type OperationType = 'create' | 'update' | 'delete' | 'get' | 'list';
 
 /**
  * Standard response structure for database operations.
@@ -149,7 +150,7 @@ export type DatabaseResponse<T> = {
  *
  * @typedef {("asc" | "desc")} SortDirection
  */
-export type SortDirection = "asc" | "desc";
+export type SortDirection = 'asc' | 'desc';
 //#endregion
 
 //#region PAGINATION TYPES
@@ -396,27 +397,39 @@ export interface QueryFactoryResult<
    *
    * @param props - Object containing input data
    * @param props.input - Data for creating the record
+   * @param props.selectionSet - Optional array of fields to retrieve (supports dot notation)
    * @returns Promise resolving to the created record
    */
-  create(props: { input: CreateInput<T, Types> }): Promise<ModelType<T, Types>>;
+  create(props: {
+    input: CreateInput<T, Types>;
+    selectionSet?: SelectionSet;
+  }): Promise<ModelType<T, Types>>;
 
   /**
    * Update an existing record.
    *
    * @param props - Object containing input data
    * @param props.input - Data for updating the record (must include identifier)
+   * @param props.selectionSet - Optional array of fields to retrieve (supports dot notation)
    * @returns Promise resolving to the updated record
    */
-  update(props: { input: UpdateInput<T, Types> }): Promise<ModelType<T, Types>>;
+  update(props: {
+    input: UpdateInput<T, Types>;
+    selectionSet?: SelectionSet;
+  }): Promise<ModelType<T, Types>>;
 
   /**
    * Delete an existing record.
    *
    * @param props - Object containing input data
    * @param props.input - Identifier for the record to delete
+   * @param props.selectionSet - Optional array of fields to retrieve (supports dot notation)
    * @returns Promise resolving to the deleted record
    */
-  delete(props: { input: DeleteInput<T, Types> }): Promise<ModelType<T, Types>>;
+  delete(props: {
+    input: DeleteInput<T, Types>;
+    selectionSet?: SelectionSet;
+  }): Promise<ModelType<T, Types>>;
 
   /**
    * Retrieve a single record by identifier.
