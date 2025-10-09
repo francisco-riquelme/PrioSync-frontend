@@ -44,9 +44,18 @@ export const CourseCard = ({ course, onCourseClick }: CourseCardProps) => {
       <CardMedia
         component="img"
         height="160"
-        image={course.imagen_portada || ''}
+        image={course.imagen_portada || course.playlistThumbnail || ''}
         alt={course.titulo}
-        sx={{ backgroundColor: 'grey.200' }}
+        sx={{ 
+          backgroundColor: 'grey.200',
+          objectFit: 'cover',
+          width: '100%'
+        }}
+        onError={(e) => {
+          // Fallback to a placeholder if image fails to load
+          const target = e.target as HTMLImageElement;
+          target.style.display = 'none';
+        }}
       />
       <CardContent 
         sx={{ 
