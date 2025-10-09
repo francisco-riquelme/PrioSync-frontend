@@ -40,9 +40,7 @@ interface CourseLessonsProps {
 
 export default function CourseLessons({ courseId }: CourseLessonsProps) {
   const { modulos, lecciones, loading, error } = useLecciones({ 
-    cursoId: courseId,
-    includeModulos: true,
-    includeCurso: false 
+    cursoId: courseId
   });
   const [expandedModule, setExpandedModule] = useState<string | false>(false);
 

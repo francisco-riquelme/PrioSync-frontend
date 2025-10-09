@@ -5,7 +5,6 @@ import type { MainTypes } from '@/utils/api/schema';
 
 // Import schema types
 type UsuarioSchema = MainTypes["Usuario"]["type"];
-type InscripcionCursoSchema = MainTypes["InscripcionCurso"]["type"];
 
 // Simplified InscripcionCurso for client-side (without lazy loaders)
 export interface InscripcionCurso {

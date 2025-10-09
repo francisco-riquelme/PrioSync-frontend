@@ -13,13 +13,11 @@ export { default as QuizAttemptsTable } from "./QuizAttemptsTable";
 
 // Exports de hooks
 export { useQuiz } from "./hooks/useQuiz";
-export type {
-  UseQuizReturn,
-  UseQuizParams,
-  QuizAnswer,
-  QuizAttempt,
-  CuestionarioWithStats,
-} from "./hooks/useQuiz";
+export type { UseQuizReturn, UseQuizParams } from "./hooks/useQuiz";
+
+export type { QuizAttempt } from "./hooks/useQuizAttempts";
+
+export type { CuestionarioWithStats } from "./hooks/useQuizData";
 
 // Exports de tipos de dominio
 export type {

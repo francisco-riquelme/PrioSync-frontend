@@ -62,7 +62,7 @@ const Calendar: React.FC = () => {
     createSession,
     updateSession,
     deleteSession,
-  } = useStudySessions(undefined, userData?.usuarioId);
+  } = useStudySessions({ usuarioId: userData?.usuarioId });
 
   // Convert backend sessions to frontend format
   const sessions = useMemo(() => 
@@ -372,7 +372,7 @@ const Calendar: React.FC = () => {
             if (editingSession) {
               // UPDATE: Pass single object with id
               const result = await updateSession({
-                id: editingSession.id,
+                sesionEstudioId: editingSession.id,
                 fecha: formData.startDate,
                 hora_inicio: formData.startTime,
                 hora_fin: formData.endTime,

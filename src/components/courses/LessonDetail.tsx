@@ -27,8 +27,7 @@ interface LessonDetailProps {
 export default function LessonDetail({ lessonId, cursoId }: LessonDetailProps) {
   const router = useRouter();
   const { leccion, curso, loading, error } = useLecciones({ 
-    leccionId: lessonId,
-    includeCurso: true // Include course data in the query
+    leccionId: lessonId
   });
 
   const handleBackClick = () => {
