@@ -63,7 +63,7 @@ export const useQuiz = (params: UseQuizParams): UseQuizReturn => {
   const { cuestionarioId, cursoId, usuarioId, autoLoad = true } = params;
 
   // Use the individual hooks
-  const quizData = useQuizData({ autoLoad: false });
+  const quizData = useQuizData();
   const quizAttempts = useQuizAttempts();
   const quizAnswers = useQuizAnswers();
 
