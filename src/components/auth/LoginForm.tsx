@@ -34,11 +34,11 @@ const VALIDATION_CONFIG = {
 } as const;
 
 // Mensajes de error
-const ERROR_MESSAGES = {
-  INVALID_EMAIL: 'Por favor ingresa un correo electrónico válido',
-  PASSWORD_TOO_SHORT: `La contraseña debe tener al menos ${VALIDATION_CONFIG.PASSWORD_MIN_LENGTH} caracteres`,
-  LOGIN_FAILED: 'Error al iniciar sesión. Verifica tus credenciales.'
-} as const;
+// const ERROR_MESSAGES = {
+//   INVALID_EMAIL: 'Por favor ingresa un correo electrónico válido',
+//   PASSWORD_TOO_SHORT: `La contraseña debe tener al menos ${VALIDATION_CONFIG.PASSWORD_MIN_LENGTH} caracteres`,
+//   LOGIN_FAILED: 'Error al iniciar sesión. Verifica tus credenciales.'
+// } as const;
 
 export default function LoginForm() {
   const router = useRouter();

@@ -33,12 +33,12 @@ import Link from 'next/link';
 
 
 // Mensajes de error
-const ERROR_MESSAGES = {
-  INVALID_EMAIL: 'Por favor ingresa un correo electrónico válido',
-  PASSWORD_WEAK: 'La contraseña debe contener al menos una letra mayúscula, una minúscula y un número',
-  PASSWORDS_DONT_MATCH: 'Las contraseñas no coinciden',
-  RESET_FAILED: 'Error al restablecer la contraseña. Inténtalo de nuevo.'
-} as const;
+// const ERROR_MESSAGES = {
+//   INVALID_EMAIL: 'Por favor ingresa un correo electrónico válido',
+//   PASSWORD_WEAK: 'La contraseña debe contener al menos una letra mayúscula, una minúscula y un número',
+//   PASSWORDS_DONT_MATCH: 'Las contraseñas no coinciden',
+//   RESET_FAILED: 'Error al restablecer la contraseña. Inténtalo de nuevo.'
+// } as const;
 
 const steps = ['Solicitar código', 'Restablecer contraseña'];
 

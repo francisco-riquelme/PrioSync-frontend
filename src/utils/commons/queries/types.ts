@@ -1,4 +1,3 @@
-/* eslint-disable max-lines */
 // types.ts - Library-compatible version
 
 //#region AMPLIFY MODEL TYPES
@@ -36,7 +35,7 @@ export interface AmplifyModelType {
 export type ModelType<
   T extends string,
   Types extends Record<T, AmplifyModelType>,
-> = Types[T] extends AmplifyModelType ? Types[T]['type'] : never;
+> = Types[T] extends AmplifyModelType ? Types[T]["type"] : never;
 
 /**
  * Extracts the create input type from Amplify model definitions.
@@ -48,7 +47,7 @@ export type ModelType<
 export type CreateInput<
   T extends string,
   Types extends Record<T, AmplifyModelType>,
-> = Types[T] extends AmplifyModelType ? Types[T]['createType'] : never;
+> = Types[T] extends AmplifyModelType ? Types[T]["createType"] : never;
 
 /**
  * Extracts the update input type from Amplify model definitions.
@@ -60,7 +59,7 @@ export type CreateInput<
 export type UpdateInput<
   T extends string,
   Types extends Record<T, AmplifyModelType>,
-> = Types[T] extends AmplifyModelType ? Types[T]['updateType'] : never;
+> = Types[T] extends AmplifyModelType ? Types[T]["updateType"] : never;
 
 /**
  * Extracts the delete input type from Amplify model definitions.
@@ -72,7 +71,7 @@ export type UpdateInput<
 export type DeleteInput<
   T extends string,
   Types extends Record<T, AmplifyModelType>,
-> = Types[T] extends AmplifyModelType ? Types[T]['deleteType'] : never;
+> = Types[T] extends AmplifyModelType ? Types[T]["deleteType"] : never;
 
 /**
  * Extracts the identifier type from Amplify model definitions.
@@ -86,7 +85,7 @@ export type DeleteInput<
 export type Identifier<
   T extends string,
   Types extends Record<T, AmplifyModelType>,
-> = Types[T] extends AmplifyModelType ? Types[T]['identifier'] : never;
+> = Types[T] extends AmplifyModelType ? Types[T]["identifier"] : never;
 //#endregion
 
 //#region AMPLIFY CONFIGURATION TYPES
@@ -95,7 +94,7 @@ export type Identifier<
  *
  * @typedef {("iam" | "userPool" | "oidc" | "lambda" | "apiKey")} AmplifyAuthMode
  */
-export type AmplifyAuthMode = 'iam' | 'userPool' | 'oidc' | 'lambda' | 'apiKey';
+export type AmplifyAuthMode = "iam" | "userPool" | "oidc" | "lambda" | "apiKey";
 
 /**
  * AWS Amplify configuration outputs structure.
@@ -128,7 +127,7 @@ export interface AmplifyOutputs {
  *
  * @typedef {("create" | "update" | "delete" | "get" | "list")} OperationType
  */
-export type OperationType = 'create' | 'update' | 'delete' | 'get' | 'list';
+export type OperationType = "create" | "update" | "delete" | "get" | "list";
 
 /**
  * Standard response structure for database operations.
@@ -150,7 +149,7 @@ export type DatabaseResponse<T> = {
  *
  * @typedef {("asc" | "desc")} SortDirection
  */
-export type SortDirection = 'asc' | 'desc';
+export type SortDirection = "asc" | "desc";
 //#endregion
 
 //#region PAGINATION TYPES

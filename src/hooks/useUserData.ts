@@ -55,7 +55,7 @@ export const useAuth = () => {
 
 // Hook para manejo de cursos
 export const useCourses = () => {
-  const { userData, updateCourseProgress, addActivity } = useUser();
+  const { userData, updateCourseProgress } = useUser();
 
   const updateProgress = useCallback(
     async (courseId: string, newProgress: number) => {
@@ -82,7 +82,7 @@ export const useCourses = () => {
         return { success: false, error: "Error al actualizar progreso" };
       }
     },
-    [userData, updateCourseProgress, addActivity]
+    [userData, updateCourseProgress]
   );
 
   const courses = userData?.InscripcionesCurso || [];

@@ -38,9 +38,9 @@ type ProgresoCuestionarioWithRelations = SelectionSet<
 >;
 
 // Extract nested types for easier access
-type UsuarioFromProgreso = NonNullable<
-  ProgresoCuestionarioWithRelations["Usuario"]
->;
+// type UsuarioFromProgreso = NonNullable<
+//   ProgresoCuestionarioWithRelations["Usuario"]
+// >;
 type CuestionarioFromProgreso = NonNullable<
   ProgresoCuestionarioWithRelations["Cuestionario"]
 >;

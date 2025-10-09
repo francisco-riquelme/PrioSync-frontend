@@ -1,6 +1,5 @@
-/* eslint-disable max-lines */
-import { logger } from '../log';
-import CryptoJS from 'crypto-js';
+import { logger } from "../log";
+import CryptoJS from "crypto-js";
 import type {
   OperationType,
   AmplifyModelType,
@@ -8,9 +7,9 @@ import type {
   QueryFactoryResult,
   SortDirection,
   AmplifyAuthMode,
-} from './types';
-import { ClientManager } from './ClientManager';
-import type { QueryCache } from './cache';
+} from "./types";
+import { ClientManager } from "./ClientManager";
+import type { QueryCache } from "./cache";
 
 //#region IDENTIFIER AND DATA EXTRACTION UTILITIES
 /**
@@ -39,7 +38,7 @@ import type { QueryCache } from './cache';
  */
 export const extractIdentifier = (
   input: Record<string, unknown>,
-  entityName: string,
+  entityName: string
 ): Record<string, unknown> => {
   const identifierFields = ClientManager.getIdentifierFields(entityName);
   const identifier: Record<string, unknown> = {};
@@ -66,7 +65,7 @@ export const extractIdentifier = (
     Object.keys(identifier).length < identifierFields.length
   ) {
     const missingFields = identifierFields.filter(
-      field => !(field in identifier),
+      (field) => !(field in identifier)
     );
     logger.warn(`Incomplete composite key for ${entityName}`, {
       found: Object.keys(identifier),
@@ -100,18 +99,18 @@ export const extractIdentifier = (
 export const logOperation = (
   nameStr: string,
   operation: OperationType,
-  data?: unknown,
+  data?: unknown
 ): void => {
   const presentParticiple =
-    operation === 'create'
-      ? 'Creating'
-      : operation === 'update'
-        ? 'Updating'
-        : operation === 'delete'
-          ? 'Deleting'
-          : operation === 'get'
-            ? 'Getting'
-            : 'Listing';
+    operation === "create"
+      ? "Creating"
+      : operation === "update"
+        ? "Updating"
+        : operation === "delete"
+          ? "Deleting"
+          : operation === "get"
+            ? "Getting"
+            : "Listing";
 
   logger.info(`${presentParticiple} ${nameStr}`, {
     operation,
@@ -138,18 +137,18 @@ export const logOperation = (
  */
 export const logSuccess = (
   operation: OperationType,
-  additionalInfo?: unknown,
+  additionalInfo?: unknown
 ): void => {
   const pastTense =
-    operation === 'create'
-      ? 'created'
-      : operation === 'update'
-        ? 'updated'
-        : operation === 'delete'
-          ? 'deleted'
-          : operation === 'get'
-            ? 'retrieved'
-            : 'listed';
+    operation === "create"
+      ? "created"
+      : operation === "update"
+        ? "updated"
+        : operation === "delete"
+          ? "deleted"
+          : operation === "get"
+            ? "retrieved"
+            : "listed";
 
   logger.info(`Successfully ${pastTense}`, {
     operation,
@@ -204,7 +203,7 @@ export const validateResponse = <R>(props: {
   }
 
   // Validate that response has the expected structure
-  if (typeof response !== 'object' || !('data' in response)) {
+  if (typeof response !== "object" || !("data" in response)) {
     const errorMsg = `Invalid response structure for ${name} ${operation}`;
     logger.error(errorMsg, { response, input });
     throw new Error(errorMsg);
@@ -214,14 +213,14 @@ export const validateResponse = <R>(props: {
 
   // Check for GraphQL errors
   if (errors && errors.length > 0) {
-    const errorMessages = errors.map(error => {
+    const errorMessages = errors.map((error) => {
       const message =
-        (error as { message?: string })?.message || 'Unknown error';
+        (error as { message?: string })?.message || "Unknown error";
       const errorMessage = `GraphQL error during ${name} ${operation}: ${message}`;
       logger.error(errorMessage, { specificError: error, input });
       return errorMessage;
     });
-    throw new Error(errorMessages.join('\n'));
+    throw new Error(errorMessages.join("\n"));
   }
 
   // Validate data presence
@@ -283,7 +282,7 @@ export function getQueryFactories<
 }): Promise<{
   [K in TSelected]: QueryFactoryResult<K, TTypes>;
 }> {
-  const { clientKey = 'default', ...rest } = config;
+  const { clientKey = "default", ...rest } = config;
   const manager = ClientManager.getInstance(clientKey);
   return manager.getQueryFactories<TTypes, TSelected>(rest);
 }
@@ -332,7 +331,7 @@ export function getErrorMessage(error: unknown): string {
  * ```
  */
 export function isNotFoundError(message: string): boolean {
-  return message.includes('No data returned for');
+  return message.includes("No data returned for");
 }
 
 /**
@@ -396,7 +395,7 @@ export function isValidationError(message: string): boolean {
     /constraint/i,
     /format/i,
   ];
-  return validationPatterns.some(pattern => pattern.test(message));
+  return validationPatterns.some((pattern) => pattern.test(message));
 }
 
 /**
@@ -458,7 +457,7 @@ export function isConflictError(message: string): boolean {
     /resource.*conflict/i,
     /operation.*conflict/i,
   ];
-  return conflictPatterns.some(pattern => pattern.test(message));
+  return conflictPatterns.some((pattern) => pattern.test(message));
 }
 //#endregion
 
@@ -485,7 +484,7 @@ export function isConflictError(message: string): boolean {
  */
 export function createObjectHash(
   obj: Record<string, unknown>,
-  entityName: string,
+  entityName: string
 ): string {
   try {
     const identifierFields = ClientManager.getIdentifierFields(entityName);
@@ -501,14 +500,14 @@ export function createObjectHash(
       Object.keys(identifierData).length > 0 ? identifierData : obj;
 
     const keys = Object.keys(dataToHash).sort();
-    const pairs = keys.map(key => `${key}:${String(dataToHash[key])}`);
-    const serialized = pairs.join('|');
+    const pairs = keys.map((key) => `${key}:${String(dataToHash[key])}`);
+    const serialized = pairs.join("|");
 
     return CryptoJS.SHA256(serialized).toString();
   } catch (error) {
     logger.warn(
       `Hash generation failed for ${entityName}, falling back to JSON`,
-      { error },
+      { error }
     );
     return CryptoJS.SHA256(JSON.stringify(obj)).toString();
   }
@@ -572,7 +571,7 @@ export function buildIndexParams(
     authMode?: AmplifyAuthMode | undefined;
     selectionSet?: readonly string[] | undefined;
     nextToken?: string | undefined;
-  },
+  }
 ): Record<string, unknown> {
   const base: Record<string, unknown> = { ...input };
   if (params.filter) base.filter = params.filter;
@@ -608,7 +607,7 @@ export function buildIndexParams(
  */
 export function checkQueryCache<T>(config: {
   nameStr: string;
-  cacheType: 'list' | 'index';
+  cacheType: "list" | "index";
   isCacheable: boolean;
   hashData: Record<string, unknown>;
   cache?: QueryCache | undefined;
@@ -642,7 +641,7 @@ export function checkQueryCache<T>(config: {
  */
 export function setQueryCache<T>(config: {
   nameStr: string;
-  cacheType: 'list' | 'index';
+  cacheType: "list" | "index";
   isCacheable: boolean;
   hashData: Record<string, unknown>;
   result: T;
@@ -698,7 +697,7 @@ export async function handlePagination<T>(
   options: {
     followNextToken?: boolean;
     maxPages?: number;
-  } = {},
+  } = {}
 ): Promise<{
   items: T[];
   nextToken?: string;
@@ -720,13 +719,13 @@ export async function handlePagination<T>(
     const { data, errors, nextToken: responseNextToken } = response;
 
     if (errors && errors.length > 0) {
-      const { throwError } = await import('../error');
-      throw throwError('Pagination operation failed', errors);
+      const { throwError } = await import("../error");
+      throw throwError("Pagination operation failed", errors);
     }
 
     if (!Array.isArray(data)) {
-      const { throwError } = await import('../error');
-      throw throwError('Invalid pagination response format');
+      const { throwError } = await import("../error");
+      throw throwError("Invalid pagination response format");
     }
 
     const items = data as T[];
@@ -737,7 +736,7 @@ export async function handlePagination<T>(
 
     if (pageCount >= maxPages) {
       logger.warn(
-        `Pagination stopped at ${maxPages} pages to prevent infinite loop`,
+        `Pagination stopped at ${maxPages} pages to prevent infinite loop`
       );
       break;
     }

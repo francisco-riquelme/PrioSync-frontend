@@ -27,7 +27,7 @@ interface CourseDetailProps {
 
 export default function CourseDetail({ courseId }: CourseDetailProps) {
   const router = useRouter();
-  const [courseProgress, _setCourseProgress] = useState<number>(0);
+  const [courseProgress] = useState<number>(0);
 
   // Use the improved hook to fetch course data
   const { course, loading, error } = useCourse(courseId);

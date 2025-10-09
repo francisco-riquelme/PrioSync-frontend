@@ -34,7 +34,7 @@ export default function CoursesList() {
   // Apply filters when component mounts or filters change
   useEffect(() => {
     actions.applyFilters();
-  }, [filters.searchTerm, filters.levelFilter, filters.durationFilter]);
+  }, [filters.searchTerm, filters.levelFilter, filters.durationFilter, actions]);
 
   const handleCourseClick = (courseId: number | string) => {
     router.push(`/courses/${courseId}`);

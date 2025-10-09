@@ -1,4 +1,3 @@
-/* eslint-disable max-lines */
 import type {
   QueryFactoryResult,
   AmplifyModelType,
@@ -12,14 +11,14 @@ import type {
   PaginationResult,
   ModelFilter,
   SelectionSet,
-} from './types';
-import { RestErrors } from '../middleware/rest/RestErrors';
+} from "./types";
+import { RestErrors } from "../middleware/rest/RestErrors";
 import {
   getErrorMessage,
   isNotFoundError,
   isValidationError,
   isConflictError,
-} from './helpers';
+} from "./helpers";
 
 /**
  * REST-aware query operations interface with HTTP error handling.
@@ -162,30 +161,30 @@ export function createRestAwareQueryOperations<
 >(
   rawModel: QueryFactoryResult<T, TTypes>,
   modelName: string,
-  context: Record<string, unknown>,
+  context: Record<string, unknown>
 ): RestAwareQueryOperations<T, TTypes> {
   return {
     get: createRestAwareGetOperation<TTypes, T>(rawModel, modelName, context),
     create: createRestAwareCreateOperation<TTypes, T>(
       rawModel,
       modelName,
-      context,
+      context
     ),
     update: createRestAwareUpdateOperation<TTypes, T>(
       rawModel,
       modelName,
-      context,
+      context
     ),
     delete: createRestAwareDeleteOperation<TTypes, T>(
       rawModel,
       modelName,
-      context,
+      context
     ),
     list: createRestAwareListOperation<TTypes, T>(rawModel, modelName, context),
     queryIndex: createRestAwareQueryIndexOperation<TTypes, T>(
       rawModel,
       modelName,
-      context,
+      context
     ),
   };
 }
@@ -212,12 +211,12 @@ function createRestAwareGetOperation<
 >(
   rawModel: QueryFactoryResult<T, TTypes>,
   modelName: string,
-  context: Record<string, unknown>,
+  context: Record<string, unknown>
 ): (props: {
   input: Identifier<T, TTypes>;
   selectionSet?: SelectionSet;
 }) => Promise<ModelType<T, TTypes>> {
-  return async props => {
+  return async (props) => {
     try {
       return await rawModel.get(props);
     } catch (error) {
@@ -231,7 +230,7 @@ function createRestAwareGetOperation<
             modelName,
             searchCriteria: props.input,
           },
-          error,
+          error
         );
       } else {
         throw RestErrors.internal(
@@ -239,10 +238,10 @@ function createRestAwareGetOperation<
           {
             ...context,
             modelName,
-            operation: 'get',
+            operation: "get",
             searchCriteria: props.input,
           },
-          error,
+          error
         );
       }
     }
@@ -266,9 +265,9 @@ function createRestAwareCreateOperation<
 >(
   rawModel: QueryFactoryResult<T, TTypes>,
   modelName: string,
-  context: Record<string, unknown>,
+  context: Record<string, unknown>
 ): (props: { input: CreateInput<T, TTypes> }) => Promise<ModelType<T, TTypes>> {
-  return async props => {
+  return async (props) => {
     try {
       return await rawModel.create(props);
     } catch (error) {
@@ -282,7 +281,7 @@ function createRestAwareCreateOperation<
             modelName,
             inputData: props.input,
           },
-          error,
+          error
         );
       } else if (isConflictError(message)) {
         throw RestErrors.conflict(
@@ -292,7 +291,7 @@ function createRestAwareCreateOperation<
             modelName,
             inputData: props.input,
           },
-          error,
+          error
         );
       } else {
         throw RestErrors.internal(
@@ -300,10 +299,10 @@ function createRestAwareCreateOperation<
           {
             ...context,
             modelName,
-            operation: 'create',
+            operation: "create",
             inputData: props.input,
           },
-          error,
+          error
         );
       }
     }
@@ -327,9 +326,9 @@ function createRestAwareUpdateOperation<
 >(
   rawModel: QueryFactoryResult<T, TTypes>,
   modelName: string,
-  context: Record<string, unknown>,
+  context: Record<string, unknown>
 ): (props: { input: UpdateInput<T, TTypes> }) => Promise<ModelType<T, TTypes>> {
-  return async props => {
+  return async (props) => {
     try {
       return await rawModel.update(props);
     } catch (error) {
@@ -343,7 +342,7 @@ function createRestAwareUpdateOperation<
             modelName,
             updateCriteria: props.input,
           },
-          error,
+          error
         );
       } else if (isValidationError(message)) {
         throw RestErrors.validation(
@@ -353,7 +352,7 @@ function createRestAwareUpdateOperation<
             modelName,
             updateData: props.input,
           },
-          error,
+          error
         );
       } else if (isConflictError(message)) {
         throw RestErrors.conflict(
@@ -363,7 +362,7 @@ function createRestAwareUpdateOperation<
             modelName,
             updateData: props.input,
           },
-          error,
+          error
         );
       } else {
         throw RestErrors.internal(
@@ -371,10 +370,10 @@ function createRestAwareUpdateOperation<
           {
             ...context,
             modelName,
-            operation: 'update',
+            operation: "update",
             updateData: props.input,
           },
-          error,
+          error
         );
       }
     }
@@ -398,9 +397,9 @@ function createRestAwareDeleteOperation<
 >(
   rawModel: QueryFactoryResult<T, TTypes>,
   modelName: string,
-  context: Record<string, unknown>,
+  context: Record<string, unknown>
 ): (props: { input: DeleteInput<T, TTypes> }) => Promise<ModelType<T, TTypes>> {
-  return async props => {
+  return async (props) => {
     try {
       return await rawModel.delete(props);
     } catch (error) {
@@ -414,7 +413,7 @@ function createRestAwareDeleteOperation<
             modelName,
             deleteCriteria: props.input,
           },
-          error,
+          error
         );
       } else {
         throw RestErrors.internal(
@@ -422,10 +421,10 @@ function createRestAwareDeleteOperation<
           {
             ...context,
             modelName,
-            operation: 'delete',
+            operation: "delete",
             deleteCriteria: props.input,
           },
-          error,
+          error
         );
       }
     }
@@ -449,7 +448,7 @@ function createRestAwareListOperation<
 >(
   rawModel: QueryFactoryResult<T, TTypes>,
   modelName: string,
-  context: Record<string, unknown>,
+  context: Record<string, unknown>
 ): (props?: {
   filter?: ModelFilter<ModelType<T, TTypes>>;
   sortDirection?: SortDirection;
@@ -460,7 +459,7 @@ function createRestAwareListOperation<
   maxPages?: number;
   selectionSet?: SelectionSet;
 }) => Promise<PaginationResult<ModelType<T, TTypes>>> {
-  return async props => {
+  return async (props) => {
     try {
       return await rawModel.list(props);
     } catch (error) {
@@ -469,10 +468,10 @@ function createRestAwareListOperation<
         {
           ...context,
           modelName,
-          operation: 'list',
+          operation: "list",
           listParams: props,
         },
-        error,
+        error
       );
     }
   };
@@ -495,7 +494,7 @@ function createRestAwareQueryIndexOperation<
 >(
   rawModel: QueryFactoryResult<T, TTypes>,
   modelName: string,
-  context: Record<string, unknown>,
+  context: Record<string, unknown>
 ): (props: {
   queryField: string;
   input?: Record<string, unknown>;
@@ -507,7 +506,7 @@ function createRestAwareQueryIndexOperation<
   maxPages?: number;
   selectionSet?: SelectionSet;
 }) => Promise<PaginationResult<ModelType<T, TTypes>>> {
-  return async props => {
+  return async (props) => {
     try {
       return await rawModel.queryIndex(props);
     } catch (error) {
@@ -516,11 +515,11 @@ function createRestAwareQueryIndexOperation<
         {
           ...context,
           modelName,
-          operation: 'queryIndex',
+          operation: "queryIndex",
           queryField: props.queryField,
           indexParams: props,
         },
-        error,
+        error
       );
     }
   };

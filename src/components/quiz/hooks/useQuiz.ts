@@ -229,7 +229,7 @@ export const useQuiz = (params: UseQuizParams): UseQuizReturn => {
     } else if (autoLoad && cursoId) {
       loadQuizByCourse(cursoId);
     }
-  }, [autoLoad, cuestionarioId, cursoId]);
+  }, [autoLoad, cuestionarioId, cursoId, loadQuiz, loadQuizByCourse]);
 
   return {
     // Data

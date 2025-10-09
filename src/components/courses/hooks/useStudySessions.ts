@@ -3,7 +3,7 @@
 import { useState, useEffect, useCallback } from "react";
 import { getQueryFactories } from "@/utils/commons/queries";
 import { MainTypes } from "@/utils/api/schema";
-import type { SelectionSet } from "aws-amplify/data";
+// import type { SelectionSet } from "aws-amplify/data";
 
 // Import types from MainTypes
 type SesionEstudio = MainTypes["SesionEstudio"]["type"];
@@ -47,35 +47,35 @@ const sessionWithRelationsSelectionSet = [
   "Leccion.moduloId",
 ] as const;
 
-const basicSessionSelectionSet = [
-  "sesionEstudioId",
-  "fecha",
-  "hora_inicio",
-  "hora_fin",
-  "duracion_minutos",
-  "tipo",
-  "estado",
-  "google_event_id",
-  "recordatorios",
-  "usuarioId",
-  "cursoId",
-  "leccionId",
-] as const;
+// const basicSessionSelectionSet = [
+//   "sesionEstudioId",
+//   "fecha",
+//   "hora_inicio",
+//   "hora_fin",
+//   "duracion_minutos",
+//   "tipo",
+//   "estado",
+//   "google_event_id",
+//   "recordatorios",
+//   "usuarioId",
+//   "cursoId",
+//   "leccionId",
+// ] as const;
 
 // Use SelectionSet to infer proper types
-type SessionWithRelations = SelectionSet<
-  SesionEstudio,
-  typeof sessionWithRelationsSelectionSet
->;
-type BasicSession = SelectionSet<
-  SesionEstudio,
-  typeof basicSessionSelectionSet
->;
+// type SessionWithRelations = SelectionSet<
+//   SesionEstudio,
+//   typeof sessionWithRelationsSelectionSet
+// >;
+// type BasicSession = SelectionSet<
+//   SesionEstudio,
+//   typeof basicSessionSelectionSet
+// >;
 
 // Extract nested types for easier access
-type UsuarioFromSession = NonNullable<SessionWithRelations["Usuario"]>;
-type CursoFromSession = NonNullable<SessionWithRelations["Curso"]>;
-type LeccionFromSession = NonNullable<SessionWithRelations["Leccion"]>;
+// type UsuarioFromSession = NonNullable<SessionWithRelations["Usuario"]>;
+// type CursoFromSession = NonNullable<SessionWithRelations["Curso"]>;
+// type LeccionFromSession = NonNullable<SessionWithRelations["Leccion"]>;
 
 // Type for creating a new session (without id and timestamps)
 export type CreateSesionEstudioInput = MainTypes["SesionEstudio"]["createType"];

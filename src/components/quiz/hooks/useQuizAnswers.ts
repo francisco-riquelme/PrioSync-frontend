@@ -49,7 +49,7 @@ type OpcionPreguntaSelected = SelectionSet<
 >;
 
 // Extract nested types for easier access
-type OpcionFromRespuesta = NonNullable<RespuestaWithRelations["Opcion"]>;
+// type OpcionFromRespuesta = NonNullable<RespuestaWithRelations["Opcion"]>;
 
 export interface UseQuizAnswersReturn {
   // User answers
@@ -344,8 +344,8 @@ export const useQuizAnswers = (): UseQuizAnswersReturn => {
           const respuestaWithRelations =
             respuesta as unknown as RespuestaWithRelations;
           if (respuestaWithRelations.Opcion) {
-            const opcion =
-              respuestaWithRelations.Opcion as unknown as OpcionPreguntaSelected;
+            // const opcion =
+            //   respuestaWithRelations.Opcion as unknown as OpcionPreguntaSelected;
 
             // Find the question in the loaded questions to get the correct index
             const question = questions.find(

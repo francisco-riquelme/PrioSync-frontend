@@ -1,4 +1,3 @@
-/* eslint-disable no-console */
 /**
  * Defines the log levels for the logger.
  */
@@ -47,7 +46,7 @@ class Logger {
   private level: LogLevel = LogLevel.INFO; // Default level
   private context: LogContext = {};
   private useStructuredLogging: boolean = false;
-  private environment: string = 'development';
+  private environment: string = "development";
 
   // Make constructor private to enforce singleton pattern
   private constructor() {
@@ -66,28 +65,28 @@ class Logger {
    */
   private detectEnvironment(): string {
     // Method 1: Explicit environment variable (set in backend.ts)
-    if (process.env.environment === 'prod') {
-      return 'production';
+    if (process.env.environment === "prod") {
+      return "production";
     }
 
     // Method 2: AWS stack name pattern (matches backend.ts logic)
     const functionName = process.env.AWS_LAMBDA_FUNCTION_NAME;
-    if (functionName && functionName.includes('-main-')) {
-      return 'production';
+    if (functionName && functionName.includes("-main-")) {
+      return "production";
     }
 
     // Method 3: AWS execution environment
     if (process.env.AWS_EXECUTION_ENV) {
-      return 'aws-lambda';
+      return "aws-lambda";
     }
 
     // Method 4: Traditional NODE_ENV
-    if (process.env.NODE_ENV === 'production') {
-      return 'production';
+    if (process.env.NODE_ENV === "production") {
+      return "production";
     }
 
     // Default to development
-    return 'development';
+    return "development";
   }
 
   /**
@@ -98,16 +97,16 @@ class Logger {
    */
   private shouldUseStructuredLogging(): boolean {
     // Explicit override
-    if (process.env.STRUCTURED_LOGGING === 'true') {
+    if (process.env.STRUCTURED_LOGGING === "true") {
       return true;
     }
-    if (process.env.STRUCTURED_LOGGING === 'false') {
+    if (process.env.STRUCTURED_LOGGING === "false") {
       return false;
     }
 
     // Auto-enable for production and AWS Lambda environments
     return (
-      this.environment === 'production' || this.environment === 'aws-lambda'
+      this.environment === "production" || this.environment === "aws-lambda"
     );
   }
 
@@ -230,7 +229,7 @@ class Logger {
   private createStructuredLog(
     level: string,
     message: string,
-    data?: unknown,
+    data?: unknown
   ): StructuredLogEntry {
     const logEntry: StructuredLogEntry = {
       timestamp: new Date().toISOString(),
@@ -262,17 +261,17 @@ class Logger {
     const contextStr =
       Object.keys(this.context).length > 0
         ? ` ${JSON.stringify(this.context)}`
-        : '';
+        : "";
 
     const argsStr = args
-      .map(arg => {
+      .map((arg) => {
         try {
-          return typeof arg === 'string' ? arg : JSON.stringify(arg);
+          return typeof arg === "string" ? arg : JSON.stringify(arg);
         } catch {
           return String(arg);
         }
       })
-      .join(' ');
+      .join(" ");
 
     return `[${level}]${contextStr} ${argsStr}`;
   }
@@ -293,11 +292,11 @@ class Logger {
 
     if (this.useStructuredLogging) {
       // Structured JSON logging
-      const message = args.length > 0 ? String(args[0]) : '';
+      const message = args.length > 0 ? String(args[0]) : "";
       const data = args.length > 1 ? args.slice(1) : undefined;
 
       const structuredLog = this.createStructuredLog(levelName, message, data);
-      const output = JSON.stringify(structuredLog) + '\n';
+      const output = JSON.stringify(structuredLog) + "\n";
 
       // Use appropriate console method
       if (level === LogLevel.ERROR) {
@@ -330,7 +329,7 @@ class Logger {
    * @param args The arguments to log.
    */
   public error(...args: unknown[]): void {
-    this.logMessage(LogLevel.ERROR, 'ERROR', ...args);
+    this.logMessage(LogLevel.ERROR, "ERROR", ...args);
   }
 
   /**
@@ -338,7 +337,7 @@ class Logger {
    * @param args The arguments to log.
    */
   public warn(...args: unknown[]): void {
-    this.logMessage(LogLevel.WARN, 'WARN', ...args);
+    this.logMessage(LogLevel.WARN, "WARN", ...args);
   }
 
   /**
@@ -346,7 +345,7 @@ class Logger {
    * @param args The arguments to log.
    */
   public info(...args: unknown[]): void {
-    this.logMessage(LogLevel.INFO, 'INFO', ...args);
+    this.logMessage(LogLevel.INFO, "INFO", ...args);
   }
 
   /**
@@ -354,7 +353,7 @@ class Logger {
    * @param args The arguments to log.
    */
   public debug(...args: unknown[]): void {
-    this.logMessage(LogLevel.DEBUG, 'DEBUG', ...args);
+    this.logMessage(LogLevel.DEBUG, "DEBUG", ...args);
   }
 
   /**
@@ -363,9 +362,9 @@ class Logger {
    * @param args The arguments to log.
    */
   public log(...args: unknown[]): void {
-    const stringifiedArgs = args.map(arg => {
+    const stringifiedArgs = args.map((arg) => {
       try {
-        return typeof arg === 'string' ? arg : JSON.stringify(arg);
+        return typeof arg === "string" ? arg : JSON.stringify(arg);
       } catch {
         return String(arg);
       }
@@ -433,7 +432,7 @@ export const logger = Logger.getInstance();
 let logLevel;
 try {
   // Remove the debug console.log(process) statement
-  logLevel = parseInt(process?.env?.LOG_LEVEL || '3');
+  logLevel = parseInt(process?.env?.LOG_LEVEL || "3");
 } catch {
   logLevel = 3;
 }

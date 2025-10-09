@@ -1,10 +1,10 @@
 'use client';
 
 import React, { createContext, useContext, useState, useEffect, ReactNode } from 'react';
-import type { MainTypes } from '@/utils/api/schema';
+// import type { MainTypes } from '@/utils/api/schema';
 
 // Import schema types
-type UsuarioSchema = MainTypes["Usuario"]["type"];
+// type UsuarioSchema = MainTypes["Usuario"]["type"];
 
 // Simplified InscripcionCurso for client-side (without lazy loaders)
 export interface InscripcionCurso {
@@ -227,7 +227,7 @@ export const UserProvider = ({ children }: { children: ReactNode }) => {
   };
 
   // Update course progress (updates InscripcionCurso)
-  const updateCourseProgress = async (courseId: string, progress: number): Promise<void> => {
+  const updateCourseProgress = async (courseId: string): Promise<void> => {
     setLoading(true);
     setError(null);
     

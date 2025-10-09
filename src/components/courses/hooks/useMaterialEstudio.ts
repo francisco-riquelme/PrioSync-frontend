@@ -7,8 +7,8 @@ import type { SelectionSet } from "aws-amplify/data";
 
 // Import types from MainTypes
 type MaterialEstudio = MainTypes["MaterialEstudio"]["type"];
-type Curso = MainTypes["Curso"]["type"];
-type Leccion = MainTypes["Leccion"]["type"];
+// type Curso = MainTypes["Curso"]["type"];
+// type Leccion = MainTypes["Leccion"]["type"];
 
 // Define selection sets as const arrays
 const materialWithRelationsSelectionSet = [
@@ -57,10 +57,10 @@ type MaterialWithRelations = SelectionSet<
   MaterialEstudio,
   typeof materialWithRelationsSelectionSet
 >;
-type BasicMaterial = SelectionSet<
-  MaterialEstudio,
-  typeof basicMaterialSelectionSet
->;
+// type BasicMaterial = SelectionSet<
+//   MaterialEstudio,
+//   typeof basicMaterialSelectionSet
+// >;
 
 // Extract nested types for easier access
 type CursoFromMaterial = NonNullable<MaterialWithRelations["Curso"]>;

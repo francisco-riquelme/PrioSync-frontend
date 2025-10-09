@@ -5,7 +5,7 @@ import type { SelectionSet } from "aws-amplify/data";
 
 // Import types from MainTypes
 type Curso = MainTypes["Curso"]["type"];
-type Modulo = MainTypes["Modulo"]["type"];
+// type Modulo = MainTypes["Modulo"]["type"];
 type Leccion = MainTypes["Leccion"]["type"];
 
 // Define selection sets as const arrays
@@ -84,7 +84,7 @@ type CursoWithModulos = SelectionSet<
 
 // Extract nested types for easier access
 type ModuloWithLecciones = NonNullable<CursoWithModulos["Modulos"]>[0];
-type LeccionFromModulo = NonNullable<ModuloWithLecciones["Lecciones"]>[0];
+// type LeccionFromModulo = NonNullable<ModuloWithLecciones["Lecciones"]>[0];
 
 export interface UseLeccionesReturn {
   lecciones: Leccion[];

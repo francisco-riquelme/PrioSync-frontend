@@ -42,15 +42,15 @@ export function VideoUpload({ onFileSelect, onMetadataExtracted, error, disabled
   const [extractingMetadata, setExtractingMetadata] = useState(false);
   const [extractedMetadata, setExtractedMetadata] = useState<VideoMetadata | null>(null);
 
-  const formatFileSize = (bytes: number): string => {
+  const formatFileSize = useCallback((bytes: number): string => {
     if (bytes === 0) return '0 Bytes';
     const k = 1024;
     const sizes = ['Bytes', 'KB', 'MB', 'GB'];
     const i = Math.floor(Math.log(bytes) / Math.log(k));
     return parseFloat((bytes / Math.pow(k, i)).toFixed(2)) + ' ' + sizes[i];
-  };
+  }, []);
 
-  const formatDuration = (seconds: number): string => {
+  const formatDuration = useCallback((seconds: number): string => {
     if (isNaN(seconds) || !isFinite(seconds)) {
       return 'Duración desconocida';
     }
@@ -63,9 +63,9 @@ export function VideoUpload({ onFileSelect, onMetadataExtracted, error, disabled
       return `${hours}h ${minutes}m ${secs}s`;
     }
     return `${minutes}m ${secs}s`;
-  };
+  }, []);
 
-  const extractVideoMetadata = async (file: File): Promise<VideoMetadata> => {
+  const extractVideoMetadata = useCallback(async (file: File): Promise<VideoMetadata> => {
     return new Promise((resolve) => {
       const video = document.createElement('video');
       video.preload = 'metadata';
@@ -94,9 +94,9 @@ export function VideoUpload({ onFileSelect, onMetadataExtracted, error, disabled
       
       video.src = URL.createObjectURL(file);
     });
-  };
+  }, [formatDuration, formatFileSize]);
 
-  const validateFile = (file: File): string | null => {
+  const validateFile = useCallback((file: File): string | null => {
     if (!ACCEPTED_VIDEO_TYPES.includes(file.type)) {
       return 'Tipo de archivo no soportado. Use MP4, AVI, MOV, QuickTime, WMV o MKV.';
     }
@@ -106,7 +106,7 @@ export function VideoUpload({ onFileSelect, onMetadataExtracted, error, disabled
     }
     
     return null;
-  };
+  }, [formatFileSize]);
 
   const handleFileSelect = useCallback(async (file: File) => {
     const validationError = validateFile(file);

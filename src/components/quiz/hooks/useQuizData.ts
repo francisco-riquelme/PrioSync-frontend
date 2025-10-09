@@ -50,37 +50,37 @@ const cuestionarioWithRelationsSelectionSet = [
   "Preguntas.Opciones.es_correcta",
 ] as const;
 
-const basicCuestionarioSelectionSet = [
-  "cuestionarioId",
-  "titulo",
-  "descripcion",
-  "tipo",
-  "puntos_maximos",
-  "duracion_minutos",
-  "intentos_permitidos",
-  "preguntas_aleatorias",
-  "porcentaje_aprobacion",
-  "cursoId",
-  "moduloId",
-  "materialEstudioId",
-] as const;
+// const basicCuestionarioSelectionSet = [
+//   "cuestionarioId",
+//   "titulo",
+//   "descripcion",
+//   "tipo",
+//   "puntos_maximos",
+//   "duracion_minutos",
+//   "intentos_permitidos",
+//   "preguntas_aleatorias",
+//   "porcentaje_aprobacion",
+//   "cursoId",
+//   "moduloId",
+//   "materialEstudioId",
+// ] as const;
 
 // Use SelectionSet to infer proper types
 type CuestionarioWithRelations = SelectionSet<
   Cuestionario,
   typeof cuestionarioWithRelationsSelectionSet
 >;
-type BasicCuestionario = SelectionSet<
-  Cuestionario,
-  typeof basicCuestionarioSelectionSet
->;
+// type BasicCuestionario = SelectionSet<
+//   Cuestionario,
+//   typeof basicCuestionarioSelectionSet
+// >;
 
 // Extract nested types for easier access
 type PreguntaFromCuestionario = NonNullable<
   CuestionarioWithRelations["Preguntas"]
 >[0];
-type OpcionFromPregunta = NonNullable<PreguntaFromCuestionario["Opciones"]>[0];
-type CursoFromCuestionario = NonNullable<CuestionarioWithRelations["Curso"]>;
+// type OpcionFromPregunta = NonNullable<PreguntaFromCuestionario["Opciones"]>[0];
+// type CursoFromCuestionario = NonNullable<CuestionarioWithRelations["Curso"]>;
 
 // Simple interface for loaded question data
 interface LoadedPreguntaData {
@@ -119,10 +119,8 @@ export interface UseQuizDataParams {
 /**
  * Hook for loading quiz data (questions, options, course info)
  */
-export const useQuizData = (
-  params: UseQuizDataParams = {}
-): UseQuizDataReturn => {
-  const { autoLoad = false } = params;
+export const useQuizData = (): UseQuizDataReturn => {
+  // const { autoLoad = false } = params;
 
   // State management
   const [quiz, setQuiz] = useState<QuizDataView | null>(null);

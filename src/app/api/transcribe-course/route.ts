@@ -792,9 +792,9 @@
 console.log("Transcripción de curso implementada");
 
 // Minimal exports to make this a valid Next.js API route module
-import { NextRequest, NextResponse } from "next/server";
+import { NextResponse } from "next/server";
 
-export async function POST(request: NextRequest) {
+export async function POST() {
   return NextResponse.json(
     {
       success: false,
@@ -804,7 +804,7 @@ export async function POST(request: NextRequest) {
   );
 }
 
-export async function GET(request: NextRequest) {
+export async function GET() {
   return NextResponse.json(
     {
       success: false,

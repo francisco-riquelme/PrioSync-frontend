@@ -22,7 +22,6 @@ import {
   Alert,
   IconButton,
   Link,
-  Divider,
 } from '@mui/material';
 import {
   ExpandMore as ExpandMoreIcon,
@@ -39,7 +38,7 @@ interface CourseLessonsProps {
 }
 
 export default function CourseLessons({ courseId }: CourseLessonsProps) {
-  const { modulos, lecciones, loading, error } = useLecciones({ 
+  const { modulos, loading, error } = useLecciones({ 
     cursoId: courseId
   });
   const [expandedModule, setExpandedModule] = useState<string | false>(false);

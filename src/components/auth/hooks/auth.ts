@@ -10,7 +10,6 @@ import {
   signOut,
   getCurrentUser,
   fetchAuthSession,
-  type ConfirmResetPasswordInput,
 } from "aws-amplify/auth";
 import { logger } from "@/utils/commons/log";
 
@@ -222,7 +221,7 @@ export function useAuth(): UseAuthReturn {
     setRegisterState({ loading: true, error: null, success: false });
 
     try {
-      const { isSignUpComplete, userId, nextStep } = await signUp({
+      const { isSignUpComplete, userId } = await signUp({
         username: input.email,
         password: input.password,
         options: {
@@ -258,7 +257,7 @@ export function useAuth(): UseAuthReturn {
     setLoginState({ loading: true, error: null, success: false });
 
     try {
-      const { isSignedIn, nextStep } = await signIn({
+      const { isSignedIn } = await signIn({
         username: input.email,
         password: input.password,
       });
@@ -292,7 +291,7 @@ export function useAuth(): UseAuthReturn {
     setValidateState({ loading: true, error: null, success: false });
 
     try {
-      const { isSignUpComplete, nextStep } = await confirmSignUp({
+      const { isSignUpComplete } = await confirmSignUp({
         username: input.email,
         confirmationCode: input.confirmationCode,
       });

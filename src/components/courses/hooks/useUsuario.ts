@@ -5,9 +5,9 @@ import type { SelectionSet } from "aws-amplify/data";
 
 // Import types from MainTypes
 type Usuario = MainTypes["Usuario"]["type"];
-type CursoCompartido = MainTypes["CursoCompartido"]["type"];
-type SesionEstudio = MainTypes["SesionEstudio"]["type"];
-type Curso = MainTypes["Curso"]["type"];
+// type CursoCompartido = MainTypes["CursoCompartido"]["type"];
+// type SesionEstudio = MainTypes["SesionEstudio"]["type"];
+// type Curso = MainTypes["Curso"]["type"];
 
 // Define selection sets as const arrays
 const usuarioWithRelationsSelectionSet = [
