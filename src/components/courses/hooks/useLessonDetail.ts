@@ -78,7 +78,10 @@ export const useLessonDetail = (
       setLoading(true);
       setError(null);
 
-      const { Leccion } = await getQueryFactories<MainTypes, "Leccion">({
+      const { Leccion } = await getQueryFactories<
+        Pick<MainTypes, "Leccion">,
+        "Leccion"
+      >({
         entities: ["Leccion"],
       });
 

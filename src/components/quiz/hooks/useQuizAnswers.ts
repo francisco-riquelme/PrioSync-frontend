@@ -49,11 +49,11 @@ type OpcionPreguntaSelected = SelectionSet<
 >;
 
 // Extract nested types for easier access
-type OpcionFromRespuesta = NonNullable<RespuestaWithRelations["Opcion"]>;
+// type OpcionFromRespuesta = NonNullable<RespuestaWithRelations["Opcion"]>;
 
 export interface UseQuizAnswersReturn {
   // User answers
-  userAnswers: Record<string, string>;
+  userAnswers: Record<string, number>;
 
   // State
   submitting: boolean;
@@ -87,7 +87,7 @@ export interface UseQuizAnswersReturn {
  */
 export const useQuizAnswers = (): UseQuizAnswersReturn => {
   // State management
-  const [userAnswers, setUserAnswers] = useState<Record<string, string>>({});
+  const [userAnswers, setUserAnswers] = useState<Record<string, number>>({});
   const [submitting, setSubmitting] = useState(false);
   const [error, setError] = useState<string | null>(null);
 
@@ -120,7 +120,7 @@ export const useQuizAnswers = (): UseQuizAnswersReturn => {
         setSubmitting(true);
 
         const { Respuesta, OpcionPregunta } = await getQueryFactories<
-          MainTypes,
+          Pick<MainTypes, "Respuesta" | "OpcionPregunta">,
           "Respuesta" | "OpcionPregunta"
         >({
           entities: ["Respuesta", "OpcionPregunta"],
@@ -179,18 +179,26 @@ export const useQuizAnswers = (): UseQuizAnswersReturn => {
           });
         }
 
-        // Update local state
-        setUserAnswers((prev) => ({
-          ...prev,
-          [questionId]: opcionId || answerText || "",
-        }));
+        // Update local state - store the answer index instead of opcionId
+        if (questions) {
+          const question = questions.find((q) => q.id === questionId);
+          if (question && question.opcionIds) {
+            const answerIndex = question.opcionIds.indexOf(opcionId);
+            if (answerIndex !== -1) {
+              setUserAnswers((prev) => ({
+                ...prev,
+                [questionId]: answerIndex,
+              }));
+            }
+          }
+        }
 
         // Update ultima_pregunta_respondida in ProgresoCuestionario
         if (questions) {
           const questionIndex = questions.findIndex((q) => q.id === questionId);
           if (questionIndex !== -1) {
             const { ProgresoCuestionario } = await getQueryFactories<
-              MainTypes,
+              Pick<MainTypes, "ProgresoCuestionario">,
               "ProgresoCuestionario"
             >({
               entities: ["ProgresoCuestionario"],
@@ -238,7 +246,7 @@ export const useQuizAnswers = (): UseQuizAnswersReturn => {
         setSubmitting(true);
 
         const { ProgresoCuestionario } = await getQueryFactories<
-          MainTypes,
+          Pick<MainTypes, "ProgresoCuestionario">,
           "ProgresoCuestionario"
         >({
           entities: ["ProgresoCuestionario"],
@@ -322,7 +330,10 @@ export const useQuizAnswers = (): UseQuizAnswersReturn => {
       questions: QuizQuestionView[]
     ): Promise<Record<string, number>> => {
       try {
-        const { Respuesta } = await getQueryFactories<MainTypes, "Respuesta">({
+        const { Respuesta } = await getQueryFactories<
+          Pick<MainTypes, "Respuesta">,
+          "Respuesta"
+        >({
           entities: ["Respuesta"],
         });
 
@@ -346,8 +357,6 @@ export const useQuizAnswers = (): UseQuizAnswersReturn => {
           const respuestaWithRelations =
             respuesta as unknown as RespuestaWithRelations;
           if (respuestaWithRelations.Opcion) {
-            const opcion = respuestaWithRelations.Opcion as OpcionFromRespuesta;
-
             // Find the question in the loaded questions to get the correct index
             const question = questions.find(
               (q) => q.id === respuesta.preguntaId

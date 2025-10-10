@@ -53,7 +53,10 @@ export const useCoursesListData = (): UseCoursesListDataReturn => {
       setLoading(true);
       setError(null);
 
-      const { Curso } = await getQueryFactories<MainTypes, "Curso">({
+      const { Curso } = await getQueryFactories<
+        Pick<MainTypes, "Curso">,
+        "Curso"
+      >({
         entities: ["Curso"],
       });
 
