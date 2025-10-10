@@ -42,7 +42,7 @@ const menuItems = [
   { text: 'Perfil', icon: <PersonIcon />, path: '/profile' },
 ];
 
-export default function DashboardLayout({ children }: LayoutProps) {
+export default function AppLayout({ children }: LayoutProps) {
   const [mobileOpen, setMobileOpen] = useState(false);
   const [mounted, setMounted] = useState(false);
   const router = useRouter();
