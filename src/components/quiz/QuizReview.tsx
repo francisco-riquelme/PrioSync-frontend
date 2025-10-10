@@ -172,7 +172,7 @@ const QuizReview: React.FC<QuizReviewProps> = ({
 
                   return (
                     <Paper
-                      key={optionIndex}
+                      key={opcion.opcionId}
                       variant="outlined"
                       sx={{
                         p: 2,

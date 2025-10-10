@@ -109,7 +109,8 @@ export interface UseCourseDetailDataReturn {
 /**
  * Hook for fetching single course detail data with first-level relationships
  * Used for course detail view where we need course + modules + lessons + materials + quiz headers
- * Auto-fetches on mount, auto-sorts modules and lessons by orden
+ * Auto-fetches on mount, auto-sorts modules and lessons by orden field
+ * Modules are sorted by orden (1, 2, 3...) and lessons within each module are also sorted by orden
  */
 export const useCourseDetailData = (
   params: UseCourseDetailDataParams
@@ -158,14 +159,23 @@ export const useCourseDetailData = (
             allModulos.push(moduloWithLecciones);
 
             if (moduloWithLecciones.Lecciones) {
+              // Ordenar lecciones por orden dentro del módulo
+              const leccionesOrdenadas = [...moduloWithLecciones.Lecciones].sort(
+                (a, b) => (a.orden || 0) - (b.orden || 0)
+              );
               allLecciones.push(
-                ...(moduloWithLecciones.Lecciones as unknown as LeccionFromModulo[])
+                ...(leccionesOrdenadas as unknown as LeccionFromModulo[])
               );
             }
           }
         }
 
-        setModulos(allModulos);
+        // Ordenar módulos por orden
+        const modulosOrdenados = allModulos.sort(
+          (a, b) => (a.orden || 0) - (b.orden || 0)
+        );
+
+        setModulos(modulosOrdenados);
         setLecciones(allLecciones);
 
         // Extract materials and quizzes

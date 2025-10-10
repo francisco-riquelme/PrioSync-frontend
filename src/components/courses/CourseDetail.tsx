@@ -1,6 +1,6 @@
 'use client';
 
-import React, { useState } from 'react';
+import React from 'react';
 import { useRouter } from 'next/navigation';
 import {
   Box,
@@ -18,6 +18,8 @@ import {
   Feedback as FeedbackIcon,
 } from '@mui/icons-material';
 import { useCourseDetailData } from '@/components/courses/hooks/useCourseDetailData';
+import { useProgresoCurso } from '@/components/courses/hooks/useProgresoCurso';
+import { useUser } from '@/contexts/UserContext';
 import StudySessionsTable from './StudySessionsTable';
 import CourseContent from './CourseContent';
 
@@ -27,10 +29,24 @@ interface CourseDetailProps {
 
 export default function CourseDetail({ courseId }: CourseDetailProps) {
   const router = useRouter();
-  const [courseProgress] = useState<number>(0);
+  const { userData } = useUser();
 
   // Fetch all course data with the new unified hook
   const { course, modulos, materiales, quizzes, loading, error } = useCourseDetailData({ cursoId: courseId });
+
+  // Calcular progreso del curso
+  const {
+    progreso,
+    leccionesCompletadas,
+    totalLecciones,
+  } = useProgresoCurso({
+    modulos,
+    usuarioId: userData?.usuarioId || '',
+  });
+
+
+
+
 
   // Handle loading state
   if (loading) {
@@ -77,16 +93,8 @@ export default function CourseDetail({ courseId }: CourseDetailProps) {
     );
   }
 
-  // TODO: Backend Integration - Obtener progreso real del usuario desde el backend
-  // El progreso debería venir de userProgress en lugar de calcularse localmente
-  const calculateProgress = () => {
-    // Since we don't have modules/lessons data from the API yet,
-    // we'll use a placeholder progress calculation
-    // This should be replaced with real progress data from the backend
-    return courseProgress || 0;
-  };
-
-  const actualProgress = calculateProgress();
+  // Usar el progreso real calculado desde el hook
+  const actualProgress = progreso;
 
   const handleBackClick = () => {
     router.push('/courses');
@@ -159,11 +167,16 @@ export default function CourseDetail({ courseId }: CourseDetailProps) {
           </Typography>
 
           {/* Progreso del curso */}
-          <Box sx={{ mb: 2 }}>
+          <Box sx={{ mb: 2 }} key={`progress-${actualProgress}-${leccionesCompletadas}-${totalLecciones}`}>
             <Box sx={{ display: 'flex', justifyContent: 'space-between', mb: 1 }}>
-              <Typography variant="body2" color="text.secondary">
-                {actualProgress}% completado
-              </Typography>
+              <Box>
+                <Typography variant="body2" color="text.secondary" sx={{ fontWeight: 600 }}>
+                  {actualProgress}% completado
+                </Typography>
+                <Typography variant="caption" color="text.secondary">
+                  {leccionesCompletadas} de {totalLecciones} lecciones completadas
+                </Typography>
+              </Box>
               <Button
                 variant="outlined"
                 size="small"
@@ -183,7 +196,7 @@ export default function CourseDetail({ courseId }: CourseDetailProps) {
                 backgroundColor: 'grey.200',
                 '& .MuiLinearProgress-bar': {
                   borderRadius: 4,
-                  backgroundColor: 'primary.main',
+                  backgroundColor: actualProgress === 100 ? 'success.main' : 'primary.main',
                 },
               }}
             />
