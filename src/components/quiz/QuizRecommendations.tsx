@@ -150,9 +150,9 @@ const QuizRecommendations: React.FC<QuizRecommendationsProps> = ({
                     </Typography>
                   </Box>
                   <Stack spacing={1}>
-                    {analysis.strengths.map((strength, index) => (
+                    {analysis.strengths.map((strength) => (
                       <Chip
-                        key={index}
+                        key={strength}
                         label={strength}
                         color="success"
                         variant="outlined"
@@ -177,9 +177,9 @@ const QuizRecommendations: React.FC<QuizRecommendationsProps> = ({
                     </Typography>
                   </Box>
                   <Stack spacing={1}>
-                    {analysis.weaknesses.map((weakness, index) => (
+                    {analysis.weaknesses.map((weakness) => (
                       <Chip
-                        key={index}
+                        key={weakness}
                         label={weakness}
                         color="warning"
                         variant="outlined"

@@ -80,7 +80,7 @@ const QuizQuestion: React.FC<QuizQuestionProps> = ({
           >
             {sortedOpciones.map((opcion, index) => (
               <Paper
-                key={index}
+                key={opcion.opcionId}
                 variant="outlined"
                 sx={{
                   p: 0,
