@@ -21,6 +21,7 @@ import {
   CircularProgress,
   IconButton,
   Link,
+  LinearProgress,
 } from '@mui/material';
 import {
   ExpandMore as ExpandMoreIcon,
@@ -28,8 +29,12 @@ import {
   ArrowForward as ArrowForwardIcon,
   PlayCircleOutline as PlayCircleIcon,
   BookOutlined as BookIcon,
+  CheckCircle as CheckCircleIcon,
 } from '@mui/icons-material';
 import { getLessonTypeIcon, getMaterialTypeColor, formatDuration } from './courseUtils';
+import { useProgresoModulo } from './hooks/useProgresoModulo';
+import { useProgresoLeccion } from './hooks/useProgresoLeccion';
+import { useUser } from '@/contexts/UserContext';
 import type { ModuloWithLecciones, LeccionFromModulo } from './hooks/useCourseDetailData';
 
 interface CourseLessonsProps {
@@ -37,8 +42,62 @@ interface CourseLessonsProps {
   loading: boolean;
 }
 
+// Componente para mostrar progreso de un módulo
+function ModuloProgreso({ modulo, usuarioId }: { modulo: ModuloWithLecciones; usuarioId: string }) {
+  const { progreso, leccionesCompletadas, totalLecciones } = useProgresoModulo({
+    modulo,
+    usuarioId,
+  });
+
+
+
+
+  return (
+    <Box sx={{ minWidth: 200 }} key={`${modulo.moduloId}-${progreso}-${leccionesCompletadas}`}>
+      <Box sx={{ display: 'flex', justifyContent: 'space-between', mb: 0.5 }}>
+        <Typography variant="caption" color="text.secondary">
+          {leccionesCompletadas} de {totalLecciones} completadas
+        </Typography>
+        <Typography variant="caption" color="text.secondary" sx={{ fontWeight: 600 }}>
+          {progreso}%
+        </Typography>
+      </Box>
+      <LinearProgress
+        variant="determinate"
+        value={progreso}
+        sx={{
+          height: 6,
+          borderRadius: 3,
+          backgroundColor: 'grey.200',
+          '& .MuiLinearProgress-bar': {
+            borderRadius: 3,
+            backgroundColor: progreso === 100 ? 'success.main' : 'primary.main',
+          },
+        }}
+      />
+    </Box>
+  );
+}
+
+// Componente para indicar si una lección está completada
+function LeccionEstadoIndicador({ leccionId, usuarioId }: { leccionId: string; usuarioId: string }) {
+  const { isCompleted } = useProgresoLeccion({ leccionId, usuarioId });
+
+  if (!isCompleted) return null;
+
+  return (
+    <CheckCircleIcon 
+      color="success" 
+      fontSize="small" 
+      sx={{ ml: 1 }}
+      titleAccess="Lección completada"
+    />
+  );
+}
+
 export default function CourseLessons({ modulos, loading }: CourseLessonsProps) {
   const [expandedModule, setExpandedModule] = useState<string | false>(false);
+  const { userData } = useUser();
 
   const handleModuleChange = (moduleId: string) => (event: React.SyntheticEvent, isExpanded: boolean) => {
     setExpandedModule(isExpanded ? moduleId : false);
@@ -95,6 +154,7 @@ export default function CourseLessons({ modulos, loading }: CourseLessonsProps) 
                   '& .MuiAccordionSummary-content': {
                     alignItems: 'center',
                     gap: 2,
+                    flexDirection: 'column',
                   },
                 }}
               >
@@ -110,7 +170,7 @@ export default function CourseLessons({ modulos, loading }: CourseLessonsProps) 
                       </Typography>
                     )}
                   </Box>
-                  <Box sx={{ display: 'flex', gap: 1, alignItems: 'center' }}>
+                  <Box sx={{ display: 'flex', gap: 1, alignItems: 'center', flexWrap: 'wrap' }}>
                     <Chip
                       label={`Módulo ${modulo.orden || '-'}`}
                       size="small"
@@ -132,6 +192,12 @@ export default function CourseLessons({ modulos, loading }: CourseLessonsProps) 
                     />
                   </Box>
                 </Box>
+                {/* Barra de progreso del módulo */}
+                {userData && (
+                  <Box sx={{ width: '100%', pl: 5, pr: 2 }}>
+                    <ModuloProgreso modulo={modulo} usuarioId={userData.usuarioId} />
+                  </Box>
+                )}
               </AccordionSummary>
               <AccordionDetails sx={{ p: 0 }}>
                 {modulo.Lecciones && modulo.Lecciones.length > 0 ? (
@@ -185,6 +251,12 @@ export default function CourseLessons({ modulos, loading }: CourseLessonsProps) 
                                   >
                                     {leccion.titulo}
                                   </Link>
+                                  {userData && (
+                                    <LeccionEstadoIndicador 
+                                      leccionId={leccion.leccionId} 
+                                      usuarioId={userData.usuarioId} 
+                                    />
+                                  )}
                                 </Box>
                               </TableCell>
                               <TableCell>

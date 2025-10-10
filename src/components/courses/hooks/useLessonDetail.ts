@@ -26,6 +26,11 @@ const lessonDetailSelectionSet = [
   "Modulo.imagen_portada",
   "Modulo.progreso_estimado",
   "Modulo.cursoId",
+  "Modulo.Lecciones.leccionId",
+  "Modulo.Lecciones.titulo",
+  "Modulo.Lecciones.orden",
+  "Modulo.Lecciones.tipo",
+  "Modulo.Lecciones.duracion_minutos",
   "Modulo.Curso.cursoId",
   "Modulo.Curso.titulo",
   "Modulo.Curso.descripcion",
@@ -34,6 +39,11 @@ const lessonDetailSelectionSet = [
   "Modulo.Curso.nivel_dificultad",
   "Modulo.Curso.estado",
   "Modulo.Curso.progreso_estimado",
+  "Modulo.Curso.Modulos.moduloId",
+  "Modulo.Curso.Modulos.orden",
+  "Modulo.Curso.Modulos.Lecciones.leccionId",
+  "Modulo.Curso.Modulos.Lecciones.titulo",
+  "Modulo.Curso.Modulos.Lecciones.orden",
 ] as const;
 
 // Use SelectionSet to infer proper types
