@@ -80,7 +80,7 @@ export const useMaterialDetail = (
       setError(null);
 
       const { MaterialEstudio } = await getQueryFactories<
-        MainTypes,
+        Pick<MainTypes, "MaterialEstudio">,
         "MaterialEstudio"
       >({
         entities: ["MaterialEstudio"],

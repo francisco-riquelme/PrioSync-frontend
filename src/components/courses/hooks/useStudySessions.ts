@@ -145,7 +145,7 @@ export const useStudySessions = (
 
       // Use the query factories pattern
       const { SesionEstudio } = await getQueryFactories<
-        MainTypes,
+        Pick<MainTypes, "SesionEstudio">,
         "SesionEstudio"
       >({
         entities: ["SesionEstudio"],
@@ -198,7 +198,7 @@ export const useStudySessions = (
         setError(null);
 
         const { SesionEstudio } = await getQueryFactories<
-          MainTypes,
+          Pick<MainTypes, "SesionEstudio">,
           "SesionEstudio"
         >({
           entities: ["SesionEstudio"],
@@ -228,7 +228,7 @@ export const useStudySessions = (
         setError(null);
 
         const { SesionEstudio } = await getQueryFactories<
-          MainTypes,
+          Pick<MainTypes, "SesionEstudio">,
           "SesionEstudio"
         >({
           entities: ["SesionEstudio"],
@@ -264,7 +264,7 @@ export const useStudySessions = (
         setError(null);
 
         const { SesionEstudio } = await getQueryFactories<
-          MainTypes,
+          Pick<MainTypes, "SesionEstudio">,
           "SesionEstudio"
         >({
           entities: ["SesionEstudio"],
@@ -294,7 +294,7 @@ export const useStudySessions = (
         setError(null);
 
         const { SesionEstudio } = await getQueryFactories<
-          MainTypes,
+          Pick<MainTypes, "SesionEstudio">,
           "SesionEstudio"
         >({
           entities: ["SesionEstudio"],

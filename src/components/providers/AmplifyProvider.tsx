@@ -1,9 +1,9 @@
 'use client';
 
 import { useEffect, useState } from 'react';
-import { AmplifyOutputsType, initializeQueries } from "@/utils/commons/queries";
+import { AmplifyOutputsType, initializeQueries, AmplifyModelType } from "@/utils/commons/queries";
 import amplifyOutputs from "../../../amplify_outputs.json";
-import { MainSchema, MainTypes } from "@/utils/api/schema";
+import { MainSchema } from "@/utils/api/schema";
 
 interface AmplifyProviderProps {
   children: React.ReactNode;
@@ -17,7 +17,7 @@ export default function AmplifyProvider({ children }: AmplifyProviderProps) {
     const initializeAmplify = async () => {
       try {
         // initializeQueries handles both Amplify configuration and client initialization
-        await initializeQueries<typeof MainSchema, MainTypes>({
+        await initializeQueries<typeof MainSchema, Record<string, AmplifyModelType>>({
           amplifyOutputs: amplifyOutputs as unknown as AmplifyOutputsType,
           schema: MainSchema,
           cache: { enabled: true, maxSize: 50 * 1024 * 1024 },

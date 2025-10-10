@@ -356,4 +356,4 @@ export const MainSchema = a.schema({
     .identifier(["usuarioId", "cursoId"]),
 });
 
-export type MainTypes = ClientSchema<typeof MainSchema>;
+export type MainTypes = Exclude<ClientSchema<typeof MainSchema>, "Video">;

@@ -158,7 +158,10 @@ export const useQuizDetailData = (
 
       const { Cuestionario, ProgresoCuestionario, Respuesta } =
         await getQueryFactories<
-          MainTypes,
+          Pick<
+            MainTypes,
+            "Cuestionario" | "ProgresoCuestionario" | "Respuesta"
+          >,
           "Cuestionario" | "ProgresoCuestionario" | "Respuesta"
         >({
           entities: ["Cuestionario", "ProgresoCuestionario", "Respuesta"],

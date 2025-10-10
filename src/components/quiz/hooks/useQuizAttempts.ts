@@ -98,7 +98,7 @@ export const useQuizAttempts = (): UseQuizAttemptsReturn => {
         setError(null);
 
         const { ProgresoCuestionario } = await getQueryFactories<
-          MainTypes,
+          Pick<MainTypes, "ProgresoCuestionario">,
           "ProgresoCuestionario"
         >({
           entities: ["ProgresoCuestionario"],
@@ -168,7 +168,7 @@ export const useQuizAttempts = (): UseQuizAttemptsReturn => {
     async (cuestionarioId: string, usuarioId: string): Promise<string> => {
       try {
         const { ProgresoCuestionario } = await getQueryFactories<
-          MainTypes,
+          Pick<MainTypes, "ProgresoCuestionario">,
           "ProgresoCuestionario"
         >({
           entities: ["ProgresoCuestionario"],
@@ -220,7 +220,7 @@ export const useQuizAttempts = (): UseQuizAttemptsReturn => {
     async (cuestionarioId: string, usuarioId: string) => {
       try {
         const { ProgresoCuestionario } = await getQueryFactories<
-          MainTypes,
+          Pick<MainTypes, "ProgresoCuestionario">,
           "ProgresoCuestionario"
         >({
           entities: ["ProgresoCuestionario"],
