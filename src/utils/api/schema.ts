@@ -33,6 +33,7 @@ export const MainSchema = a.schema({
       Respuestas: a.hasMany("Respuesta", "usuarioId"),
       ProgresoMateriales: a.hasMany("ProgresoMaterial", "usuarioId"),
       ProgresoCuestionarios: a.hasMany("ProgresoCuestionario", "usuarioId"),
+      ProgresoLecciones: a.hasMany("ProgresoLeccion", "usuarioId"),
       Evaluaciones: a.hasMany("EvaluacionCurso", "usuarioId"),
       CursoCompartido: a.hasMany("CursoCompartido", "usuarioId"),
       BloqueEstudio: a.hasMany("BloqueEstudio", "usuarioId"),
@@ -159,6 +160,7 @@ export const MainSchema = a.schema({
       // Relationships
       MaterialesEstudio: a.hasMany("MaterialEstudio", "leccionId"),
       SesionesEstudio: a.hasMany("SesionEstudio", "leccionId"),
+      ProgresoLecciones: a.hasMany("ProgresoLeccion", "leccionId"),
     })
     .identifier(["leccionId"]),
 
@@ -303,6 +305,17 @@ export const MainSchema = a.schema({
     })
     .identifier(["usuarioId", "materialEstudioId"]),
 
+  ProgresoLeccion: a
+    .model({
+      usuarioId: a.id().required(),
+      leccionId: a.id().required(),
+      completada: a.boolean().default(false),
+      fecha_completado: a.datetime(),
+      Usuario: a.belongsTo("Usuario", "usuarioId"),
+      Leccion: a.belongsTo("Leccion", "leccionId"),
+    })
+    .identifier(["usuarioId", "leccionId"]),
+
   ProgresoCuestionario: a
     .model({
       progresoCuestionarioId: a.string().required(),
@@ -342,5 +355,5 @@ export const MainSchema = a.schema({
     })
     .identifier(["usuarioId", "cursoId"]),
 });
-export type SmallTypes = Pick<ClientSchema<typeof MainSchema>, "Video">;
-export type MainTypes = Omit<ClientSchema<typeof MainSchema>, "Video">;
+
+export type MainTypes = ClientSchema<typeof MainSchema>;
