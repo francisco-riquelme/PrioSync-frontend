@@ -1,4 +1,4 @@
-import type { Context, APIGatewayProxyEvent } from 'aws-lambda';
+import type { Context, APIGatewayProxyWebsocketEventV2 } from 'aws-lambda';
 import type { Middleware, MiddlewareChain } from '../middlewareChain';
 import type {
   AmplifyOutputs,
@@ -27,25 +27,9 @@ export interface MiddlewareError extends Error {
 
 /**
  * WebSocket event structure for API Gateway WebSocket APIs
- *
- * Extends the standard API Gateway proxy event with WebSocket-specific
- * request context information including connection ID and event type.
+ * For regular WebSocket routes (MESSAGE, CONNECT, DISCONNECT)
  */
-export type WebSocketEvent = Omit<APIGatewayProxyEvent, 'body'> & {
-  /** WebSocket-specific request context */
-  requestContext: APIGatewayProxyEvent['requestContext'] & {
-    /** Unique identifier for the WebSocket connection */
-    connectionId: string;
-    /** Route key that triggered this event */
-    routeKey: string;
-    /** Unique identifier for the message (MESSAGE events only) */
-    messageId?: string;
-    /** Type of WebSocket event */
-    eventType: 'CONNECT' | 'DISCONNECT' | 'MESSAGE';
-  };
-  /** Message body for MESSAGE events (JSON string) */
-  body?: string;
-};
+export type WebSocketEvent = APIGatewayProxyWebsocketEventV2;
 
 /**
  * Standard WebSocket response structure
@@ -114,61 +98,6 @@ export interface WebSocketInputWithModels<
 }
 
 /**
- * IAM policy statement structure
- *
- * Represents a single statement in an IAM policy document,
- * used for WebSocket API authorization.
- */
-export interface IAMPolicyStatement {
-  /** Whether to allow or deny the action */
-  Effect: 'Allow' | 'Deny';
-  /** Action or actions to allow/deny */
-  Action: string | string[];
-  /** Resource or resources the action applies to */
-  Resource: string | string[];
-  /** Optional conditions for the statement */
-  Condition?: Record<string, unknown>;
-}
-
-/**
- * IAM policy document structure
- *
- * Complete IAM policy document for WebSocket API authorization,
- * containing version information and policy statements.
- */
-export interface IAMPolicyDocument {
-  /** IAM policy language version */
-  Version: string;
-  /** Array of policy statements */
-  Statement: IAMPolicyStatement[];
-}
-
-/**
- * WebSocket authorizer response structure
- *
- * Response format for WebSocket custom authorizer functions,
- * including principal ID, policy document, and optional context.
- */
-export interface AuthorizerResponse {
-  /** Unique identifier for the principal being authorized */
-  principalId: string;
-  /** IAM policy document defining permissions */
-  policyDocument: IAMPolicyDocument;
-  /** Optional context data passed to the handler */
-  context?: Record<string, string | number | boolean>;
-  /** Optional usage identifier for API throttling */
-  usageIdentifierKey?: string;
-}
-
-/**
- * Union type for WebSocket handler return values
- *
- * WebSocket handlers can return either a standard response or
- * an authorizer response depending on the handler type.
- */
-export type WebSocketHandlerReturn = WebSocketResponse | AuthorizerResponse;
-
-/**
  * WebSocket-specific middleware chain type
  *
  * Type alias for middleware chains that work with WebSocket inputs
@@ -184,7 +113,7 @@ export type WebSocketMiddlewareChain<
     AmplifyModelType
   >,
   TSelected extends keyof TTypes & string = keyof TTypes & string,
-  TReturn = WebSocketHandlerReturn,
+  TReturn = WebSocketResponse,
 > = MiddlewareChain<WebSocketInputWithModels<TTypes, TSelected>, TReturn>;
 
 /**
@@ -203,7 +132,7 @@ export type WebSocketMiddleware<
     AmplifyModelType
   >,
   TSelected extends keyof TTypes & string = keyof TTypes & string,
-  TReturn = WebSocketHandlerReturn,
+  TReturn = WebSocketResponse,
 > = Middleware<WebSocketInputWithModels<TTypes, TSelected>, TReturn>;
 
 /**
@@ -296,7 +225,7 @@ export interface WebSocketRequestValidationConfig {
  * used for detailed error reporting.
  */
 export interface ValidationErrorDetail {
-  /** Field name that failed validation */
+  /** field name that failed validation */
   field: string;
   /** Human-readable error message */
   message: string;

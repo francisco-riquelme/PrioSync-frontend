@@ -4,15 +4,19 @@ import type {
   WebSocketInputWithModels,
   WebSocketErrorHandlerConfig,
   MiddlewareError,
-  WebSocketHandlerReturn,
+  WebSocketResponse,
 } from './types';
 import type { AmplifyModelType } from '../../queries/types';
+import { buildWebSocketContext } from './utils';
 import {
-  buildErrorContext,
-  setupStructuredLogging,
+  buildErrorContextWith,
+  setupStructuredLoggingWith,
   getErrorMessage,
   getErrorStack,
-} from './utils';
+} from '../utils/common';
+import type { Context } from 'aws-lambda';
+import type { WebSocketEvent } from './types';
+import type { InputWithModels } from '../utils/common';
 
 function isMiddlewareError(error: unknown): error is MiddlewareError {
   return (
@@ -36,7 +40,7 @@ export function createWebSocketErrorHandler<
     AmplifyModelType
   >,
   TSelected extends keyof TTypes & string = keyof TTypes & string,
-  TOutput = WebSocketHandlerReturn,
+  TOutput = WebSocketResponse,
 >(
   config: WebSocketErrorHandlerConfig = {},
 ): Middleware<WebSocketInputWithModels<TTypes, TSelected>, TOutput> {
@@ -50,11 +54,28 @@ export function createWebSocketErrorHandler<
       input?: WebSocketInputWithModels<TTypes, TSelected>,
     ) => Promise<TOutput>,
   ): Promise<TOutput> => {
-    setupStructuredLogging(
-      input as unknown as WebSocketInputWithModels<
-        Record<string, AmplifyModelType>,
-        string
-      >,
+    const typedInput = input as unknown as InputWithModels<
+      Record<string, AmplifyModelType>,
+      string,
+      WebSocketEvent,
+      Context
+    >;
+
+    setupStructuredLoggingWith<
+      Record<string, AmplifyModelType>,
+      string,
+      WebSocketEvent,
+      Context
+    >(
+      typedInput,
+      (i, extra) =>
+        buildWebSocketContext(
+          i as unknown as WebSocketInputWithModels<
+            Record<string, AmplifyModelType>,
+            string
+          >,
+          extra,
+        ),
       true,
       defaultContext,
     );
@@ -68,11 +89,21 @@ export function createWebSocketErrorHandler<
       if (isWebSocketError(error)) {
         throw WebSocketErrors.internal(error.message, {
           ...(isDev
-            ? buildErrorContext(
-                input as unknown as WebSocketInputWithModels<
-                  Record<string, AmplifyModelType>,
-                  string
-                >,
+            ? buildErrorContextWith<
+                Record<string, AmplifyModelType>,
+                string,
+                WebSocketEvent,
+                Context
+              >(
+                typedInput,
+                (i, extra) =>
+                  buildWebSocketContext(
+                    i as unknown as WebSocketInputWithModels<
+                      Record<string, AmplifyModelType>,
+                      string
+                    >,
+                    extra,
+                  ),
                 error,
                 defaultContext,
               )
@@ -88,11 +119,21 @@ export function createWebSocketErrorHandler<
           `Middleware error in ${middlewareInfo.name}`,
           {
             ...(isDev
-              ? buildErrorContext(
-                  input as unknown as WebSocketInputWithModels<
-                    Record<string, AmplifyModelType>,
-                    string
-                  >,
+              ? buildErrorContextWith<
+                  Record<string, AmplifyModelType>,
+                  string,
+                  WebSocketEvent,
+                  Context
+                >(
+                  typedInput,
+                  (i, extra) =>
+                    buildWebSocketContext(
+                      i as unknown as WebSocketInputWithModels<
+                        Record<string, AmplifyModelType>,
+                        string
+                      >,
+                      extra,
+                    ),
                   null,
                   defaultContext,
                 )
@@ -109,11 +150,21 @@ export function createWebSocketErrorHandler<
 
       throw WebSocketErrors.internal('Internal server error', {
         ...(isDev
-          ? buildErrorContext(
-              input as unknown as WebSocketInputWithModels<
-                Record<string, AmplifyModelType>,
-                string
-              >,
+          ? buildErrorContextWith<
+              Record<string, AmplifyModelType>,
+              string,
+              WebSocketEvent,
+              Context
+            >(
+              typedInput,
+              (i, extra) =>
+                buildWebSocketContext(
+                  i as unknown as WebSocketInputWithModels<
+                    Record<string, AmplifyModelType>,
+                    string
+                  >,
+                  extra,
+                ),
               null,
               defaultContext,
             )

@@ -5,7 +5,7 @@ import type { Middleware } from '../middlewareChain';
 import type {
   WebSocketEvent,
   WebSocketInputWithModels,
-  WebSocketHandlerReturn,
+  WebSocketResponse,
   WebSocketRequestValidationConfig,
   ValidationErrorDetail,
 } from './types';
@@ -95,7 +95,6 @@ function shouldValidate<
   validateOnlyOnRoutes: string[],
 ): { shouldValidate: boolean; reason?: string } {
   const { event } = input;
-  const { requestContext } = event;
 
   if (!isMessageEvent(event)) {
     return { shouldValidate: false, reason: 'Not a MESSAGE event' };
@@ -105,17 +104,21 @@ function shouldValidate<
     return { shouldValidate: false, reason: 'No validation schema' };
   }
 
-  if (!event.body) {
+  const bodyStr = (event as { body?: string }).body;
+  if (!bodyStr) {
     return { shouldValidate: false, reason: 'No message body' };
   }
 
   if (
     validateOnlyOnRoutes.length > 0 &&
-    !validateOnlyOnRoutes.includes(requestContext.routeKey)
+    !validateOnlyOnRoutes.includes(
+      (event as { requestContext?: { routeKey?: string } }).requestContext
+        ?.routeKey ?? '',
+    )
   ) {
     return {
       shouldValidate: false,
-      reason: `Route ${requestContext.routeKey} not in validation list`,
+      reason: `Route ${(event as { requestContext?: { routeKey?: string } }).requestContext?.routeKey ?? 'unknown'} not in validation list`,
     };
   }
 
@@ -185,7 +188,7 @@ function shouldValidate<
 export function createWebSocketRequestValidator<
   TTypes extends Record<string, AmplifyModelType>,
   TSelected extends keyof TTypes & string = keyof TTypes & string,
-  TOutput = WebSocketHandlerReturn,
+  TOutput = WebSocketResponse,
 >(
   config: WebSocketRequestValidationConfig,
 ): Middleware<WebSocketInputWithModels<TTypes, TSelected>, TOutput> {
@@ -206,7 +209,6 @@ export function createWebSocketRequestValidator<
     ) => Promise<TOutput>,
   ): Promise<TOutput> => {
     const { event } = input;
-    const { requestContext } = event;
 
     const validationDecision = shouldValidate(
       input,
@@ -216,15 +218,23 @@ export function createWebSocketRequestValidator<
 
     if (!validationDecision.shouldValidate) {
       if (logValidationSkipped) {
+        const ctx = buildWebSocketContext(
+          input as unknown as WebSocketInputWithModels<
+            Record<string, AmplifyModelType>,
+            string
+          >,
+        );
         logger.debug('WebSocket validation skipped', {
-          connectionId: requestContext.connectionId,
-          routeKey: requestContext.routeKey,
+          connectionId: ctx.connectionId,
+          routeKey: (event as { requestContext?: { routeKey?: string } })
+            .requestContext?.routeKey,
           reason: validationDecision.reason,
         });
       }
       return await next(input);
     }
 
+    // Validate only this block; do NOT catch downstream handler errors
     try {
       const context = buildWebSocketContext(
         input as unknown as WebSocketInputWithModels<
@@ -232,13 +242,22 @@ export function createWebSocketRequestValidator<
           string
         >,
       );
-      const messageData = parseJsonBody(event.body, context);
+
+      const bodyStr = (event as { body?: string }).body;
+      const messageData = parseJsonBody(bodyStr, context);
 
       if (messageData === null) {
-        throw WebSocketErrors.badRequest('Invalid JSON in message body', {
-          connectionId: requestContext.connectionId,
-          routeKey: requestContext.routeKey,
-        });
+        const connId = (event as { requestContext?: { connectionId?: string } })
+          .requestContext?.connectionId;
+        const routeKey = (event as { requestContext?: { routeKey?: string } })
+          .requestContext?.routeKey;
+
+        const ctx = {
+          ...(connId ? { connectionId: connId } : {}),
+          ...(routeKey ? { routeKey } : {}),
+        };
+
+        throw WebSocketErrors.badRequest('Invalid JSON in message body', ctx);
       }
 
       const validatedData = await bodySchema!.validate(messageData, {
@@ -249,8 +268,6 @@ export function createWebSocketRequestValidator<
       (event as WebSocketEvent & { [VALIDATED_MESSAGE_KEY]?: unknown })[
         VALIDATED_MESSAGE_KEY
       ] = validatedData;
-
-      return await next(input);
     } catch (error) {
       const context = buildWebSocketContext(
         input as unknown as WebSocketInputWithModels<
@@ -268,9 +285,13 @@ export function createWebSocketRequestValidator<
           validationErrors,
           field: validationErrors[0]?.field,
         });
-      } else {
-        throw WebSocketErrors.internal('Validation processing error', context);
       }
+
+      // Unexpected error during validation phase only
+      throw WebSocketErrors.internal('Validation processing error', context);
     }
+
+    // Run next outside of the validation try/catch so chain errors propagate
+    return await next(input);
   };
 }

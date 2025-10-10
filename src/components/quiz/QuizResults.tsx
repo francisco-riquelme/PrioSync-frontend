@@ -17,7 +17,8 @@ import {
   Refresh,
   Lightbulb,
   TrendingUp,
-  School
+  School,
+  ArrowBack
 } from '@mui/icons-material';
 
 interface QuizResultsProps {
@@ -28,6 +29,7 @@ interface QuizResultsProps {
   passingScore: number;
   onRetry: () => void;
   onViewRecommendations?: () => void;
+  onReturnToCourse?: () => void;
   showRecommendationsButton?: boolean;
 }
 
@@ -39,6 +41,7 @@ const QuizResults: React.FC<QuizResultsProps> = ({
   passingScore,
   onRetry,
   onViewRecommendations,
+  onReturnToCourse,
   showRecommendationsButton = true
 }) => {
   const getResultIcon = () => {
@@ -228,6 +231,18 @@ const QuizResults: React.FC<QuizResultsProps> = ({
             size="large"
           >
             Explorar Cursos
+          </Button>
+        )}
+        
+        {onReturnToCourse && (
+          <Button 
+            variant="outlined" 
+            color="secondary"
+            onClick={onReturnToCourse}
+            startIcon={<ArrowBack />}
+            size="large"
+          >
+            Volver al Curso
           </Button>
         )}
       </Stack>

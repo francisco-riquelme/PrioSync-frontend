@@ -63,7 +63,6 @@ export function createRestModelInitializer<
 
     // Initialize queries with cache configuration
     const rawModels = await Promise.race([
-      // Use unified initialization with cache support
       initializeQueries<TSchema, TTypes, TSelected>({
         amplifyOutputs,
         schema,
@@ -96,44 +95,36 @@ export function createRestModelInitializer<
   };
 
   return async (input, next) => {
-    const context = buildRestContext(
-      input as unknown as RestInputWithModels<
-        Record<string, AmplifyModelType>,
-        string
-      >,
-    );
-
     try {
-      if (isInitialized && initPromise) {
-        const models = await initPromise;
-        return await next({ ...input, models });
-      }
-
+      // Lazy initialization: create promise on first request
       if (!initPromise) {
         initPromise = initialize(input);
       }
 
+      // Wait for initialization to complete
       const models = await initPromise;
       isInitialized = true;
 
+      // Pass models to next middleware - REST errors will bubble up naturally
       return await next({ ...input, models });
     } catch (error) {
-      const message = getErrorMessage(error);
-
+      // Only catch initialization errors - re-throw all others
       if (!isInitialized) {
+        // Reset state on initialization failure
         isInitialized = false;
         initPromise = null;
 
+        const message = getErrorMessage(error);
         return {
           statusCode: 500,
           body: JSON.stringify({
             error: 'Model initialization failed',
             message,
-            ...context,
           }),
         } as TReturn;
       }
 
+      // Re-throw REST errors and other errors to be handled by RestErrorHandler
       throw error;
     }
   };

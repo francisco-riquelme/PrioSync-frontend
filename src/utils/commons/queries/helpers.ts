@@ -1,12 +1,15 @@
 import { logger } from "../log";
-import { createHash } from "crypto";
+import CryptoJS from "crypto-js";
 import type {
   OperationType,
   AmplifyModelType,
   CacheConfig,
   QueryFactoryResult,
+  SortDirection,
+  AmplifyAuthMode,
 } from "./types";
 import { ClientManager } from "./ClientManager";
+import type { QueryCache } from "./cache";
 
 //#region IDENTIFIER AND DATA EXTRACTION UTILITIES
 /**
@@ -500,14 +503,154 @@ export function createObjectHash(
     const pairs = keys.map((key) => `${key}:${String(dataToHash[key])}`);
     const serialized = pairs.join("|");
 
-    return createHash("sha256").update(serialized).digest("hex");
+    return CryptoJS.SHA256(serialized).toString();
   } catch (error) {
     logger.warn(
       `Hash generation failed for ${entityName}, falling back to JSON`,
       { error }
     );
-    return createHash("sha256").update(JSON.stringify(obj)).digest("hex");
+    return CryptoJS.SHA256(JSON.stringify(obj)).toString();
   }
+}
+//#endregion
+
+//#region QUERY PARAMETER BUILDERS
+/**
+ * Builds parameters object for list operations.
+ *
+ * @param params - Configuration for list parameters
+ * @returns Object containing only the defined parameters
+ *
+ * @example
+ * ```typescript
+ * const params = buildListParams({
+ *   filter: { status: { eq: 'active' } },
+ *   limit: 50,
+ *   sortDirection: 'desc'
+ * });
+ * // Returns: { filter: {...}, limit: 50, sortDirection: 'desc' }
+ * ```
+ */
+export function buildListParams(params: {
+  filter?: unknown | undefined;
+  sortDirection?: SortDirection | undefined;
+  limit?: number | undefined;
+  authMode?: AmplifyAuthMode | undefined;
+  selectionSet?: readonly string[] | undefined;
+}): Record<string, unknown> {
+  const result: Record<string, unknown> = {};
+  if (params.filter) result.filter = params.filter;
+  if (params.sortDirection) result.sortDirection = params.sortDirection;
+  if (params.limit) result.limit = params.limit;
+  if (params.authMode) result.authMode = params.authMode;
+  if (params.selectionSet) result.selectionSet = params.selectionSet;
+  return result;
+}
+
+/**
+ * Builds parameters for index query operations.
+ *
+ * @param input - Base input object for the query
+ * @param params - Additional parameters to merge
+ * @returns Combined parameter object
+ *
+ * @example
+ * ```typescript
+ * const params = buildIndexParams(
+ *   { userId: "123" },
+ *   { limit: 20, filter: { active: { eq: true } } }
+ * );
+ * // Returns: { userId: "123", limit: 20, filter: {...} }
+ * ```
+ */
+export function buildIndexParams(
+  input: Record<string, unknown>,
+  params: {
+    filter?: unknown | undefined;
+    limit?: number | undefined;
+    authMode?: AmplifyAuthMode | undefined;
+    selectionSet?: readonly string[] | undefined;
+    nextToken?: string | undefined;
+  }
+): Record<string, unknown> {
+  const base: Record<string, unknown> = { ...input };
+  if (params.filter) base.filter = params.filter;
+  if (params.limit) base.limit = params.limit;
+  if (params.authMode) base.authMode = params.authMode;
+  if (params.selectionSet) base.selectionSet = params.selectionSet;
+  if (params.nextToken) base.nextToken = params.nextToken;
+  return base;
+}
+//#endregion
+
+//#region CACHE UTILITIES
+/**
+ * Generic cache check for query operations.
+ *
+ * Checks the cache for a previously stored query result based on
+ * the operation type and hash of query parameters.
+ *
+ * @template T - Type of the cached result
+ * @param config - Cache check configuration
+ * @returns Cached result if available, null otherwise
+ *
+ * @example
+ * ```typescript
+ * const cached = checkQueryCache<PaginationResult<User>>({
+ *   nameStr: "User",
+ *   cacheType: "list",
+ *   isCacheable: true,
+ *   hashData: { limit: 50 },
+ *   cache: queryCache
+ * });
+ * ```
+ */
+export function checkQueryCache<T>(config: {
+  nameStr: string;
+  cacheType: "list" | "index";
+  isCacheable: boolean;
+  hashData: Record<string, unknown>;
+  cache?: QueryCache | undefined;
+}): T | null {
+  if (!config.isCacheable || !config.cache) return null;
+
+  const cacheKey = `${config.nameStr}:${config.cacheType}:${createObjectHash(config.hashData, config.nameStr)}`;
+  return config.cache.get<T>(cacheKey) || null;
+}
+
+/**
+ * Generic cache set for query operations.
+ *
+ * Stores a query result in the cache if caching is eligible based
+ * on the operation type and parameters.
+ *
+ * @template T - Type of the result to cache
+ * @param config - Cache set configuration
+ *
+ * @example
+ * ```typescript
+ * setQueryCache({
+ *   nameStr: "User",
+ *   cacheType: "list",
+ *   isCacheable: true,
+ *   hashData: { limit: 50 },
+ *   result: { items: [...], scannedCount: 50 },
+ *   cache: queryCache
+ * });
+ * ```
+ */
+export function setQueryCache<T>(config: {
+  nameStr: string;
+  cacheType: "list" | "index";
+  isCacheable: boolean;
+  hashData: Record<string, unknown>;
+  result: T;
+  cache?: QueryCache | undefined;
+}): void {
+  if (!config.isCacheable || !config.cache) return;
+
+  const cacheKey = `${config.nameStr}:${config.cacheType}:${createObjectHash(config.hashData, config.nameStr)}`;
+  config.cache.set(cacheKey, config.result);
 }
 //#endregion
 
@@ -545,8 +688,11 @@ export function createObjectHash(
  * ```
  */
 export async function handlePagination<T>(
-  // eslint-disable-next-line @typescript-eslint/no-explicit-any
-  operation: (params?: Record<string, unknown>) => Promise<any>,
+  operation: (params?: Record<string, unknown>) => Promise<{
+    data: T[];
+    errors?: unknown[];
+    nextToken?: string;
+  }>,
   params: Record<string, unknown> = {},
   options: {
     followNextToken?: boolean;
@@ -598,7 +744,7 @@ export async function handlePagination<T>(
 
   return {
     items: allItems,
-    nextToken: currentToken as string | undefined,
+    ...(currentToken ? { nextToken: currentToken as string } : {}),
     scannedCount: totalScanned,
   };
 }

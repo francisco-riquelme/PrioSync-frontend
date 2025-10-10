@@ -296,7 +296,7 @@ class Logger {
       const data = args.length > 1 ? args.slice(1) : undefined;
 
       const structuredLog = this.createStructuredLog(levelName, message, data);
-      const output = JSON.stringify(structuredLog);
+      const output = JSON.stringify(structuredLog) + "\n";
 
       // Use appropriate console method
       if (level === LogLevel.ERROR) {

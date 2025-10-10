@@ -17,7 +17,7 @@ import {
   ArrowBack as ArrowBackIcon,
   Feedback as FeedbackIcon,
 } from '@mui/icons-material';
-import { useCourse } from '@/components/courses/hooks/useCourse';
+import { useCourseDetailData } from '@/components/courses/hooks/useCourseDetailData';
 import StudySessionsTable from './StudySessionsTable';
 import CourseContent from './CourseContent';
 
@@ -27,10 +27,10 @@ interface CourseDetailProps {
 
 export default function CourseDetail({ courseId }: CourseDetailProps) {
   const router = useRouter();
-  const [courseProgress, _setCourseProgress] = useState<number>(0);
+  const [courseProgress] = useState<number>(0);
 
-  // Use the improved hook to fetch course data
-  const { course, loading, error } = useCourse(courseId);
+  // Fetch all course data with the new unified hook
+  const { course, modulos, materiales, quizzes, loading, error } = useCourseDetailData({ cursoId: courseId });
 
   // Handle loading state
   if (loading) {
@@ -117,9 +117,6 @@ export default function CourseDetail({ courseId }: CourseDetailProps) {
   //   console.log('Lesson feedback:', moduleId, lessonId);
   // };
 
-  // TODO: Get actual user ID from auth context
-  const userId = "user-uuid-123"; // Replace with actual user ID from context
-
   return (
     <Box>
       {/* Header con botón de regreso */}
@@ -195,10 +192,16 @@ export default function CourseDetail({ courseId }: CourseDetailProps) {
       </Box>
       
       {/* Contenido del curso */}
-      <CourseContent courseId={courseId} usuarioId={userId} />
+      <CourseContent 
+        modulos={modulos}
+        materiales={materiales}
+        materialesLoading={false}
+        cuestionarios={quizzes}
+        quizzesLoading={false}
+      />
 
       {/* Sesiones de Estudio */}
-      <StudySessionsTable courseId={courseId} usuarioId={userId} />
+      <StudySessionsTable sessions={[]} loading={false} />
 
     </Box>
   );

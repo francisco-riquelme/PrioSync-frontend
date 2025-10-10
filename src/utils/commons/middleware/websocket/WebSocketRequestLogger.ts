@@ -5,10 +5,13 @@ import type {
   WebSocketResponse,
   WebSocketInputWithModels,
   WebSocketRequestLoggerConfig,
-  WebSocketHandlerReturn,
 } from './types';
 import type { AmplifyModelType } from '../../queries/types';
-import { extractEventInfo, setupStructuredLogging } from './utils';
+import {
+  extractEventInfo,
+  setupStructuredLogging,
+  isMessageEvent,
+} from './utils';
 
 /**
  * Maximum depth for object sanitization to prevent infinite recursion
@@ -104,32 +107,32 @@ function extractDetailedEventInfo<
 ): Record<string, unknown> {
   const { event } = input;
   const {
-    logMessageBody = true, // Changed from false to true
+    logMessageBody = true,
     excludeEventFields = [],
     maxDepth = MAX_DEPTH,
   } = config;
 
   const basicInfo = extractEventInfo(event);
 
-  if (
-    logMessageBody &&
-    event.requestContext.eventType === 'MESSAGE' &&
-    event.body
-  ) {
-    try {
-      const parsedBody = JSON.parse(event.body);
-      return {
-        ...basicInfo,
-        body: sanitizeObject(parsedBody, {
-          excludeFields: excludeEventFields,
-          maxDepth,
-        }),
-      };
-    } catch {
-      return {
-        ...basicInfo,
-        body: '[Invalid JSON]',
-      };
+  if (logMessageBody && isMessageEvent(event)) {
+    const bodyStr = (event as { body?: string }).body;
+
+    if (bodyStr) {
+      try {
+        const parsedBody = JSON.parse(bodyStr);
+        return {
+          ...basicInfo,
+          body: sanitizeObject(parsedBody, {
+            excludeFields: excludeEventFields,
+            maxDepth,
+          }),
+        };
+      } catch {
+        return {
+          ...basicInfo,
+          body: '[Invalid JSON]',
+        };
+      }
     }
   }
 
@@ -206,7 +209,7 @@ export function createWebSocketRequestLogger<
     AmplifyModelType
   >,
   TSelected extends keyof TTypes & string = keyof TTypes & string,
-  TOutput = WebSocketHandlerReturn,
+  TOutput = WebSocketResponse,
 >(
   config: WebSocketRequestLoggerConfig = {},
 ): Middleware<WebSocketInputWithModels<TTypes, TSelected>, TOutput> {
@@ -235,9 +238,9 @@ export function createWebSocketRequestLogger<
       logger.info('WebSocket request received', {
         ...eventInfo,
         ...defaultContext,
-        requestId: context.awsRequestId,
-        functionName: context.functionName,
-        functionVersion: context.functionVersion,
+        requestId: context?.awsRequestId || undefined,
+        functionName: context?.functionName || undefined,
+        functionVersion: context?.functionVersion || undefined,
       });
 
       const result = await next(input);
@@ -250,7 +253,7 @@ export function createWebSocketRequestLogger<
           ...responseInfo,
           ...defaultContext,
           duration: `${duration}ms`,
-          requestId: context.awsRequestId,
+          requestId: context?.awsRequestId || undefined,
         });
       }
 
@@ -258,7 +261,7 @@ export function createWebSocketRequestLogger<
       logger.debug('WebSocket request completed', {
         ...defaultContext,
         duration: `${duration}ms`,
-        requestId: context.awsRequestId,
+        requestId: context?.awsRequestId || undefined,
       });
 
       return result;

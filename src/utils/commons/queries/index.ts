@@ -1,25 +1,25 @@
 // Main interface
-export { ClientManager } from "./ClientManager";
+export { ClientManager } from './ClientManager';
 
 // Static method convenience exports
-import { ClientManager } from "./ClientManager";
+import { ClientManager } from './ClientManager';
 export const initializeQueries = ClientManager.initializeQueries;
 export const getGlobalAmplifyOutputs = ClientManager.getGlobalAmplifyOutputs;
 export const getIdentifierFields = ClientManager.getIdentifierFields;
 
 // Instance method convenience utilities - now from helpers
-export { getQueryFactories } from "./helpers";
+export { getQueryFactories } from './helpers';
 
 // QueryFactory is internal - users should use ClientManager methods
 
 // Cache system
-export { QueryCache, getGlobalCache, resetGlobalCache } from "./cache";
+export { QueryCache, getGlobalCache, resetGlobalCache } from './cache';
 
 // REST-aware operations
 export {
   createRestAwareQueryOperations,
   type RestAwareQueryOperations,
-} from "./restAware";
+} from './restAware';
 
 // Core types - all from types file now
 export type {
@@ -39,4 +39,5 @@ export type {
   PaginationParams,
   PaginationResult,
   SortDirection,
-} from "./types";
+  PickModels,
+} from './types';

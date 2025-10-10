@@ -14,18 +14,23 @@ import {
   PlayArrow,
   Quiz as QuizIcon,
   Schedule,
-  CheckCircle
+  CheckCircle,
+  ArrowBack
 } from '@mui/icons-material';
-import { QuizData } from '@/types/quiz';
+import { CuestionarioWithQuestions, PreguntaFromCuestionario } from './hooks/useQuizDetailData';
 
 interface QuizInstructionsProps {
-  quizData: QuizData;
+  quiz: CuestionarioWithQuestions;
+  preguntas: PreguntaFromCuestionario[];
   onStartQuiz: () => void;
+  onReturnToCourse: () => void;
 }
 
 const QuizInstructions: React.FC<QuizInstructionsProps> = ({
-  quizData,
-  onStartQuiz
+  quiz,
+  preguntas,
+  onStartQuiz,
+  onReturnToCourse
 }) => {
   return (
     <Box sx={{ maxWidth: 700, mx: 'auto', p: 2 }}>
@@ -35,10 +40,10 @@ const QuizInstructions: React.FC<QuizInstructionsProps> = ({
           <Box sx={{ textAlign: 'center', mb: 2 }}>
             <QuizIcon sx={{ fontSize: 48, color: 'primary.main', mb: 1 }} />
             <Typography variant="h5" gutterBottom sx={{ fontWeight: 'bold' }}>
-              {quizData.title}
+              {quiz.titulo}
             </Typography>
             <Chip
-              label={quizData.courseName}
+              label="Curso"
               color="primary"
               variant="outlined"
               size="small"
@@ -47,9 +52,9 @@ const QuizInstructions: React.FC<QuizInstructionsProps> = ({
           </Box>
 
           {/* Description - More compact */}
-          {quizData.description && (
+          {quiz.descripcion && (
             <Typography variant="body2" sx={{ mb: 2, textAlign: 'center', color: 'text.secondary' }}>
-              {quizData.description}
+              {quiz.descripcion}
             </Typography>
           )}
 
@@ -68,7 +73,7 @@ const QuizInstructions: React.FC<QuizInstructionsProps> = ({
               borderRadius: 1 
             }}>
               <Typography variant="h6" color="primary.main" sx={{ fontWeight: 'bold' }}>
-                {quizData.questions.length}
+                {preguntas.length}
               </Typography>
               <Typography variant="caption" color="text.secondary">
                 Preguntas
@@ -89,7 +94,7 @@ const QuizInstructions: React.FC<QuizInstructionsProps> = ({
                 fontWeight: 'bold' 
               }}>
                 <Schedule sx={{ fontSize: 16 }} />
-                {quizData.timeLimit}
+                {quiz.duracion_minutos || 30}
               </Typography>
               <Typography variant="caption" color="text.secondary">
                 Minutos
@@ -103,7 +108,7 @@ const QuizInstructions: React.FC<QuizInstructionsProps> = ({
               borderRadius: 1 
             }}>
               <Typography variant="h6" color="success.main" sx={{ fontWeight: 'bold' }}>
-                {quizData.passingScore}%
+                {quiz.porcentaje_aprobacion || 70}%
               </Typography>
               <Typography variant="caption" color="text.secondary">
                 Para Aprobar
@@ -128,7 +133,7 @@ const QuizInstructions: React.FC<QuizInstructionsProps> = ({
                   •
                 </Typography>
                 <Typography component="span">
-                  <strong>{quizData.questions.length} preguntas</strong> de selección múltiple
+                  <strong>{preguntas.length} preguntas</strong> de selección múltiple
                 </Typography>
               </Typography>
               
@@ -137,7 +142,7 @@ const QuizInstructions: React.FC<QuizInstructionsProps> = ({
                   •
                 </Typography>
                 <Typography component="span">
-                  <strong>{quizData.timeLimit} minutos</strong> para completar
+                  <strong>{quiz.duracion_minutos || 30} minutos</strong> para completar
                 </Typography>
               </Typography>
               
@@ -146,7 +151,7 @@ const QuizInstructions: React.FC<QuizInstructionsProps> = ({
                   •
                 </Typography>
                 <Typography component="span">
-                  Mínimo <strong>{quizData.passingScore}%</strong> para aprobar
+                  Mínimo <strong>{quiz.porcentaje_aprobacion || 70}%</strong> para aprobar
                 </Typography>
               </Typography>
               
@@ -181,6 +186,19 @@ const QuizInstructions: React.FC<QuizInstructionsProps> = ({
             >
               Iniciar Quiz
             </Button>
+            
+            {/* Return to Course Button */}
+            <Box sx={{ mt: 2 }}>
+              <Button
+                variant="outlined"
+                size="medium"
+                onClick={onReturnToCourse}
+                startIcon={<ArrowBack />}
+                sx={{ px: 2, py: 0.5, fontSize: '0.9rem' }}
+              >
+                Volver al Curso
+              </Button>
+            </Box>
           </Box>
         </CardContent>
       </Card>

@@ -19,17 +19,8 @@ export { createGraphQLRequestLogger } from './GraphQLRequestLogger';
 // GraphQL utilities
 export {
   buildGraphQLContext,
-  extractEventInfo,
-  extractArguments,
   setupStructuredLogging,
-  hasArguments,
-  getErrorMessage,
-  getErrorStack,
-  buildErrorContext,
   getModelsFromInput,
-  getModelFromInput,
-  hasModel,
-  getAvailableModelNames,
 } from './utils';
 
 // GraphQL types

@@ -1,8 +1,7 @@
 import { MiddlewareChain } from '../middlewareChain';
 import type {
   WebSocketInputWithModels,
-  AuthorizerResponse,
-  WebSocketHandlerReturn,
+  WebSocketResponse,
   WebSocketMiddlewareChain,
 } from './types';
 import type { AmplifyModelType } from '../../queries/types';
@@ -38,7 +37,7 @@ import type { AmplifyModelType } from '../../queries/types';
 export function createWebSocketChain<
   TTypes extends Record<string, AmplifyModelType>,
   TSelected extends keyof TTypes & string = keyof TTypes & string,
-  TReturn = WebSocketHandlerReturn,
+  TReturn = WebSocketResponse,
 >(
   config: {
     enableDebugLogging?: boolean;
@@ -87,7 +86,7 @@ export function createWebSocketChain<
 export function wrapWebSocketHandler<
   TTypes extends Record<string, AmplifyModelType>,
   TSelected extends keyof TTypes & string = keyof TTypes & string,
-  TReturn extends WebSocketHandlerReturn = WebSocketHandlerReturn,
+  TReturn extends WebSocketResponse = WebSocketResponse,
 >(
   chain: WebSocketMiddlewareChain<TTypes, TSelected, TReturn>,
   handler: (
@@ -103,86 +102,5 @@ export function wrapWebSocketHandler<
       TSelected
     >;
     return await chain.execute(input, handler);
-  };
-}
-
-/**
- * Create an IAM policy that allows WebSocket API access
- *
- * Generates a properly formatted IAM policy document for WebSocket API Gateway
- * authorizers. Used in custom authorizer functions to grant access to WebSocket
- * connections and route execution.
- *
- * @param principalId - Unique identifier for the principal (user/system) being authorized
- * @param resourceArn - ARN of the WebSocket API resource (defaults to '*' for all resources)
- * @param action - IAM action to allow (defaults to 'execute-api:Invoke')
- * @param context - Additional context data to pass to the handler
- * @returns Formatted authorizer response with Allow policy
- *
- * @example
- * ```typescript
- * // Basic allow policy
- * const allowPolicy = createAllowPolicy('user123');
- *
- * // Allow policy with specific resource and context
- * const specificPolicy = createAllowPolicy(
- *   'user123',
- *   'arn:aws:execute-api:us-east-1:123456789:abc123/prod/*',
- *   'execute-api:Invoke',
- *   { userId: 'user123', role: 'admin' }
- * );
- * ```
- */
-export function createAllowPolicy(
-  principalId: string,
-  resourceArn: string = '*',
-  action: string = 'execute-api:Invoke',
-  context: Record<string, string | number | boolean> = {},
-): AuthorizerResponse {
-  return {
-    principalId,
-    policyDocument: {
-      Version: '2012-10-17',
-      Statement: [{ Effect: 'Allow', Action: action, Resource: resourceArn }],
-    },
-    context,
-  };
-}
-
-/**
- * Create an IAM policy that denies WebSocket API access
- *
- * Generates a properly formatted IAM policy document that denies access to
- * WebSocket API Gateway resources. Used in custom authorizer functions to
- * reject unauthorized connection attempts.
- *
- * @param principalId - Unique identifier for the principal being denied
- * @param resourceArn - ARN of the WebSocket API resource (defaults to '*' for all resources)
- * @param action - IAM action to deny (defaults to 'execute-api:Invoke')
- * @returns Formatted authorizer response with Deny policy
- *
- * @example
- * ```typescript
- * // Basic deny policy
- * const denyPolicy = createDenyPolicy('invalid-user');
- *
- * // Deny policy for specific resource
- * const specificDeny = createDenyPolicy(
- *   'blocked-user',
- *   'arn:aws:execute-api:us-east-1:123456789:abc123/prod/sendMessage'
- * );
- * ```
- */
-export function createDenyPolicy(
-  principalId: string,
-  resourceArn: string = '*',
-  action: string = 'execute-api:Invoke',
-): AuthorizerResponse {
-  return {
-    principalId,
-    policyDocument: {
-      Version: '2012-10-17',
-      Statement: [{ Effect: 'Deny', Action: action, Resource: resourceArn }],
-    },
   };
 }

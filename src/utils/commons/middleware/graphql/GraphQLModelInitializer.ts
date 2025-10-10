@@ -1,61 +1,52 @@
-import { throwError } from "../../error";
-import { ClientManager } from "../../queries/ClientManager";
+import { throwError } from '../../error';
+import { ClientManager } from '../../queries/ClientManager';
+import { logger } from '../../log';
 import type {
   GraphQLModelInitializerConfig,
   GraphQLInputWithModels,
   GraphQLHandlerReturn,
-} from "./types";
-import type { Middleware } from "../middlewareChain";
-import type { AmplifyModelType, QueryFactoryResult } from "../../queries/types";
+} from './types';
+import type { Middleware } from '../middlewareChain';
+import type { AmplifyModelType, QueryFactoryResult } from '../../queries/types';
 
-/**
- * Global cache for initialized models across invocations
- * Key format: `${clientKey}-${entityKey}`
- * @internal
- */
 const modelsCache = new Map<string, Record<string, unknown>>();
-
-/**
- * Global cache for initialization promises to prevent concurrent initialization
- * Key format: `${clientKey}-${entityKey}`
- * @internal
- */
 const initializationPromises = new Map<
   string,
   Promise<Record<string, unknown>>
 >();
 
-/**
- * Create cache key for model storage
- * @internal
- */
 function createCacheKey(
   clientKey: string,
-  entities?: readonly string[]
+  entities?: readonly string[],
 ): string {
-  const entityKey = entities ? [...entities].sort().join(",") : "all";
+  const entityKey = entities ? [...entities].sort().join(',') : 'all';
   return `${clientKey}-${entityKey}`;
 }
 
-/**
- * Initialize models with timeout protection
- * @internal
- */
 async function initializeModelsWithTimeout<
   TSchema extends { models: Record<string, unknown> },
   TTypes extends Record<string, AmplifyModelType>,
   TSelected extends keyof TTypes & string,
 >(
-  config: GraphQLModelInitializerConfig<TSchema, TTypes, TSelected>
+  config: GraphQLModelInitializerConfig<TSchema, TTypes, TSelected>,
 ): Promise<{ [K in TSelected]: QueryFactoryResult<K, TTypes> }> {
   const {
     schema,
     amplifyOutputs,
     entities,
-    clientKey = "default",
+    clientKey = 'default',
     timeout = 5000,
     cache,
   } = config;
+
+  logger.info('Starting GraphQL model initialization', {
+    clientKey,
+    entities: entities || 'all',
+    timeout,
+    cacheEnabled: !!cache?.enabled,
+    schemaModels: Object.keys(schema?.models || {}),
+    middleware: 'GraphQLModelInitializer',
+  });
 
   const initPromise = ClientManager.initializeQueries({
     schema,
@@ -72,84 +63,98 @@ async function initializeModelsWithTimeout<
   });
 
   try {
+    logger.debug('Waiting for model initialization', {
+      clientKey,
+      timeout,
+      middleware: 'GraphQLModelInitializer',
+    });
+
     const models = await Promise.race([initPromise, timeoutPromise]);
+
+    logger.info('Model initialization completed successfully', {
+      initializedModels: Object.keys(models || {}),
+      modelCount: Object.keys(models || {}).length,
+      clientKey,
+      middleware: 'GraphQLModelInitializer',
+    });
+
     return models as { [K in TSelected]: QueryFactoryResult<K, TTypes> };
   } catch (error) {
-    throwError("GraphQL model initialization failed", {
+    logger.error('Model initialization failed', {
+      error: error instanceof Error ? error.message : String(error),
+      clientKey,
+      entities: entities || 'all',
+      timeout,
+      cacheEnabled: !!cache?.enabled,
+      middleware: 'GraphQLModelInitializer',
+    });
+
+    throwError('GraphQL model initialization failed', {
       originalError: error,
       clientKey,
-      entities: entities || "all",
+      entities: entities || 'all',
       timeout,
       cacheEnabled: !!cache?.enabled,
     });
   }
 }
 
-/**
- * Create a GraphQL model initializer middleware
- *
- * This middleware initializes Amplify Data model query factories for GraphQL resolvers.
- * It handles lazy initialization with caching, timeout protection, and automatic retry
- * logic on initialization failures.
- *
- * **Initialization Flow:**
- * 1. Checks if models are already initialized (uses caching)
- * 2. If not initialized, creates initialization promise with timeout
- * 3. Initializes Amplify client and query factories for specified entities
- * 4. Adds initialized models to input object for subsequent middleware
- * 5. Handles initialization failures with proper error responses
- *
- * **Caching Behavior:**
- * - Models are initialized once and cached for subsequent requests
- * - Initialization failures reset the cache to allow retry
- * - Concurrent requests share the same initialization promise
- *
- * **Error Handling:**
- * - Initialization timeout: Throws error to be handled by error middleware
- * - Amplify client errors: Throws error with details for debugging
- * - Post-initialization errors: Re-throws to be handled by error middleware
- *
- * **Performance Considerations:**
- * - First request bears initialization cost (typically 100-500ms)
- * - Subsequent requests use cached models (near-zero overhead)
- * - Timeout protection prevents hanging Lambda functions
- *
- * @template TSchema - Amplify Data schema type with models property
- * @template TTypes - Record of available Amplify model types
- * @template TSelected - Selected model types to initialize (subset of TTypes)
- * @template TReturn - Expected return type of the GraphQL resolver
- * @param config - Configuration for model initialization
- * @returns Middleware function that adds initialized models to the input
- */
 export function createGraphQLModelInitializer<
   TSchema extends { models: Record<string, unknown> },
   TTypes extends Record<string, AmplifyModelType>,
   TSelected extends keyof TTypes & string = keyof TTypes & string,
   TReturn extends GraphQLHandlerReturn = GraphQLHandlerReturn,
 >(
-  config: GraphQLModelInitializerConfig<TSchema, TTypes, TSelected>
+  config: GraphQLModelInitializerConfig<TSchema, TTypes, TSelected>,
 ): Middleware<GraphQLInputWithModels<TTypes, TSelected>, TReturn> {
-  const { clientKey = "default", entities } = config;
+  const { clientKey = 'default', entities } = config;
   const cacheKey = createCacheKey(clientKey, entities);
+
+  logger.debug('Creating GraphQL model initializer middleware', {
+    clientKey,
+    entities: entities || 'all',
+    cacheKey,
+    middleware: 'GraphQLModelInitializer',
+  });
 
   return async (
     input: GraphQLInputWithModels<TTypes, TSelected>,
-    next: () => Promise<TReturn>
+    next: () => Promise<TReturn>,
   ): Promise<TReturn> => {
+    logger.debug('GraphQL model initializer middleware execution started', {
+      cacheKey,
+      hasModels: !!input.models,
+      availableModels: Object.keys(input.models || {}),
+      middleware: 'GraphQLModelInitializer',
+    });
+
+    let models: { [K in TSelected]: QueryFactoryResult<K, TTypes> } | undefined;
+
     try {
-      // Check if models are already cached
-      let models = modelsCache.get(cacheKey) as
+      models = modelsCache.get(cacheKey) as
         | { [K in TSelected]: QueryFactoryResult<K, TTypes> }
         | undefined;
 
       if (!models) {
-        // Check if initialization is already in progress
+        logger.debug('Models not cached, checking initialization status', {
+          cacheKey,
+          middleware: 'GraphQLModelInitializer',
+        });
+
         let initPromise = initializationPromises.get(cacheKey);
 
         if (!initPromise) {
-          // Start new initialization
+          logger.info('Starting new model initialization', {
+            cacheKey,
+            middleware: 'GraphQLModelInitializer',
+          });
           initPromise = initializeModelsWithTimeout(config);
           initializationPromises.set(cacheKey, initPromise);
+        } else {
+          logger.debug('Waiting for existing initialization', {
+            cacheKey,
+            middleware: 'GraphQLModelInitializer',
+          });
         }
 
         try {
@@ -157,27 +162,54 @@ export function createGraphQLModelInitializer<
             [K in TSelected]: QueryFactoryResult<K, TTypes>;
           };
           modelsCache.set(cacheKey, models);
+          logger.info('Models cached successfully', {
+            cacheKey,
+            modelCount: Object.keys(models || {}).length,
+            modelNames: Object.keys(models || {}),
+            middleware: 'GraphQLModelInitializer',
+          });
         } catch (error) {
-          // Clear failed initialization from cache
+          logger.error('Clearing failed initialization from cache', {
+            cacheKey,
+            error: error instanceof Error ? error.message : String(error),
+            middleware: 'GraphQLModelInitializer',
+          });
           initializationPromises.delete(cacheKey);
           modelsCache.delete(cacheKey);
           throw error;
         } finally {
-          // Clear the promise once completed (success or failure)
           initializationPromises.delete(cacheKey);
         }
+      } else {
+        logger.debug('Using cached models', {
+          cacheKey,
+          modelCount: Object.keys(models || {}).length,
+          modelNames: Object.keys(models || {}),
+          middleware: 'GraphQLModelInitializer',
+        });
       }
 
-      // Add models to input for next middleware
       input.models = models;
 
-      return await next();
+      logger.debug('Proceeding to next middleware', {
+        cacheKey,
+        modelCount: Object.keys(models || {}).length,
+        middleware: 'GraphQLModelInitializer',
+      });
     } catch (error) {
-      throwError("GraphQL model initializer middleware failed", {
+      logger.error('GraphQL model initialization failed', {
         originalError: error,
         cacheKey,
-        middleware: "GraphQLModelInitializer",
+        middleware: 'GraphQLModelInitializer',
+      });
+
+      throwError('GraphQL model initialization failed', {
+        originalError: error,
+        cacheKey,
+        middleware: 'GraphQLModelInitializer',
       });
     }
+
+    return await next();
   };
 }

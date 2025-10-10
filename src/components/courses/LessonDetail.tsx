@@ -16,20 +16,26 @@ import {
   ArrowBack as ArrowBackIcon,
   CheckCircle as CheckCircleIcon,
 } from '@mui/icons-material';
-import { useLecciones } from './hooks/useLecciones';
+import { useLessonDetail } from './hooks/useLessonDetail';
 import { getMaterialTypeLabel, getMaterialTypeColor, formatDuration } from './courseUtils';
 
 interface LessonDetailProps {
   lessonId: string;
+  cursoId?: string; // Make this optional since we can get it from the lesson data
 }
 
-export default function LessonDetail({ lessonId }: LessonDetailProps) {
+export default function LessonDetail({ lessonId, cursoId }: LessonDetailProps) {
   const router = useRouter();
-  const { leccion, loading, error } = useLecciones({ leccionId: lessonId });
+  const { leccion, curso, loading, error } = useLessonDetail({ 
+    leccionId: lessonId
+  });
 
   const handleBackClick = () => {
-    if (leccion?.cursoId) {
-      router.push(`/courses/${leccion.cursoId}`);
+    // Use cursoId from lesson data if not provided as prop
+    const targetCursoId = cursoId || curso?.cursoId;
+    
+    if (targetCursoId) {
+      router.push(`/courses/${targetCursoId}`);
     } else {
       router.push('/courses');
     }

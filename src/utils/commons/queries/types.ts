@@ -223,6 +223,159 @@ export interface CacheStats {
 }
 //#endregion
 
+//#region FILTER TYPES
+/**
+ * Filter operators for string fields.
+ * Provides operations like equality, comparison, pattern matching, etc.
+ */
+export interface StringFilter<T extends string = string> {
+  /** Check if attribute exists */
+  attributeExists?: boolean;
+  /** String starts with the given prefix */
+  beginsWith?: string;
+  /** Value is between two strings (inclusive) */
+  between?: [string, string];
+  /** String contains the substring */
+  contains?: string;
+  /** Equals exact value */
+  eq?: T;
+  /** Greater than or equal */
+  ge?: string;
+  /** Greater than */
+  gt?: string;
+  /** Less than or equal */
+  le?: string;
+  /** Less than */
+  lt?: string;
+  /** Not equal */
+  ne?: T;
+  /** Does not contain substring */
+  notContains?: string;
+  /** Size-based filters */
+  size?: SizeFilter;
+}
+
+/**
+ * Filter operators for numeric fields.
+ */
+export interface NumericFilter {
+  /** Check if attribute exists */
+  attributeExists?: boolean;
+  /** Value is between two numbers (inclusive) */
+  between?: [number, number];
+  /** Equals exact value */
+  eq?: number;
+  /** Greater than or equal */
+  ge?: number;
+  /** Greater than */
+  gt?: number;
+  /** Less than or equal */
+  le?: number;
+  /** Less than */
+  lt?: number;
+  /** Not equal */
+  ne?: number;
+}
+
+/**
+ * Filter operators for boolean fields.
+ */
+export interface BooleanFilters {
+  /** Check if attribute exists */
+  attributeExists?: boolean;
+  /** Equals exact value */
+  eq?: boolean;
+  /** Not equal */
+  ne?: boolean;
+}
+
+/**
+ * Filter options for size-based operations on strings and arrays.
+ */
+export interface SizeFilter {
+  /** Size is between two values (inclusive) */
+  between?: [number, number];
+  /** Size equals exact value */
+  eq?: number;
+  /** Size greater than or equal */
+  ge?: number;
+  /** Size greater than */
+  gt?: number;
+  /** Size less than or equal */
+  le?: number;
+  /** Size less than */
+  lt?: number;
+  /** Size not equal */
+  ne?: number;
+}
+
+/**
+ * Extracts a filter type for a specific field based on its type.
+ */
+type FieldFilter<T> = boolean extends T
+  ? BooleanFilters
+  : number extends T
+    ? NumericFilter
+    : string extends T
+      ? StringFilter
+      : StringFilter; // default to StringFilter for complex types
+
+/**
+ * Generates type-safe filter object for a model type.
+ * Supports field-level filters with appropriate operators based on field types,
+ * plus logical operators (and, or, not) for compound filtering.
+ *
+ * @template T - The model type to generate filters for
+ */
+export type ModelFilter<T> = {
+  /** Combine filters with AND logic */
+  and?: ModelFilter<T> | ModelFilter<T>[];
+  /** Combine filters with OR logic */
+  or?: ModelFilter<T> | ModelFilter<T>[];
+  /** Negate a filter */
+  not?: ModelFilter<T>;
+} & {
+  /** Field-level filters for each property in the model */
+  [K in keyof T]?: T[K] extends (...args: unknown[]) => unknown
+    ? never // Exclude function properties (lazy loaders/relationships)
+    : FieldFilter<T[K]>;
+};
+//#endregion
+
+//#region SELECTION SET TYPES
+/**
+ * Selection set type for specifying which fields to retrieve.
+ * Supports dot notation for nested fields (e.g., 'author.email', 'posts.*')
+ */
+export type SelectionSet = readonly string[];
+//#endregion
+
+//#region MODEL UTILITIES
+/**
+ * Utility type to extract a subset of models from a model type map based on an entity list.
+ *
+ * This is useful in resolvers where you only need access to specific models,
+ * ensuring type safety while reducing the scope of available models.
+ *
+ * @template TEntities - Readonly array of entity names
+ * @template TTypes - Record containing all available model types
+ * @returns Object type with only the specified entities from TTypes
+ *
+ * @example
+ * ```typescript
+ * const entities = ["Curso", "Usuario"] as const;
+ * type ModelTypes = PickModels<typeof entities, MainTypes>;
+ * // Result: { Curso: MainTypes["Curso"], Usuario: MainTypes["Usuario"] }
+ * ```
+ */
+export type PickModels<
+  TEntities extends readonly string[],
+  TTypes extends Record<string, unknown>,
+> = {
+  [K in TEntities[number]]: K extends keyof TTypes ? TTypes[K] : never;
+};
+//#endregion
+
 //#region QUERY FACTORY TYPES
 /**
  * Complete CRUD operation interface for Amplify models.
@@ -243,58 +396,101 @@ export interface QueryFactoryResult<
    *
    * @param props - Object containing input data
    * @param props.input - Data for creating the record
+   * @param props.selectionSet - Optional array of fields to retrieve (supports dot notation)
    * @returns Promise resolving to the created record
    */
-  create(props: { input: CreateInput<T, Types> }): Promise<ModelType<T, Types>>;
+  create(props: {
+    input: CreateInput<T, Types>;
+    selectionSet?: SelectionSet;
+  }): Promise<ModelType<T, Types>>;
 
   /**
    * Update an existing record.
    *
    * @param props - Object containing input data
    * @param props.input - Data for updating the record (must include identifier)
+   * @param props.selectionSet - Optional array of fields to retrieve (supports dot notation)
    * @returns Promise resolving to the updated record
    */
-  update(props: { input: UpdateInput<T, Types> }): Promise<ModelType<T, Types>>;
+  update(props: {
+    input: UpdateInput<T, Types>;
+    selectionSet?: SelectionSet;
+  }): Promise<ModelType<T, Types>>;
 
   /**
    * Delete an existing record.
    *
    * @param props - Object containing input data
    * @param props.input - Identifier for the record to delete
+   * @param props.selectionSet - Optional array of fields to retrieve (supports dot notation)
    * @returns Promise resolving to the deleted record
    */
-  delete(props: { input: DeleteInput<T, Types> }): Promise<ModelType<T, Types>>;
+  delete(props: {
+    input: DeleteInput<T, Types>;
+    selectionSet?: SelectionSet;
+  }): Promise<ModelType<T, Types>>;
 
   /**
    * Retrieve a single record by identifier.
    *
    * @param props - Object containing input data
    * @param props.input - Identifier for the record to retrieve
+   * @param props.selectionSet - Optional array of fields to retrieve (supports dot notation)
    * @returns Promise resolving to the retrieved record
    */
-  get(props: { input: Identifier<T, Types> }): Promise<ModelType<T, Types>>;
+  get(props: {
+    input: Identifier<T, Types>;
+    selectionSet?: SelectionSet;
+  }): Promise<ModelType<T, Types>>;
 
   /**
    * Retrieve multiple records with optional filtering and pagination.
    *
    * @param props - Optional configuration for the list operation
-   * @param props.filter - Filter criteria for the query
+   * @param props.filter - Type-safe filter criteria for the query
    * @param props.sortDirection - Sort direction (asc or desc)
    * @param props.limit - Maximum number of items to return
    * @param props.nextToken - Token for pagination
    * @param props.authMode - Authorization mode for the request
    * @param props.followNextToken - Automatically follow pagination to get all results
    * @param props.maxPages - Safety limit for automatic pagination
+   * @param props.selectionSet - Optional array of fields to retrieve (supports dot notation)
    * @returns Promise resolving to paginated results
    */
   list(props?: {
-    filter?: Record<string, unknown>;
+    filter?: ModelFilter<ModelType<T, Types>>;
     sortDirection?: SortDirection;
     limit?: number;
     nextToken?: string;
     authMode?: AmplifyAuthMode;
     followNextToken?: boolean;
     maxPages?: number;
+    selectionSet?: SelectionSet;
+  }): Promise<PaginationResult<ModelType<T, Types>>>;
+
+  /**
+   * Execute a named secondary index query (queryField from schema keys).
+   *
+   * @param props - Configuration for the index query
+   * @param props.queryField - GraphQL query field name (e.g., UsersByEmail)
+   * @param props.input - Input arguments for the query field
+   * @param props.filter - Type-safe filter criteria for the query
+   * @param props.limit - Max items per page
+   * @param props.nextToken - Token for pagination
+   * @param props.authMode - Authorization mode for the request
+   * @param props.followNextToken - Automatically follow pagination
+   * @param props.maxPages - Safety limit for pagination
+   */
+  queryIndex(props: {
+    queryField: string;
+    input?: Record<string, unknown>;
+    filter?: ModelFilter<ModelType<T, Types>>;
+    limit?: number;
+    nextToken?: string;
+    authMode?: AmplifyAuthMode;
+    followNextToken?: boolean;
+    maxPages?: number;
+    selectionSet?: SelectionSet;
   }): Promise<PaginationResult<ModelType<T, Types>>>;
 }
 

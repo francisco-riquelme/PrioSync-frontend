@@ -16,25 +16,28 @@ import {
   Cancel,
   ArrowBack 
 } from '@mui/icons-material';
-import { QuizQuestionView, QuizDataView } from '@/types/quiz';
-import { QuizAttempt } from './hooks/useQuiz';
+import { PreguntaFromCuestionario, QuizAttemptWithAnswers } from './hooks/useQuizDetailData';
 
 interface QuizReviewProps {
-  quiz: QuizDataView;
-  attempt: QuizAttempt;
+  preguntas: PreguntaFromCuestionario[];
+  attempt: QuizAttemptWithAnswers;
   userAnswers: Record<string, number>;
   onBack: () => void;
+  onReturnToCourse?: () => void;
 }
 
 const QuizReview: React.FC<QuizReviewProps> = ({
-  quiz,
+  preguntas,
   attempt,
   userAnswers,
   onBack,
+  onReturnToCourse,
 }) => {
-  const getAnswerColor = (question: QuizQuestionView, optionIndex: number) => {
-    const userAnswer = userAnswers[question.id];
-    const isCorrectAnswer = optionIndex === question.correctAnswer;
+  const getAnswerColor = (pregunta: PreguntaFromCuestionario, optionIndex: number) => {
+    const userAnswer = userAnswers[pregunta.preguntaId];
+    const sortedOpciones = [...(pregunta.Opciones || [])].sort((a, b) => (a.orden || 0) - (b.orden || 0));
+    const correctAnswerIndex = sortedOpciones.findIndex(opcion => opcion.es_correcta);
+    const isCorrectAnswer = optionIndex === correctAnswerIndex;
     const isUserAnswer = optionIndex === userAnswer;
 
     if (isCorrectAnswer && isUserAnswer) {
@@ -48,9 +51,11 @@ const QuizReview: React.FC<QuizReviewProps> = ({
     }
   };
 
-  const getAnswerIcon = (question: QuizQuestionView, optionIndex: number) => {
-    const userAnswer = userAnswers[question.id];
-    const isCorrectAnswer = optionIndex === question.correctAnswer;
+  const getAnswerIcon = (pregunta: PreguntaFromCuestionario, optionIndex: number) => {
+    const userAnswer = userAnswers[pregunta.preguntaId];
+    const sortedOpciones = [...(pregunta.Opciones || [])].sort((a, b) => (a.orden || 0) - (b.orden || 0));
+    const correctAnswerIndex = sortedOpciones.findIndex(opcion => opcion.es_correcta);
+    const isCorrectAnswer = optionIndex === correctAnswerIndex;
     const isUserAnswer = optionIndex === userAnswer;
 
     if (isCorrectAnswer && isUserAnswer) {
@@ -64,9 +69,11 @@ const QuizReview: React.FC<QuizReviewProps> = ({
     }
   };
 
-  const getAnswerLabel = (question: QuizQuestionView, optionIndex: number) => {
-    const userAnswer = userAnswers[question.id];
-    const isCorrectAnswer = optionIndex === question.correctAnswer;
+  const getAnswerLabel = (pregunta: PreguntaFromCuestionario, optionIndex: number) => {
+    const userAnswer = userAnswers[pregunta.preguntaId];
+    const sortedOpciones = [...(pregunta.Opciones || [])].sort((a, b) => (a.orden || 0) - (b.orden || 0));
+    const correctAnswerIndex = sortedOpciones.findIndex(opcion => opcion.es_correcta);
+    const isCorrectAnswer = optionIndex === correctAnswerIndex;
     const isUserAnswer = optionIndex === userAnswer;
 
     if (isCorrectAnswer && isUserAnswer) {
@@ -92,6 +99,16 @@ const QuizReview: React.FC<QuizReviewProps> = ({
         >
           Volver
         </Button>
+        {onReturnToCourse && (
+          <Button
+            startIcon={<ArrowBack />}
+            onClick={onReturnToCourse}
+            variant="outlined"
+            color="secondary"
+          >
+            Volver al Curso
+          </Button>
+        )}
         <QuizIcon sx={{ color: 'primary.main', fontSize: 32 }} />
         <Box sx={{ flex: 1 }}>
           <Typography variant="h4" sx={{ fontWeight: 'bold' }}>
@@ -111,41 +128,47 @@ const QuizReview: React.FC<QuizReviewProps> = ({
 
       {/* Questions */}
       <Stack spacing={4}>
-        {quiz.questions.map((question, questionIndex) => (
-          <Paper key={question.id} elevation={2} sx={{ p: 4, borderRadius: 3 }}>
-            {/* Question Header */}
-            <Box sx={{ display: 'flex', alignItems: 'center', gap: 2, mb: 3 }}>
-              <Typography variant="h6" sx={{ fontWeight: 'bold' }}>
-                Pregunta {questionIndex + 1} de {quiz.questions.length}
-              </Typography>
-              <Chip
-                label={userAnswers[question.id] === question.correctAnswer ? 'Correcta' : 'Incorrecta'}
-                color={userAnswers[question.id] === question.correctAnswer ? 'success' : 'error'}
-                size="small"
-                variant="outlined"
-              />
-            </Box>
+        {preguntas.map((pregunta, questionIndex) => {
+          const sortedOpciones = [...(pregunta.Opciones || [])].sort((a, b) => (a.orden || 0) - (b.orden || 0));
+          const correctAnswerIndex = sortedOpciones.findIndex(opcion => opcion.es_correcta);
+          const userAnswer = userAnswers[pregunta.preguntaId];
+          const isCorrect = userAnswer === correctAnswerIndex;
+          
+          return (
+            <Paper key={pregunta.preguntaId} elevation={2} sx={{ p: 4, borderRadius: 3 }}>
+              {/* Question Header */}
+              <Box sx={{ display: 'flex', alignItems: 'center', gap: 2, mb: 3 }}>
+                <Typography variant="h6" sx={{ fontWeight: 'bold' }}>
+                  Pregunta {questionIndex + 1} de {preguntas.length}
+                </Typography>
+                <Chip
+                  label={isCorrect ? 'Correcta' : 'Incorrecta'}
+                  color={isCorrect ? 'success' : 'error'}
+                  size="small"
+                  variant="outlined"
+                />
+              </Box>
 
-            {/* Question Text */}
-            <Typography 
-              variant="h5" 
-              sx={{ 
-                fontWeight: 500, 
-                lineHeight: 1.4,
-                color: 'text.primary',
-                mb: 3
-              }}
-            >
-              {question.question}
-            </Typography>
+              {/* Question Text */}
+              <Typography 
+                variant="h5" 
+                sx={{ 
+                  fontWeight: 500, 
+                  lineHeight: 1.4,
+                  color: 'text.primary',
+                  mb: 3
+                }}
+              >
+                {pregunta.texto_pregunta}
+              </Typography>
 
             {/* Options */}
             <FormControl fullWidth>
               <Stack spacing={1}>
-                {question.options.map((option: string, optionIndex: number) => {
-                  const color = getAnswerColor(question, optionIndex);
-                  const icon = getAnswerIcon(question, optionIndex);
-                  const label = getAnswerLabel(question, optionIndex);
+                {sortedOpciones.map((opcion, optionIndex) => {
+                  const color = getAnswerColor(pregunta, optionIndex);
+                  const icon = getAnswerIcon(pregunta, optionIndex);
+                  const label = getAnswerLabel(pregunta, optionIndex);
 
                   return (
                     <Paper
@@ -179,7 +202,7 @@ const QuizReview: React.FC<QuizReviewProps> = ({
                             flex: 1
                           }}
                         >
-                          {String.fromCharCode(65 + optionIndex)}. {option}
+                          {String.fromCharCode(65 + optionIndex)}. {opcion.texto}
                         </Typography>
                         {label && (
                           <Chip
@@ -197,15 +220,16 @@ const QuizReview: React.FC<QuizReviewProps> = ({
             </FormControl>
 
             {/* Explanation */}
-            {question.explanation && (
+            {pregunta.explicacion && (
               <Box sx={{ mt: 3, p: 2, bgcolor: 'info.50', borderRadius: 2 }}>
                 <Typography variant="body2" color="info.main" sx={{ fontWeight: 500 }}>
-                  💡 Explicación: {question.explanation}
+                  💡 Explicación: {pregunta.explicacion}
                 </Typography>
               </Box>
             )}
           </Paper>
-        ))}
+          );
+        })}
       </Stack>
 
       {/* Summary */}
@@ -225,7 +249,11 @@ const QuizReview: React.FC<QuizReviewProps> = ({
             variant="outlined"
           />
           <Chip
-            label={`Correctas: ${quiz.questions.filter(q => userAnswers[q.id] === q.correctAnswer).length}/${quiz.questions.length}`}
+            label={`Correctas: ${preguntas.filter(p => {
+              const sortedOpciones = [...(p.Opciones || [])].sort((a, b) => (a.orden || 0) - (b.orden || 0));
+              const correctAnswerIndex = sortedOpciones.findIndex(opcion => opcion.es_correcta);
+              return userAnswers[p.preguntaId] === correctAnswerIndex;
+            }).length}/${preguntas.length}`}
             color="info"
             variant="outlined"
           />

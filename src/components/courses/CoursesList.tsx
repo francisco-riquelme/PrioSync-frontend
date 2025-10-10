@@ -1,6 +1,7 @@
 'use client';
 
 import { useRouter } from 'next/navigation';
+import { useState, useMemo } from 'react';
 import {
   Box,
   Typography,
@@ -12,23 +13,70 @@ import {
   InputLabel,
   CircularProgress,
   Alert,
+  Button,
 } from '@mui/material';
-import { Search as SearchIcon } from '@mui/icons-material';
-import { useCourseFilters } from '@/components/courses/hooks/useCourseFilters';
+import { Search as SearchIcon, Clear as ClearIcon } from '@mui/icons-material';
+import { useCoursesListData } from '@/components/courses/hooks/useCoursesListData';
 import { CourseCard } from './CourseCard';
-import { useCourse } from '@/components/courses/hooks/useCourse';
 
 export default function CoursesList() {
   const router = useRouter();
   
-  // Use custom hook for filter controls
-  const { filters, actions } = useCourseFilters();
+  // Use new hook for courses data
+  const { courses, loading, error } = useCoursesListData();
   
-  // Use unified course hook to fetch all courses
-  const { courses, loading, error } = useCourse();
+  // Local filter state
+  const [searchTerm, setSearchTerm] = useState('');
+  const [levelFilter, setLevelFilter] = useState('todos');
+  const [durationFilter, setDurationFilter] = useState('todos');
+
+  // Apply filters to courses
+  const filteredCourses = useMemo(() => {
+    let filtered = [...courses];
+
+    // Apply search filter
+    if (searchTerm.trim()) {
+      const searchLower = searchTerm.toLowerCase();
+      filtered = filtered.filter(course => 
+        course.titulo.toLowerCase().includes(searchLower) ||
+        course.descripcion?.toLowerCase().includes(searchLower) ||
+        course.playlistTitle?.toLowerCase().includes(searchLower)
+      );
+    }
+
+    // Apply level filter
+    if (levelFilter !== 'todos') {
+      filtered = filtered.filter(course => course.nivel_dificultad === levelFilter);
+    }
+
+    // Apply duration filter
+    if (durationFilter !== 'todos') {
+      filtered = filtered.filter(course => {
+        const duration = course.duracion_estimada || 0;
+        switch (durationFilter) {
+          case 'corto':
+            return duration <= 30;
+          case 'medio':
+            return duration > 30 && duration <= 120;
+          case 'largo':
+            return duration > 120;
+          default:
+            return true;
+        }
+      });
+    }
+
+    return filtered;
+  }, [courses, searchTerm, levelFilter, durationFilter]);
 
   const handleCourseClick = (courseId: number | string) => {
     router.push(`/courses/${courseId}`);
+  };
+
+  const handleClearFilters = () => {
+    setSearchTerm('');
+    setLevelFilter('todos');
+    setDurationFilter('todos');
   };
 
   return (
@@ -45,12 +93,12 @@ export default function CoursesList() {
         Cursos
       </Typography>
 
-      {/* Filtros (non-functional UI) */}
-      <Box sx={{ display: 'flex', gap: 2, mb: 4, flexWrap: 'wrap' }}>
+      {/* Filtros */}
+      <Box sx={{ display: 'flex', gap: 2, mb: 4, flexWrap: 'wrap', alignItems: 'center' }}>
         <TextField
           placeholder="Buscar cursos..."
-          value={filters.searchTerm}
-          onChange={(e) => actions.setSearchTerm(e.target.value)}
+          value={searchTerm}
+          onChange={(e) => setSearchTerm(e.target.value)}
           sx={{ minWidth: 300 }}
           InputProps={{
             startAdornment: (
@@ -64,9 +112,9 @@ export default function CoursesList() {
         <FormControl sx={{ minWidth: 120 }}>
           <InputLabel>Nivel</InputLabel>
           <Select
-            value={filters.levelFilter}
+            value={levelFilter}
             label="Nivel"
-            onChange={(e) => actions.setLevelFilter(e.target.value)}
+            onChange={(e) => setLevelFilter(e.target.value)}
           >
             <MenuItem value="todos">Todos</MenuItem>
             <MenuItem value="basico">Básico</MenuItem>
@@ -78,16 +126,25 @@ export default function CoursesList() {
         <FormControl sx={{ minWidth: 120 }}>
           <InputLabel>Duración</InputLabel>
           <Select
-            value={filters.durationFilter}
+            value={durationFilter}
             label="Duración"
-            onChange={(e) => actions.setDurationFilter(e.target.value)}
+            onChange={(e) => setDurationFilter(e.target.value)}
           >
             <MenuItem value="todos">Todos</MenuItem>
-            <MenuItem value="corto">Corto (&lt;20h)</MenuItem>
-            <MenuItem value="medio">Medio (20-40h)</MenuItem>
-            <MenuItem value="largo">Largo (&gt;40h)</MenuItem>
+            <MenuItem value="corto">Corto (&lt;30h)</MenuItem>
+            <MenuItem value="medio">Medio (30-120h)</MenuItem>
+            <MenuItem value="largo">Largo (&gt;120h)</MenuItem>
           </Select>
         </FormControl>
+
+        <Button
+          variant="outlined"
+          startIcon={<ClearIcon />}
+          onClick={handleClearFilters}
+          sx={{ minWidth: 120 }}
+        >
+          Limpiar
+        </Button>
       </Box>
 
       {/* Estados de loading y error */}
@@ -107,7 +164,7 @@ export default function CoursesList() {
       {!loading && !error && (
         <>
           {/* Lista de cursos */}
-          {courses.length > 0 ? (
+          {filteredCourses.length > 0 ? (
             <Box 
               sx={{ 
                 display: 'grid',
@@ -115,7 +172,7 @@ export default function CoursesList() {
                 gap: 3
               }}
             >
-              {courses.map((course) => (
+              {filteredCourses.map((course) => (
                 <CourseCard 
                   key={course.cursoId} 
                   course={course} 
@@ -126,7 +183,10 @@ export default function CoursesList() {
           ) : (
             <Box sx={{ textAlign: 'center', py: 8 }}>
               <Typography variant="h6" color="text.secondary">
-                No hay cursos disponibles en este momento
+                No se encontraron cursos con los filtros aplicados
+              </Typography>
+              <Typography variant="body2" color="text.secondary" sx={{ mt: 1 }}>
+                Intenta ajustar los filtros o limpiar la búsqueda
               </Typography>
             </Box>
           )}

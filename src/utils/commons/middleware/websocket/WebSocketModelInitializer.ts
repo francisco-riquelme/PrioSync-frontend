@@ -1,13 +1,13 @@
-import { logger } from "../../log";
+import { logger } from '../../log';
 import type {
   WebSocketModelInitializerConfig,
   WebSocketInputWithModels,
-  WebSocketHandlerReturn,
-} from "./types";
-import type { Middleware } from "../middlewareChain";
-import type { AmplifyModelType, QueryFactoryResult } from "../../queries/types";
-import { initializeQueries } from "../../queries";
-import { buildWebSocketContext, getErrorMessage } from "./utils";
+  WebSocketResponse,
+} from './types';
+import type { Middleware } from '../middlewareChain';
+import type { AmplifyModelType, QueryFactoryResult } from '../../queries/types';
+import { initializeQueries } from '../../queries';
+import { buildWebSocketContext, getErrorMessage } from './utils';
 
 /**
  * Create a WebSocket model initializer middleware
@@ -52,15 +52,15 @@ export function createWebSocketModelInitializer<
   TSchema extends { models: Record<string, unknown> },
   TTypes extends Record<string, AmplifyModelType>,
   TSelected extends keyof TTypes & string = keyof TTypes & string,
-  TReturn extends WebSocketHandlerReturn = WebSocketHandlerReturn,
+  TReturn extends WebSocketResponse = WebSocketResponse,
 >(
-  config: WebSocketModelInitializerConfig<TSchema, TTypes, TSelected>
+  config: WebSocketModelInitializerConfig<TSchema, TTypes, TSelected>,
 ): Middleware<WebSocketInputWithModels<TTypes, TSelected>, TReturn> {
   const {
     schema,
     amplifyOutputs,
     entities,
-    clientKey = "default",
+    clientKey = 'default',
     timeout = 5000,
     cache,
   } = config;
@@ -90,8 +90,8 @@ export function createWebSocketModelInitializer<
       new Promise<never>((_, reject) =>
         setTimeout(
           () => reject(new Error(`Initialization timeout after ${timeout}ms`)),
-          timeout
-        )
+          timeout,
+        ),
       ),
     ]);
 
@@ -103,32 +103,36 @@ export function createWebSocketModelInitializer<
       input as unknown as WebSocketInputWithModels<
         Record<string, AmplifyModelType>,
         string
-      >
+      >,
     );
+
+    // Only catch model initialization errors, not errors from next()
+    let models: { [K in TSelected]: QueryFactoryResult<K, TTypes> } | undefined;
 
     try {
       // Let ClientManager handle all caching and state management
-      const models = await initializeWithTimeout();
-
-      return await next({ ...input, models });
+      models = await initializeWithTimeout();
     } catch (error) {
       const message = getErrorMessage(error);
 
-      logger.error("WebSocket Model Initializer - Initialization failed", {
+      logger.error('WebSocket Model Initializer - Initialization failed', {
         ...context,
         error: message,
         clientKey,
         cacheEnabled: !!cache?.enabled,
-        entitiesRequested: entities || "all",
+        entitiesRequested: entities || 'all',
       });
 
       return {
         statusCode: 500,
         body: JSON.stringify({
-          error: "Model initialization failed",
+          error: 'Model initialization failed',
           message,
         }),
       } as TReturn;
     }
+
+    // Call next() outside the try-catch so errors from other middlewares bubble up naturally
+    return await next({ ...input, models });
   };
 }

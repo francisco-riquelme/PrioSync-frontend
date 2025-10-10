@@ -15,7 +15,6 @@ import {
   Paper,
   Chip,
   CircularProgress,
-  Alert,
   IconButton,
 } from '@mui/material';
 import {
@@ -23,16 +22,16 @@ import {
   Event as EventIcon,
   VideoCall as VideoCallIcon,
 } from '@mui/icons-material';
-import { useStudySessions } from './hooks/useStudySessions';
+import type { MainTypes } from '@/utils/api/schema';
 
+type SesionEstudio = MainTypes["SesionEstudio"]["type"];
 
 interface StudySessionsTableProps {
-  courseId: string;
-  usuarioId?: string;
+  sessions: SesionEstudio[];
+  loading: boolean;
 }
 
-export default function StudySessionsTable({ courseId, usuarioId }: StudySessionsTableProps) {
-  const { sessions, loading, error,  } = useStudySessions(courseId, usuarioId);
+export default function StudySessionsTable({ sessions, loading }: StudySessionsTableProps) {
 
   const formatTime = (time: string) => {
     // Format time from HH:MM:SS to HH:MM
@@ -97,19 +96,6 @@ export default function StudySessionsTable({ courseId, usuarioId }: StudySession
     );
   }
 
-  // Error state
-  if (error) {
-    return (
-      <Box>
-        <Typography variant="h5" sx={{ fontWeight: 600, mb: 3, color: 'text.primary' }}>
-          Sesiones de Estudio
-        </Typography>
-        <Alert severity="error" sx={{ mb: 4 }}>
-          {error}
-        </Alert>
-      </Box>
-    );
-  }
 
   return (
     <Box>

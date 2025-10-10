@@ -58,7 +58,7 @@
               "name": "nombre",
               "isArray": false,
               "type": "String",
-              "isRequired": true,
+              "isRequired": false,
               "attributes": []
             },
             "apellido": {
@@ -89,11 +89,11 @@
               "isRequired": false,
               "attributes": []
             },
-            "InscripcionesCurso": {
-              "name": "InscripcionesCurso",
+            "Cursos": {
+              "name": "Cursos",
               "isArray": true,
               "type": {
-                "model": "InscripcionCurso"
+                "model": "Curso"
               },
               "isRequired": false,
               "attributes": [],
@@ -185,6 +185,38 @@
                 ]
               }
             },
+            "CursoCompartido": {
+              "name": "CursoCompartido",
+              "isArray": true,
+              "type": {
+                "model": "CursoCompartido"
+              },
+              "isRequired": false,
+              "attributes": [],
+              "isArrayNullable": true,
+              "association": {
+                "connectionType": "HAS_MANY",
+                "associatedWith": [
+                  "usuarioId"
+                ]
+              }
+            },
+            "BloqueEstudio": {
+              "name": "BloqueEstudio",
+              "isArray": true,
+              "type": {
+                "model": "BloqueEstudio"
+              },
+              "isRequired": false,
+              "attributes": [],
+              "isArrayNullable": true,
+              "association": {
+                "connectionType": "HAS_MANY",
+                "associatedWith": [
+                  "usuarioId"
+                ]
+              }
+            },
             "updatedAt": {
               "name": "updatedAt",
               "isArray": false,
@@ -263,6 +295,134 @@
             "sortKeyFieldNames": []
           }
         },
+        "BloqueEstudio": {
+          "name": "BloqueEstudio",
+          "fields": {
+            "bloqueEstudioId": {
+              "name": "bloqueEstudioId",
+              "isArray": false,
+              "type": "ID",
+              "isRequired": true,
+              "attributes": []
+            },
+            "hora_inicio": {
+              "name": "hora_inicio",
+              "isArray": false,
+              "type": "AWSTime",
+              "isRequired": true,
+              "attributes": []
+            },
+            "hora_fin": {
+              "name": "hora_fin",
+              "isArray": false,
+              "type": "AWSTime",
+              "isRequired": true,
+              "attributes": []
+            },
+            "duracion_minutos": {
+              "name": "duracion_minutos",
+              "isArray": false,
+              "type": "Int",
+              "isRequired": false,
+              "attributes": []
+            },
+            "usuarioId": {
+              "name": "usuarioId",
+              "isArray": false,
+              "type": "ID",
+              "isRequired": true,
+              "attributes": []
+            },
+            "Usuario": {
+              "name": "Usuario",
+              "isArray": false,
+              "type": {
+                "model": "Usuario"
+              },
+              "isRequired": false,
+              "attributes": [],
+              "association": {
+                "connectionType": "BELONGS_TO",
+                "targetNames": [
+                  "usuarioId"
+                ]
+              }
+            },
+            "createdAt": {
+              "name": "createdAt",
+              "isArray": false,
+              "type": "AWSDateTime",
+              "isRequired": false,
+              "attributes": [],
+              "isReadOnly": true
+            },
+            "updatedAt": {
+              "name": "updatedAt",
+              "isArray": false,
+              "type": "AWSDateTime",
+              "isRequired": false,
+              "attributes": [],
+              "isReadOnly": true
+            }
+          },
+          "syncable": true,
+          "pluralName": "BloqueEstudios",
+          "attributes": [
+            {
+              "type": "model",
+              "properties": {}
+            },
+            {
+              "type": "key",
+              "properties": {
+                "fields": [
+                  "bloqueEstudioId"
+                ]
+              }
+            },
+            {
+              "type": "auth",
+              "properties": {
+                "rules": [
+                  {
+                    "allow": "public",
+                    "provider": "apiKey",
+                    "operations": [
+                      "create",
+                      "update",
+                      "delete",
+                      "read"
+                    ]
+                  },
+                  {
+                    "allow": "private",
+                    "operations": [
+                      "create",
+                      "update",
+                      "delete",
+                      "read"
+                    ]
+                  },
+                  {
+                    "allow": "public",
+                    "provider": "iam",
+                    "operations": [
+                      "create",
+                      "update",
+                      "delete",
+                      "read"
+                    ]
+                  }
+                ]
+              }
+            }
+          ],
+          "primaryKeyInfo": {
+            "isCustomPrimaryKey": true,
+            "primaryKeyFieldName": "bloqueEstudioId",
+            "sortKeyFieldNames": []
+          }
+        },
         "Curso": {
           "name": "Curso",
           "fields": {
@@ -319,19 +479,88 @@
               "isRequired": false,
               "attributes": []
             },
-            "InscripcionesCurso": {
-              "name": "InscripcionesCurso",
-              "isArray": true,
+            "progreso_estimado": {
+              "name": "progreso_estimado",
+              "isArray": false,
+              "type": "Int",
+              "isRequired": false,
+              "attributes": []
+            },
+            "playlistId": {
+              "name": "playlistId",
+              "isArray": false,
+              "type": "String",
+              "isRequired": true,
+              "attributes": []
+            },
+            "playlistTitle": {
+              "name": "playlistTitle",
+              "isArray": false,
+              "type": "String",
+              "isRequired": true,
+              "attributes": []
+            },
+            "playlistDescription": {
+              "name": "playlistDescription",
+              "isArray": false,
+              "type": "String",
+              "isRequired": true,
+              "attributes": []
+            },
+            "playlistThumbnail": {
+              "name": "playlistThumbnail",
+              "isArray": false,
+              "type": "AWSURL",
+              "isRequired": true,
+              "attributes": []
+            },
+            "playlistChannelTitle": {
+              "name": "playlistChannelTitle",
+              "isArray": false,
+              "type": "String",
+              "isRequired": true,
+              "attributes": []
+            },
+            "playlistChannelId": {
+              "name": "playlistChannelId",
+              "isArray": false,
+              "type": "String",
+              "isRequired": true,
+              "attributes": []
+            },
+            "playlistPublishedAt": {
+              "name": "playlistPublishedAt",
+              "isArray": false,
+              "type": "AWSDateTime",
+              "isRequired": true,
+              "attributes": []
+            },
+            "playlistItemCount": {
+              "name": "playlistItemCount",
+              "isArray": false,
+              "type": "Int",
+              "isRequired": true,
+              "attributes": []
+            },
+            "usuarioId": {
+              "name": "usuarioId",
+              "isArray": false,
+              "type": "ID",
+              "isRequired": true,
+              "attributes": []
+            },
+            "Usuario": {
+              "name": "Usuario",
+              "isArray": false,
               "type": {
-                "model": "InscripcionCurso"
+                "model": "Usuario"
               },
               "isRequired": false,
               "attributes": [],
-              "isArrayNullable": true,
               "association": {
-                "connectionType": "HAS_MANY",
-                "associatedWith": [
-                  "cursoId"
+                "connectionType": "BELONGS_TO",
+                "targetNames": [
+                  "usuarioId"
                 ]
               }
             },
@@ -399,11 +628,43 @@
                 ]
               }
             },
-            "Lecciones": {
-              "name": "Lecciones",
+            "Modulos": {
+              "name": "Modulos",
               "isArray": true,
               "type": {
-                "model": "Leccion"
+                "model": "Modulo"
+              },
+              "isRequired": false,
+              "attributes": [],
+              "isArrayNullable": true,
+              "association": {
+                "connectionType": "HAS_MANY",
+                "associatedWith": [
+                  "cursoId"
+                ]
+              }
+            },
+            "CursoCompartido": {
+              "name": "CursoCompartido",
+              "isArray": true,
+              "type": {
+                "model": "CursoCompartido"
+              },
+              "isRequired": false,
+              "attributes": [],
+              "isArrayNullable": true,
+              "association": {
+                "connectionType": "HAS_MANY",
+                "associatedWith": [
+                  "cursoId"
+                ]
+              }
+            },
+            "Transcripcion": {
+              "name": "Transcripcion",
+              "isArray": true,
+              "type": {
+                "model": "Transcripcion"
               },
               "isRequired": false,
               "attributes": [],
@@ -490,6 +751,498 @@
             "sortKeyFieldNames": []
           }
         },
+        "Transcripcion": {
+          "name": "Transcripcion",
+          "fields": {
+            "transcripcionId": {
+              "name": "transcripcionId",
+              "isArray": false,
+              "type": "ID",
+              "isRequired": true,
+              "attributes": []
+            },
+            "transcripcion": {
+              "name": "transcripcion",
+              "isArray": false,
+              "type": "String",
+              "isRequired": false,
+              "attributes": []
+            },
+            "transcripcionDuration": {
+              "name": "transcripcionDuration",
+              "isArray": false,
+              "type": "Int",
+              "isRequired": false,
+              "attributes": []
+            },
+            "videoId": {
+              "name": "videoId",
+              "isArray": false,
+              "type": "String",
+              "isRequired": false,
+              "attributes": []
+            },
+            "videoTitle": {
+              "name": "videoTitle",
+              "isArray": false,
+              "type": "String",
+              "isRequired": false,
+              "attributes": []
+            },
+            "videoDescription": {
+              "name": "videoDescription",
+              "isArray": false,
+              "type": "String",
+              "isRequired": false,
+              "attributes": []
+            },
+            "videoThumbnail": {
+              "name": "videoThumbnail",
+              "isArray": false,
+              "type": "AWSURL",
+              "isRequired": false,
+              "attributes": []
+            },
+            "videoPublishedAt": {
+              "name": "videoPublishedAt",
+              "isArray": false,
+              "type": "AWSDateTime",
+              "isRequired": false,
+              "attributes": []
+            },
+            "videoPosition": {
+              "name": "videoPosition",
+              "isArray": false,
+              "type": "Int",
+              "isRequired": false,
+              "attributes": []
+            },
+            "videoDuration": {
+              "name": "videoDuration",
+              "isArray": false,
+              "type": "Int",
+              "isRequired": false,
+              "attributes": []
+            },
+            "videoViewCount": {
+              "name": "videoViewCount",
+              "isArray": false,
+              "type": "Int",
+              "isRequired": false,
+              "attributes": []
+            },
+            "cursoId": {
+              "name": "cursoId",
+              "isArray": false,
+              "type": "ID",
+              "isRequired": true,
+              "attributes": []
+            },
+            "Curso": {
+              "name": "Curso",
+              "isArray": false,
+              "type": {
+                "model": "Curso"
+              },
+              "isRequired": false,
+              "attributes": [],
+              "association": {
+                "connectionType": "BELONGS_TO",
+                "targetNames": [
+                  "cursoId"
+                ]
+              }
+            },
+            "createdAt": {
+              "name": "createdAt",
+              "isArray": false,
+              "type": "AWSDateTime",
+              "isRequired": false,
+              "attributes": [],
+              "isReadOnly": true
+            },
+            "updatedAt": {
+              "name": "updatedAt",
+              "isArray": false,
+              "type": "AWSDateTime",
+              "isRequired": false,
+              "attributes": [],
+              "isReadOnly": true
+            }
+          },
+          "syncable": true,
+          "pluralName": "Transcripcions",
+          "attributes": [
+            {
+              "type": "model",
+              "properties": {}
+            },
+            {
+              "type": "key",
+              "properties": {
+                "fields": [
+                  "transcripcionId"
+                ]
+              }
+            },
+            {
+              "type": "auth",
+              "properties": {
+                "rules": [
+                  {
+                    "allow": "public",
+                    "provider": "apiKey",
+                    "operations": [
+                      "create",
+                      "update",
+                      "delete",
+                      "read"
+                    ]
+                  },
+                  {
+                    "allow": "private",
+                    "operations": [
+                      "create",
+                      "update",
+                      "delete",
+                      "read"
+                    ]
+                  },
+                  {
+                    "allow": "public",
+                    "provider": "iam",
+                    "operations": [
+                      "create",
+                      "update",
+                      "delete",
+                      "read"
+                    ]
+                  }
+                ]
+              }
+            }
+          ],
+          "primaryKeyInfo": {
+            "isCustomPrimaryKey": true,
+            "primaryKeyFieldName": "transcripcionId",
+            "sortKeyFieldNames": []
+          }
+        },
+        "CursoCompartido": {
+          "name": "CursoCompartido",
+          "fields": {
+            "estado": {
+              "name": "estado",
+              "isArray": false,
+              "type": {
+                "enum": "CursoCompartidoEstado"
+              },
+              "isRequired": false,
+              "attributes": []
+            },
+            "usuarioId": {
+              "name": "usuarioId",
+              "isArray": false,
+              "type": "ID",
+              "isRequired": true,
+              "attributes": []
+            },
+            "Usuario": {
+              "name": "Usuario",
+              "isArray": false,
+              "type": {
+                "model": "Usuario"
+              },
+              "isRequired": false,
+              "attributes": [],
+              "association": {
+                "connectionType": "BELONGS_TO",
+                "targetNames": [
+                  "usuarioId"
+                ]
+              }
+            },
+            "cursoId": {
+              "name": "cursoId",
+              "isArray": false,
+              "type": "ID",
+              "isRequired": true,
+              "attributes": []
+            },
+            "Curso": {
+              "name": "Curso",
+              "isArray": false,
+              "type": {
+                "model": "Curso"
+              },
+              "isRequired": false,
+              "attributes": [],
+              "association": {
+                "connectionType": "BELONGS_TO",
+                "targetNames": [
+                  "cursoId"
+                ]
+              }
+            },
+            "createdAt": {
+              "name": "createdAt",
+              "isArray": false,
+              "type": "AWSDateTime",
+              "isRequired": false,
+              "attributes": [],
+              "isReadOnly": true
+            },
+            "updatedAt": {
+              "name": "updatedAt",
+              "isArray": false,
+              "type": "AWSDateTime",
+              "isRequired": false,
+              "attributes": [],
+              "isReadOnly": true
+            }
+          },
+          "syncable": true,
+          "pluralName": "CursoCompartidos",
+          "attributes": [
+            {
+              "type": "model",
+              "properties": {}
+            },
+            {
+              "type": "key",
+              "properties": {
+                "fields": [
+                  "usuarioId",
+                  "cursoId"
+                ]
+              }
+            },
+            {
+              "type": "auth",
+              "properties": {
+                "rules": [
+                  {
+                    "allow": "public",
+                    "provider": "apiKey",
+                    "operations": [
+                      "create",
+                      "update",
+                      "delete",
+                      "read"
+                    ]
+                  },
+                  {
+                    "allow": "private",
+                    "operations": [
+                      "create",
+                      "update",
+                      "delete",
+                      "read"
+                    ]
+                  },
+                  {
+                    "allow": "public",
+                    "provider": "iam",
+                    "operations": [
+                      "create",
+                      "update",
+                      "delete",
+                      "read"
+                    ]
+                  }
+                ]
+              }
+            }
+          ],
+          "primaryKeyInfo": {
+            "isCustomPrimaryKey": true,
+            "primaryKeyFieldName": "usuarioId",
+            "sortKeyFieldNames": [
+              "cursoId"
+            ]
+          }
+        },
+        "Modulo": {
+          "name": "Modulo",
+          "fields": {
+            "moduloId": {
+              "name": "moduloId",
+              "isArray": false,
+              "type": "ID",
+              "isRequired": true,
+              "attributes": []
+            },
+            "titulo": {
+              "name": "titulo",
+              "isArray": false,
+              "type": "String",
+              "isRequired": true,
+              "attributes": []
+            },
+            "descripcion": {
+              "name": "descripcion",
+              "isArray": false,
+              "type": "String",
+              "isRequired": false,
+              "attributes": []
+            },
+            "duracion_estimada": {
+              "name": "duracion_estimada",
+              "isArray": false,
+              "type": "Int",
+              "isRequired": false,
+              "attributes": []
+            },
+            "orden": {
+              "name": "orden",
+              "isArray": false,
+              "type": "Int",
+              "isRequired": false,
+              "attributes": []
+            },
+            "imagen_portada": {
+              "name": "imagen_portada",
+              "isArray": false,
+              "type": "AWSURL",
+              "isRequired": false,
+              "attributes": []
+            },
+            "progreso_estimado": {
+              "name": "progreso_estimado",
+              "isArray": false,
+              "type": "Int",
+              "isRequired": false,
+              "attributes": []
+            },
+            "cursoId": {
+              "name": "cursoId",
+              "isArray": false,
+              "type": "ID",
+              "isRequired": true,
+              "attributes": []
+            },
+            "Curso": {
+              "name": "Curso",
+              "isArray": false,
+              "type": {
+                "model": "Curso"
+              },
+              "isRequired": false,
+              "attributes": [],
+              "association": {
+                "connectionType": "BELONGS_TO",
+                "targetNames": [
+                  "cursoId"
+                ]
+              }
+            },
+            "Lecciones": {
+              "name": "Lecciones",
+              "isArray": true,
+              "type": {
+                "model": "Leccion"
+              },
+              "isRequired": false,
+              "attributes": [],
+              "isArrayNullable": true,
+              "association": {
+                "connectionType": "HAS_MANY",
+                "associatedWith": [
+                  "moduloId"
+                ]
+              }
+            },
+            "Cuestionarios": {
+              "name": "Cuestionarios",
+              "isArray": true,
+              "type": {
+                "model": "Cuestionario"
+              },
+              "isRequired": false,
+              "attributes": [],
+              "isArrayNullable": true,
+              "association": {
+                "connectionType": "HAS_MANY",
+                "associatedWith": [
+                  "moduloId"
+                ]
+              }
+            },
+            "createdAt": {
+              "name": "createdAt",
+              "isArray": false,
+              "type": "AWSDateTime",
+              "isRequired": false,
+              "attributes": [],
+              "isReadOnly": true
+            },
+            "updatedAt": {
+              "name": "updatedAt",
+              "isArray": false,
+              "type": "AWSDateTime",
+              "isRequired": false,
+              "attributes": [],
+              "isReadOnly": true
+            }
+          },
+          "syncable": true,
+          "pluralName": "Modulos",
+          "attributes": [
+            {
+              "type": "model",
+              "properties": {}
+            },
+            {
+              "type": "key",
+              "properties": {
+                "fields": [
+                  "moduloId"
+                ]
+              }
+            },
+            {
+              "type": "auth",
+              "properties": {
+                "rules": [
+                  {
+                    "allow": "public",
+                    "provider": "apiKey",
+                    "operations": [
+                      "create",
+                      "update",
+                      "delete",
+                      "read"
+                    ]
+                  },
+                  {
+                    "allow": "private",
+                    "operations": [
+                      "create",
+                      "update",
+                      "delete",
+                      "read"
+                    ]
+                  },
+                  {
+                    "allow": "public",
+                    "provider": "iam",
+                    "operations": [
+                      "create",
+                      "update",
+                      "delete",
+                      "read"
+                    ]
+                  }
+                ]
+              }
+            }
+          ],
+          "primaryKeyInfo": {
+            "isCustomPrimaryKey": true,
+            "primaryKeyFieldName": "moduloId",
+            "sortKeyFieldNames": []
+          }
+        },
         "Leccion": {
           "name": "Leccion",
           "fields": {
@@ -537,6 +1290,13 @@
               "isRequired": true,
               "attributes": []
             },
+            "completada": {
+              "name": "completada",
+              "isArray": false,
+              "type": "Boolean",
+              "isRequired": false,
+              "attributes": []
+            },
             "orden": {
               "name": "orden",
               "isArray": false,
@@ -544,25 +1304,25 @@
               "isRequired": false,
               "attributes": []
             },
-            "cursoId": {
-              "name": "cursoId",
+            "moduloId": {
+              "name": "moduloId",
               "isArray": false,
               "type": "ID",
               "isRequired": true,
               "attributes": []
             },
-            "Curso": {
-              "name": "Curso",
+            "Modulo": {
+              "name": "Modulo",
               "isArray": false,
               "type": {
-                "model": "Curso"
+                "model": "Modulo"
               },
               "isRequired": false,
               "attributes": [],
               "association": {
                 "connectionType": "BELONGS_TO",
                 "targetNames": [
-                  "cursoId"
+                  "moduloId"
                 ]
               }
             },
@@ -571,6 +1331,22 @@
               "isArray": true,
               "type": {
                 "model": "MaterialEstudio"
+              },
+              "isRequired": false,
+              "attributes": [],
+              "isArrayNullable": true,
+              "association": {
+                "connectionType": "HAS_MANY",
+                "associatedWith": [
+                  "leccionId"
+                ]
+              }
+            },
+            "SesionesEstudio": {
+              "name": "SesionesEstudio",
+              "isArray": true,
+              "type": {
+                "model": "SesionEstudio"
               },
               "isRequired": false,
               "attributes": [],
@@ -655,147 +1431,6 @@
             "isCustomPrimaryKey": true,
             "primaryKeyFieldName": "leccionId",
             "sortKeyFieldNames": []
-          }
-        },
-        "InscripcionCurso": {
-          "name": "InscripcionCurso",
-          "fields": {
-            "fecha_inscripcion": {
-              "name": "fecha_inscripcion",
-              "isArray": false,
-              "type": "AWSDateTime",
-              "isRequired": false,
-              "attributes": []
-            },
-            "estado": {
-              "name": "estado",
-              "isArray": false,
-              "type": {
-                "enum": "InscripcionCursoEstado"
-              },
-              "isRequired": false,
-              "attributes": []
-            },
-            "usuarioId": {
-              "name": "usuarioId",
-              "isArray": false,
-              "type": "ID",
-              "isRequired": true,
-              "attributes": []
-            },
-            "Usuario": {
-              "name": "Usuario",
-              "isArray": false,
-              "type": {
-                "model": "Usuario"
-              },
-              "isRequired": false,
-              "attributes": [],
-              "association": {
-                "connectionType": "BELONGS_TO",
-                "targetNames": [
-                  "usuarioId"
-                ]
-              }
-            },
-            "cursoId": {
-              "name": "cursoId",
-              "isArray": false,
-              "type": "ID",
-              "isRequired": true,
-              "attributes": []
-            },
-            "Curso": {
-              "name": "Curso",
-              "isArray": false,
-              "type": {
-                "model": "Curso"
-              },
-              "isRequired": false,
-              "attributes": [],
-              "association": {
-                "connectionType": "BELONGS_TO",
-                "targetNames": [
-                  "cursoId"
-                ]
-              }
-            },
-            "createdAt": {
-              "name": "createdAt",
-              "isArray": false,
-              "type": "AWSDateTime",
-              "isRequired": false,
-              "attributes": [],
-              "isReadOnly": true
-            },
-            "updatedAt": {
-              "name": "updatedAt",
-              "isArray": false,
-              "type": "AWSDateTime",
-              "isRequired": false,
-              "attributes": [],
-              "isReadOnly": true
-            }
-          },
-          "syncable": true,
-          "pluralName": "InscripcionCursos",
-          "attributes": [
-            {
-              "type": "model",
-              "properties": {}
-            },
-            {
-              "type": "key",
-              "properties": {
-                "fields": [
-                  "usuarioId",
-                  "cursoId"
-                ]
-              }
-            },
-            {
-              "type": "auth",
-              "properties": {
-                "rules": [
-                  {
-                    "allow": "public",
-                    "provider": "apiKey",
-                    "operations": [
-                      "create",
-                      "update",
-                      "delete",
-                      "read"
-                    ]
-                  },
-                  {
-                    "allow": "private",
-                    "operations": [
-                      "create",
-                      "update",
-                      "delete",
-                      "read"
-                    ]
-                  },
-                  {
-                    "allow": "public",
-                    "provider": "iam",
-                    "operations": [
-                      "create",
-                      "update",
-                      "delete",
-                      "read"
-                    ]
-                  }
-                ]
-              }
-            }
-          ],
-          "primaryKeyInfo": {
-            "isCustomPrimaryKey": true,
-            "primaryKeyFieldName": "usuarioId",
-            "sortKeyFieldNames": [
-              "cursoId"
-            ]
           }
         },
         "SesionEstudio": {
@@ -909,6 +1544,28 @@
                 "connectionType": "BELONGS_TO",
                 "targetNames": [
                   "cursoId"
+                ]
+              }
+            },
+            "leccionId": {
+              "name": "leccionId",
+              "isArray": false,
+              "type": "ID",
+              "isRequired": false,
+              "attributes": []
+            },
+            "Leccion": {
+              "name": "Leccion",
+              "isArray": false,
+              "type": {
+                "model": "Leccion"
+              },
+              "isRequired": false,
+              "attributes": [],
+              "association": {
+                "connectionType": "BELONGS_TO",
+                "targetNames": [
+                  "leccionId"
                 ]
               }
             },
@@ -1295,6 +1952,28 @@
                 "connectionType": "BELONGS_TO",
                 "targetNames": [
                   "cursoId"
+                ]
+              }
+            },
+            "moduloId": {
+              "name": "moduloId",
+              "isArray": false,
+              "type": "ID",
+              "isRequired": false,
+              "attributes": []
+            },
+            "Modulo": {
+              "name": "Modulo",
+              "isArray": false,
+              "type": {
+                "model": "Modulo"
+              },
+              "isRequired": false,
+              "attributes": [],
+              "association": {
+                "connectionType": "BELONGS_TO",
+                "targetNames": [
+                  "moduloId"
                 ]
               }
             },
@@ -2712,21 +3391,21 @@
             "inactivo"
           ]
         },
+        "CursoCompartidoEstado": {
+          "name": "CursoCompartidoEstado",
+          "values": [
+            "en_progreso",
+            "completado",
+            "abandonado",
+            "inscrito"
+          ]
+        },
         "LeccionTipo": {
           "name": "LeccionTipo",
           "values": [
             "video",
             "audio",
             "archivo"
-          ]
-        },
-        "InscripcionCursoEstado": {
-          "name": "InscripcionCursoEstado",
-          "values": [
-            "en_progreso",
-            "completado",
-            "abandonado",
-            "inscrito"
           ]
         },
         "SesionEstudioTipo": {
@@ -2786,8 +3465,87 @@
         }
       },
       "nonModels": {
-        "ExampleReturnType": {
-          "name": "ExampleReturnType",
+        "Video": {
+          "name": "Video",
+          "fields": {
+            "videoId": {
+              "name": "videoId",
+              "isArray": false,
+              "type": "String",
+              "isRequired": true,
+              "attributes": []
+            },
+            "videoTitle": {
+              "name": "videoTitle",
+              "isArray": false,
+              "type": "String",
+              "isRequired": true,
+              "attributes": []
+            }
+          }
+        },
+        "MakeExampleResolverReturnType": {
+          "name": "MakeExampleResolverReturnType",
+          "fields": {
+            "message": {
+              "name": "message",
+              "isArray": false,
+              "type": "String",
+              "isRequired": true,
+              "attributes": []
+            }
+          }
+        },
+        "LoadYoutubeDataResolverReturnType": {
+          "name": "LoadYoutubeDataResolverReturnType",
+          "fields": {
+            "message": {
+              "name": "message",
+              "isArray": false,
+              "type": "String",
+              "isRequired": true,
+              "attributes": []
+            }
+          }
+        },
+        "CrearModulosResolverReturnType": {
+          "name": "CrearModulosResolverReturnType",
+          "fields": {
+            "message": {
+              "name": "message",
+              "isArray": false,
+              "type": "String",
+              "isRequired": true,
+              "attributes": []
+            }
+          }
+        },
+        "CrearQuestionarioResolverReturnType": {
+          "name": "CrearQuestionarioResolverReturnType",
+          "fields": {
+            "message": {
+              "name": "message",
+              "isArray": false,
+              "type": "String",
+              "isRequired": true,
+              "attributes": []
+            }
+          }
+        },
+        "CrearQuestionarioFinalResolverReturnType": {
+          "name": "CrearQuestionarioFinalResolverReturnType",
+          "fields": {
+            "message": {
+              "name": "message",
+              "isArray": false,
+              "type": "String",
+              "isRequired": true,
+              "attributes": []
+            }
+          }
+        },
+        "GenerarCitasResolverReturnType": {
+          "name": "GenerarCitasResolverReturnType",
           "fields": {
             "message": {
               "name": "message",
@@ -2800,16 +3558,102 @@
         }
       },
       "mutations": {
-        "Example": {
-          "name": "Example",
+        "makeExampleResolver": {
+          "name": "makeExampleResolver",
           "isArray": false,
           "type": {
-            "nonModel": "ExampleReturnType"
+            "nonModel": "MakeExampleResolverReturnType"
           },
           "isRequired": false,
           "arguments": {
-            "formId": {
-              "name": "formId",
+            "question": {
+              "name": "question",
+              "isArray": false,
+              "type": "String",
+              "isRequired": true
+            },
+            "context": {
+              "name": "context",
+              "isArray": false,
+              "type": "String",
+              "isRequired": false
+            }
+          }
+        },
+        "loadYoutubeDataResolver": {
+          "name": "loadYoutubeDataResolver",
+          "isArray": false,
+          "type": {
+            "nonModel": "LoadYoutubeDataResolverReturnType"
+          },
+          "isRequired": false,
+          "arguments": {
+            "playlistId": {
+              "name": "playlistId",
+              "isArray": false,
+              "type": "String",
+              "isRequired": true
+            }
+          }
+        },
+        "crearModulosResolver": {
+          "name": "crearModulosResolver",
+          "isArray": false,
+          "type": {
+            "nonModel": "CrearModulosResolverReturnType"
+          },
+          "isRequired": false,
+          "arguments": {
+            "cursoId": {
+              "name": "cursoId",
+              "isArray": false,
+              "type": "String",
+              "isRequired": true
+            }
+          }
+        },
+        "crearQuestionarioResolver": {
+          "name": "crearQuestionarioResolver",
+          "isArray": false,
+          "type": {
+            "nonModel": "CrearQuestionarioResolverReturnType"
+          },
+          "isRequired": false,
+          "arguments": {
+            "moduloId": {
+              "name": "moduloId",
+              "isArray": false,
+              "type": "String",
+              "isRequired": true
+            }
+          }
+        },
+        "crearQuestionarioFinalResolver": {
+          "name": "crearQuestionarioFinalResolver",
+          "isArray": false,
+          "type": {
+            "nonModel": "CrearQuestionarioFinalResolverReturnType"
+          },
+          "isRequired": false,
+          "arguments": {
+            "cursoId": {
+              "name": "cursoId",
+              "isArray": false,
+              "type": "String",
+              "isRequired": true
+            }
+          }
+        },
+        "generarCitasResolver": {
+          "name": "generarCitasResolver",
+          "isArray": false,
+          "type": {
+            "nonModel": "GenerarCitasResolverReturnType"
+          },
+          "isRequired": false,
+          "arguments": {
+            "cursoId": {
+              "name": "cursoId",
               "isArray": false,
               "type": "String",
               "isRequired": true
