@@ -192,9 +192,7 @@ export default function DashboardLayout({ children }: LayoutProps) {
             <MenuIcon />
           </IconButton>
           
-          <Typography variant="h6" noWrap component="div" sx={{ flexGrow: 1 }}>
-            Dashboard
-          </Typography>
+          <Box sx={{ flexGrow: 1 }} />
 
           {/* Notificaciones */}
           <IconButton color="inherit" sx={{ mr: 2 }}>
