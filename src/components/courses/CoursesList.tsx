@@ -1,7 +1,7 @@
 'use client';
 
 import { useRouter } from 'next/navigation';
-import { useEffect } from 'react';
+import { useState, useMemo } from 'react';
 import {
   Box,
   Typography,
@@ -16,32 +16,67 @@ import {
   Button,
 } from '@mui/material';
 import { Search as SearchIcon, Clear as ClearIcon } from '@mui/icons-material';
-import { useCourseFilters } from '@/components/courses/hooks/useCourseFilters';
+import { useCoursesListData } from '@/components/courses/hooks/useCoursesListData';
 import { CourseCard } from './CourseCard';
 
 export default function CoursesList() {
   const router = useRouter();
   
-  // Use custom hook for filter controls and filtered courses
-  const { 
-    filters, 
-    actions, 
-    filteredCourses, 
-    loading, 
-    error 
-  } = useCourseFilters();
+  // Use new hook for courses data
+  const { courses, loading, error } = useCoursesListData();
+  
+  // Local filter state
+  const [searchTerm, setSearchTerm] = useState('');
+  const [levelFilter, setLevelFilter] = useState('todos');
+  const [durationFilter, setDurationFilter] = useState('todos');
 
-  // Apply filters when component mounts or filters change
-  useEffect(() => {
-    actions.applyFilters();
-  }, [filters.searchTerm, filters.levelFilter, filters.durationFilter]);
+  // Apply filters to courses
+  const filteredCourses = useMemo(() => {
+    let filtered = [...courses];
+
+    // Apply search filter
+    if (searchTerm.trim()) {
+      const searchLower = searchTerm.toLowerCase();
+      filtered = filtered.filter(course => 
+        course.titulo.toLowerCase().includes(searchLower) ||
+        course.descripcion?.toLowerCase().includes(searchLower) ||
+        course.playlistTitle?.toLowerCase().includes(searchLower)
+      );
+    }
+
+    // Apply level filter
+    if (levelFilter !== 'todos') {
+      filtered = filtered.filter(course => course.nivel_dificultad === levelFilter);
+    }
+
+    // Apply duration filter
+    if (durationFilter !== 'todos') {
+      filtered = filtered.filter(course => {
+        const duration = course.duracion_estimada || 0;
+        switch (durationFilter) {
+          case 'corto':
+            return duration <= 30;
+          case 'medio':
+            return duration > 30 && duration <= 120;
+          case 'largo':
+            return duration > 120;
+          default:
+            return true;
+        }
+      });
+    }
+
+    return filtered;
+  }, [courses, searchTerm, levelFilter, durationFilter]);
 
   const handleCourseClick = (courseId: number | string) => {
     router.push(`/courses/${courseId}`);
   };
 
   const handleClearFilters = () => {
-    actions.resetFilters();
+    setSearchTerm('');
+    setLevelFilter('todos');
+    setDurationFilter('todos');
   };
 
   return (
@@ -62,8 +97,8 @@ export default function CoursesList() {
       <Box sx={{ display: 'flex', gap: 2, mb: 4, flexWrap: 'wrap', alignItems: 'center' }}>
         <TextField
           placeholder="Buscar cursos..."
-          value={filters.searchTerm}
-          onChange={(e) => actions.setSearchTerm(e.target.value)}
+          value={searchTerm}
+          onChange={(e) => setSearchTerm(e.target.value)}
           sx={{ minWidth: 300 }}
           InputProps={{
             startAdornment: (
@@ -77,9 +112,9 @@ export default function CoursesList() {
         <FormControl sx={{ minWidth: 120 }}>
           <InputLabel>Nivel</InputLabel>
           <Select
-            value={filters.levelFilter}
+            value={levelFilter}
             label="Nivel"
-            onChange={(e) => actions.setLevelFilter(e.target.value)}
+            onChange={(e) => setLevelFilter(e.target.value)}
           >
             <MenuItem value="todos">Todos</MenuItem>
             <MenuItem value="basico">Básico</MenuItem>
@@ -91,9 +126,9 @@ export default function CoursesList() {
         <FormControl sx={{ minWidth: 120 }}>
           <InputLabel>Duración</InputLabel>
           <Select
-            value={filters.durationFilter}
+            value={durationFilter}
             label="Duración"
-            onChange={(e) => actions.setDurationFilter(e.target.value)}
+            onChange={(e) => setDurationFilter(e.target.value)}
           >
             <MenuItem value="todos">Todos</MenuItem>
             <MenuItem value="corto">Corto (&lt;30h)</MenuItem>

@@ -12,18 +12,18 @@ import {
   Chip
 } from '@mui/material';
 import { Quiz as QuizIcon } from '@mui/icons-material';
-import { QuizQuestionView as IQuizQuestion } from '@/types/quiz';
+import { PreguntaFromCuestionario } from './hooks/useQuizDetailData';
 
 interface QuizQuestionProps {
-  question: IQuizQuestion;
+  pregunta: PreguntaFromCuestionario;
   questionNumber: number;
   totalQuestions: number;
   selectedAnswer?: number;
-  onAnswerSelect: (questionId: string, answerIndex: number) => void;
+  onAnswerSelect: (preguntaId: string, answerIndex: number) => void;
 }
 
 const QuizQuestion: React.FC<QuizQuestionProps> = ({
-  question,
+  pregunta,
   questionNumber,
   totalQuestions,
   selectedAnswer,
@@ -31,8 +31,11 @@ const QuizQuestion: React.FC<QuizQuestionProps> = ({
 }) => {
   const handleAnswerChange = (event: React.ChangeEvent<HTMLInputElement>) => {
     const answerIndex = parseInt(event.target.value);
-    onAnswerSelect(question.id, answerIndex);
+    onAnswerSelect(pregunta.preguntaId, answerIndex);
   };
+
+  // Sort options by orden field
+  const sortedOpciones = [...(pregunta.Opciones || [])].sort((a, b) => (a.orden || 0) - (b.orden || 0));
 
   return (
     <Box sx={{ maxWidth: 800, mx: 'auto' }}>
@@ -64,7 +67,7 @@ const QuizQuestion: React.FC<QuizQuestionProps> = ({
               color: 'text.primary'
             }}
           >
-            {question.question}
+            {pregunta.texto_pregunta}
           </Typography>
         </Box>
 
@@ -75,7 +78,7 @@ const QuizQuestion: React.FC<QuizQuestionProps> = ({
             onChange={handleAnswerChange}
             sx={{ gap: 1 }}
           >
-            {question.options.map((option: string, index: number) => (
+            {sortedOpciones.map((opcion, index) => (
               <Paper
                 key={index}
                 variant="outlined"
@@ -120,7 +123,7 @@ const QuizQuestion: React.FC<QuizQuestionProps> = ({
                           color: selectedAnswer === index ? 'primary.main' : 'text.primary'
                         }}
                       >
-                        {String.fromCharCode(65 + index)}. {option}
+                        {String.fromCharCode(65 + index)}. {opcion.texto}
                       </Typography>
                     </Box>
                   }

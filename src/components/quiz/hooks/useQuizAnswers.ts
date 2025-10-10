@@ -49,7 +49,7 @@ type OpcionPreguntaSelected = SelectionSet<
 >;
 
 // Extract nested types for easier access
-// type OpcionFromRespuesta = NonNullable<RespuestaWithRelations["Opcion"]>;
+type OpcionFromRespuesta = NonNullable<RespuestaWithRelations["Opcion"]>;
 
 export interface UseQuizAnswersReturn {
   // User answers
@@ -132,7 +132,7 @@ export const useQuizAnswers = (): UseQuizAnswersReturn => {
           const opcion = (await OpcionPregunta.get({
             input: { opcionId },
             selectionSet: opcionPreguntaSelectionSet,
-          })) as unknown as OpcionPreguntaSelected;
+          })) as OpcionPreguntaSelected;
           isCorrect = opcion?.es_correcta || false;
         }
 
@@ -148,7 +148,9 @@ export const useQuizAnswers = (): UseQuizAnswersReturn => {
           selectionSet: respuestaWithRelationsSelectionSet,
         });
 
-        const existingAnswer = existingAnswersRes.items?.[0];
+        const existingAnswer = existingAnswersRes.items?.[0] as unknown as
+          | RespuestaWithRelations
+          | undefined;
 
         if (existingAnswer) {
           // Update existing answer
@@ -340,12 +342,11 @@ export const useQuizAnswers = (): UseQuizAnswersReturn => {
         for (const respuesta of respuestasRes.items || []) {
           if (!respuesta.preguntaId || !respuesta.opcionId) continue;
 
-          // Use the option data from the selectionSet - assume it's always available
+          // Cast to proper type since we're using the selection set
           const respuestaWithRelations =
             respuesta as unknown as RespuestaWithRelations;
           if (respuestaWithRelations.Opcion) {
-            // const opcion =
-            //   respuestaWithRelations.Opcion as unknown as OpcionPreguntaSelected;
+            const opcion = respuestaWithRelations.Opcion as OpcionFromRespuesta;
 
             // Find the question in the loaded questions to get the correct index
             const question = questions.find(

@@ -12,12 +12,22 @@ export { default as QuizNavigation } from "./QuizNavigation";
 export { default as QuizAttemptsTable } from "./QuizAttemptsTable";
 
 // Exports de hooks
-export { useQuiz } from "./hooks/useQuiz";
-export type { UseQuizReturn, UseQuizParams } from "./hooks/useQuiz";
+export { useQuizDetailData } from "./hooks/useQuizDetailData";
+export { useQuizActions } from "./hooks/useQuizActions";
+export type {
+  UseQuizDetailDataReturn,
+  UseQuizDetailDataParams,
+  CuestionarioWithQuestions,
+  PreguntaFromCuestionario,
+  OpcionFromPregunta,
+  QuizAttemptWithAnswers,
+} from "./hooks/useQuizDetailData";
+export type {
+  UseQuizActionsParams,
+  UseQuizActionsReturn,
+} from "./hooks/useQuizActions";
 
 export type { QuizAttempt } from "./hooks/useQuizAttempts";
-
-export type { CuestionarioWithStats } from "./hooks/useQuizData";
 
 // Exports de tipos de dominio
 export type {

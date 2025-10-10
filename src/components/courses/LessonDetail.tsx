@@ -16,7 +16,7 @@ import {
   ArrowBack as ArrowBackIcon,
   CheckCircle as CheckCircleIcon,
 } from '@mui/icons-material';
-import { useLecciones } from './hooks/useLecciones';
+import { useLessonDetail } from './hooks/useLessonDetail';
 import { getMaterialTypeLabel, getMaterialTypeColor, formatDuration } from './courseUtils';
 
 interface LessonDetailProps {
@@ -26,7 +26,7 @@ interface LessonDetailProps {
 
 export default function LessonDetail({ lessonId, cursoId }: LessonDetailProps) {
   const router = useRouter();
-  const { leccion, curso, loading, error } = useLecciones({ 
+  const { leccion, curso, loading, error } = useLessonDetail({ 
     leccionId: lessonId
   });
 

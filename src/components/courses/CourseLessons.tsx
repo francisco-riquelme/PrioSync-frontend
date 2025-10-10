@@ -19,7 +19,6 @@ import {
   Paper,
   Chip,
   CircularProgress,
-  Alert,
   IconButton,
   Link,
 } from '@mui/material';
@@ -30,17 +29,15 @@ import {
   PlayCircleOutline as PlayCircleIcon,
   BookOutlined as BookIcon,
 } from '@mui/icons-material';
-import { useLecciones } from './hooks/useLecciones';
 import { getLessonTypeIcon, getMaterialTypeColor, formatDuration } from './courseUtils';
+import type { ModuloWithLecciones, LeccionFromModulo } from './hooks/useCourseDetailData';
 
 interface CourseLessonsProps {
-  courseId: string;
+  modulos: ModuloWithLecciones[];
+  loading: boolean;
 }
 
-export default function CourseLessons({ courseId }: CourseLessonsProps) {
-  const { modulos, loading, error } = useLecciones({ 
-    cursoId: courseId
-  });
+export default function CourseLessons({ modulos, loading }: CourseLessonsProps) {
   const [expandedModule, setExpandedModule] = useState<string | false>(false);
 
   const handleModuleChange = (moduleId: string) => (event: React.SyntheticEvent, isExpanded: boolean) => {
@@ -61,19 +58,6 @@ export default function CourseLessons({ courseId }: CourseLessonsProps) {
     );
   }
 
-  // Error state
-  if (error) {
-    return (
-      <Box>
-        <Typography variant="h5" sx={{ fontWeight: 600, mb: 3, color: 'text.primary' }}>
-          Módulos y Lecciones del Curso
-        </Typography>
-        <Alert severity="error" sx={{ mb: 4 }}>
-          {error}
-        </Alert>
-      </Box>
-    );
-  }
 
   return (
     <Box>
@@ -165,8 +149,8 @@ export default function CourseLessons({ courseId }: CourseLessonsProps) {
                       </TableHead>
                       <TableBody>
                         {modulo.Lecciones
-                          .sort((a, b) => (a.orden || 0) - (b.orden || 0))
-                          .map((leccion) => (
+                          .sort((a: LeccionFromModulo, b: LeccionFromModulo) => (a.orden || 0) - (b.orden || 0))
+                          .map((leccion: LeccionFromModulo) => (
                             <TableRow 
                               key={leccion.leccionId}
                               sx={{ 

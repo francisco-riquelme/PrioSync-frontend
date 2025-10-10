@@ -23,13 +23,13 @@ import {
   Replay,
   Visibility,
 } from '@mui/icons-material';
-import { QuizAttempt } from './hooks/useQuizAttempts';
+import { QuizAttemptWithAnswers } from './hooks/useQuizDetailData';
 
 interface QuizAttemptsTableProps {
-  attempts: QuizAttempt[];
+  attempts: QuizAttemptWithAnswers[];
   currentAttemptNumber: number;
-  onContinueAttempt?: (attempt: QuizAttempt) => void;
-  onReviewAttempt?: (attempt: QuizAttempt) => void;
+  onContinueAttempt?: (attempt: QuizAttemptWithAnswers) => void;
+  onReviewAttempt?: (attempt: QuizAttemptWithAnswers) => void;
 }
 
 const QuizAttemptsTable: React.FC<QuizAttemptsTableProps> = ({

@@ -16,7 +16,6 @@ import {
   Paper,
   Chip,
   CircularProgress,
-  Alert,
   Button,
 } from '@mui/material';
 import {
@@ -25,11 +24,11 @@ import {
   ArrowForward as ArrowForwardIcon,
   EmojiEvents as TrophyIcon,
 } from '@mui/icons-material';
-import { useQuiz } from '@/components/quiz/hooks/useQuiz';
+import type { CuestionarioFromCourse } from './hooks/useCourseDetailData';
 
 interface CourseQuizzesProps {
-  courseId: string;
-  usuarioId: string;
+  cuestionarios: CuestionarioFromCourse[];
+  loading: boolean;
 }
 
 const getQuizTypeLabel = (tipo: string) => {
@@ -48,13 +47,8 @@ const formatDuration = (minutes?: number | null) => {
   return mins > 0 ? `${hours}h ${mins}min` : `${hours}h`;
 };
 
-export default function CourseQuizzes({ courseId, usuarioId }: CourseQuizzesProps) {
+export default function CourseQuizzes({ cuestionarios, loading }: CourseQuizzesProps) {
   const router = useRouter();
-  const { cuestionarios, loading, error } = useQuiz({
-    cursoId: courseId,
-    usuarioId,
-    autoLoad: true,
-  });
 
   // Loading state
   if (loading) {
@@ -66,18 +60,6 @@ export default function CourseQuizzes({ courseId, usuarioId }: CourseQuizzesProp
         <Box sx={{ display: 'flex', justifyContent: 'center', py: 4 }}>
           <CircularProgress />
         </Box>
-      </Box>
-    );
-  }
-
-  // Error state
-  if (error) {
-    return (
-      <Box sx={{ mb: 4 }}>
-        <Typography variant="h5" sx={{ fontWeight: 600, mb: 3, color: 'text.primary' }}>
-          Cuestionarios del Curso
-        </Typography>
-        <Alert severity="error">{error}</Alert>
       </Box>
     );
   }
@@ -185,7 +167,7 @@ export default function CourseQuizzes({ courseId, usuarioId }: CourseQuizzesProp
 
                       <TableCell align="center">
                         <Typography variant="body2">
-                          {cuestionario.questionCount || 0}
+                          -
                         </Typography>
                       </TableCell>
 

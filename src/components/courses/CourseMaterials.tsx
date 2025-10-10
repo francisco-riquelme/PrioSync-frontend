@@ -16,7 +16,6 @@ import {
   Paper,
   Chip,
   CircularProgress,
-  Alert,
   IconButton,
   Link,
 } from '@mui/material';
@@ -24,16 +23,15 @@ import {
   OpenInNew as OpenInNewIcon,
   ArrowForward as ArrowForwardIcon,
 } from '@mui/icons-material';
-import { useMaterialEstudio } from './hooks/useMaterialEstudio';
 import { getMaterialTypeIcon, getMaterialTypeColor, getMaterialTypeLabel } from './courseUtils';
+import type { MaterialFromCourse } from './hooks/useCourseDetailData';
 
 interface CourseMaterialsProps {
-  courseId: string;
+  materiales: MaterialFromCourse[];
+  loading: boolean;
 }
 
-export default function CourseMaterials({ courseId }: CourseMaterialsProps) {
-  const { materiales, loading, error } = useMaterialEstudio(courseId);
-
+export default function CourseMaterials({ materiales, loading }: CourseMaterialsProps) {
   // Loading state
   if (loading) {
     return (
@@ -44,20 +42,6 @@ export default function CourseMaterials({ courseId }: CourseMaterialsProps) {
         <Box sx={{ display: 'flex', justifyContent: 'center', py: 4 }}>
           <CircularProgress />
         </Box>
-      </Box>
-    );
-  }
-
-  // Error state
-  if (error) {
-    return (
-      <Box>
-        <Typography variant="h5" sx={{ fontWeight: 600, mb: 3, color: 'text.primary' }}>
-          Material de Estudio
-        </Typography>
-        <Alert severity="error" sx={{ mb: 4 }}>
-          {error}
-        </Alert>
       </Box>
     );
   }

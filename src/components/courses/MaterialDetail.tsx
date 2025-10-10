@@ -19,7 +19,7 @@ import {
   ArrowBack as ArrowBackIcon,
   CheckCircle as CheckCircleIcon,
 } from '@mui/icons-material';
-import { useMaterialEstudio } from './hooks/useMaterialEstudio';
+import { useMaterialDetail } from './hooks/useMaterialDetail';
 import { getMaterialTypeLabelWithDefault, getMaterialTypeColor } from './courseUtils';
 
 interface MaterialDetailProps {
@@ -28,7 +28,7 @@ interface MaterialDetailProps {
 
 export default function MaterialDetail({ materialId }: MaterialDetailProps) {
   const router = useRouter();
-  const { material, loading, error } = useMaterialEstudio({ materialId });
+  const { material, loading, error } = useMaterialDetail({ materialId });
 
   const handleBackClick = () => {
     if (material?.cursoId) {
