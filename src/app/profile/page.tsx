@@ -1,12 +1,12 @@
 'use client';
 
-import DashboardLayout from '../../components/layout/DashboardLayout';
+import AppLayout from '../../components/layout/AppLayout';
 import UserProfile from '../../components/profile/UserProfile';
 
 export default function ProfilePage() {
   return (
-    <DashboardLayout>
+    <AppLayout>
       <UserProfile />
-    </DashboardLayout>
+    </AppLayout>
   );
 }

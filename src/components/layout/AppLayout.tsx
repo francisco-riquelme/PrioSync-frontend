@@ -36,13 +36,13 @@ interface LayoutProps {
 }
 
 const menuItems = [
-  { text: 'Dashboard', icon: <DashboardIcon />, path: '/' },
+  { text: 'Dashboard', icon: <DashboardIcon />, path: '/dashboard' },
   { text: 'Calendario', icon: <CalendarIcon />, path: '/calendar' },
   { text: 'Cursos', icon: <SchoolIcon />, path: '/courses' },
   { text: 'Perfil', icon: <PersonIcon />, path: '/profile' },
 ];
 
-export default function DashboardLayout({ children }: LayoutProps) {
+export default function AppLayout({ children }: LayoutProps) {
   const [mobileOpen, setMobileOpen] = useState(false);
   const [mounted, setMounted] = useState(false);
   const router = useRouter();
@@ -192,9 +192,7 @@ export default function DashboardLayout({ children }: LayoutProps) {
             <MenuIcon />
           </IconButton>
           
-          <Typography variant="h6" noWrap component="div" sx={{ flexGrow: 1 }}>
-            Dashboard
-          </Typography>
+          <Box sx={{ flexGrow: 1 }} />
 
           {/* Notificaciones */}
           <IconButton color="inherit" sx={{ mr: 2 }}>

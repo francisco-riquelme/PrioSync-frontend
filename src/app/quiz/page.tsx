@@ -1,7 +1,7 @@
 'use client';
 
 import { useSearchParams } from 'next/navigation';
-import DashboardLayout from '@/components/layout/DashboardLayout';
+import AppLayout from '@/components/layout/AppLayout';
 import Quiz from '@/components/quiz/Quiz';
 
 export default function QuizPage() {
@@ -10,11 +10,11 @@ export default function QuizPage() {
   const cursoId = searchParams.get('cursoId') || undefined;
 
   return (
-    <DashboardLayout>
+    <AppLayout>
       <Quiz 
         cuestionarioId={cuestionarioId}
         cursoId={cursoId}
       />
-    </DashboardLayout>
+    </AppLayout>
   );
 }
