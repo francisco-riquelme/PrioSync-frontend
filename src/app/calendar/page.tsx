@@ -1,12 +1,12 @@
 'use client';
 
-import DashboardLayout from '@/components/layout/DashboardLayout';
+import AppLayout from '@/components/layout/AppLayout';
 import { Calendar } from '@/components/calendar';
 
 export default function CalendarPage() {
   return (
-    <DashboardLayout>
+    <AppLayout>
       <Calendar />
-    </DashboardLayout>
+    </AppLayout>
   );
 }

@@ -1,4 +1,4 @@
-import DashboardLayout from '@/components/layout/DashboardLayout';
+import AppLayout from '@/components/layout/AppLayout';
 import LessonDetail from '@/components/courses/LessonDetail';
 
 export default async function LessonPage({ 
@@ -9,11 +9,11 @@ export default async function LessonPage({
   const resolvedParams = await params;
 
   return (
-    <DashboardLayout>
+    <AppLayout>
       <LessonDetail 
         cursoId={resolvedParams.id}
         lessonId={resolvedParams.lessonId} 
       />
-    </DashboardLayout>
+    </AppLayout>
   );
 }

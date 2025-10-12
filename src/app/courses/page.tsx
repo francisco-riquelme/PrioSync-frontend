@@ -1,10 +1,10 @@
-import DashboardLayout from '@/components/layout/DashboardLayout';
+import AppLayout from '@/components/layout/AppLayout';
 import CoursesList from '@/components/courses/CoursesList';
 
-export default function CursosPage() {
+export default function CoursesPage() {
   return (
-    <DashboardLayout>
+    <AppLayout>
       <CoursesList />
-    </DashboardLayout>
+    </AppLayout>
   );
 }
