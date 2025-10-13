@@ -92,6 +92,7 @@ export interface UseStudySessionsReturn {
   loading: boolean;
   error: string | null;
   refetch: () => Promise<void>;
+  refreshSessions: () => Promise<void>;
   createSession: (
     data: CreateSesionEstudioInput
   ) => Promise<SesionEstudio | null>;
@@ -328,6 +329,7 @@ export const useStudySessions = (
     loading,
     error,
     refetch: loadSessions,
+    refreshSessions: loadSessions,
     createSession,
     updateSession,
     deleteSession,
