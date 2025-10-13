@@ -20,7 +20,7 @@ import { useStudySessions } from '@/components/courses/hooks/useStudySessions';
 
 const VerificarSesiones: React.FC = () => {
   const { userData } = useUser();
-  const { sessions, loading, error } = useStudySessions(undefined, userData?.usuarioId);
+  const { sessions, loading, error } = useStudySessions({ usuarioId: userData?.usuarioId });
 
   console.log('🔍 DEBUG - Verificación de Sesiones');
   console.log('Usuario ID:', userData?.usuarioId);

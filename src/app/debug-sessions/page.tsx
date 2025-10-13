@@ -32,7 +32,7 @@ import { useStudySessions } from '@/components/courses/hooks/useStudySessions';
  */
 const DebugSessionsPage: React.FC = () => {
   const { userData } = useUser();
-  const { sessions, loading, error, refreshSessions } = useStudySessions(undefined, userData?.usuarioId);
+  const { sessions, loading, error, refreshSessions } = useStudySessions({ usuarioId: userData?.usuarioId });
   const [lastRefresh, setLastRefresh] = useState<Date>(new Date());
 
   useEffect(() => {
