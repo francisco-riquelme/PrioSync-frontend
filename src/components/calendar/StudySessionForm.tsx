@@ -12,12 +12,19 @@ import {
   Typography,
   Alert,
   IconButton,
+  Chip,
+  Stack,
+  Divider,
 } from '@mui/material';
 import {
   Close as CloseIcon,
   AccessTime as TimeIcon,
+  LightbulbOutlined as SuggestionIcon,
+  CheckCircleOutline as CheckIcon,
 } from '@mui/icons-material';
 import { CalendarStudySessionFormData, StudySessionFormProps } from './componentTypes';
+import { useUserPreferences } from '@/hooks/useUserPreferences';
+import { getPreferredSlotsForDate, formatTimeSlot, isTimeRangePreferred } from '@/utils/scheduleHelpers';
 
 // Función auxiliar para formatear fecha en zona horaria local
 const formatLocalDate = (date: Date): string => {
@@ -47,6 +54,28 @@ const StudySessionForm: React.FC<StudySessionFormProps> = ({
     startTime: '',
     endTime: ''
   });
+  
+  // Obtener preferencias del usuario
+  const { preferences } = useUserPreferences();
+
+  // Obtener slots sugeridos para la fecha seleccionada
+  const suggestedSlots = formData.startDate 
+    ? getPreferredSlotsForDate(parseLocalDate(formData.startDate), preferences)
+    : [];
+  
+  // Verificar si el horario actual es preferido
+  const isCurrentTimePreferred = formData.startDate && formData.startTime && formData.endTime
+    ? isTimeRangePreferred(formData.startTime, formData.endTime, parseLocalDate(formData.startDate), preferences)
+    : false;
+
+  // Función para aplicar un slot sugerido
+  const handleApplySuggestedSlot = (startTime: string, endTime: string) => {
+    setFormData(prev => ({
+      ...prev,
+      startTime,
+      endTime
+    }));
+  };
 
   // Inicializar formulario cuando se abre
   useEffect(() => {
@@ -191,6 +220,60 @@ const StudySessionForm: React.FC<StudySessionFormProps> = ({
                   })}
                 </Typography>
               </Box>
+            )}
+
+            {/* Horarios sugeridos */}
+            {suggestedSlots.length > 0 && (
+              <>
+                <Box>
+                  <Box sx={{ display: 'flex', alignItems: 'center', gap: 1, mb: 1.5 }}>
+                    <SuggestionIcon color="success" fontSize="small" />
+                    <Typography variant="subtitle2" color="text.secondary" sx={{ fontWeight: 600 }}>
+                      💡 Horarios sugeridos para este día
+                    </Typography>
+                  </Box>
+                  <Stack direction="row" spacing={1} flexWrap="wrap" useFlexGap>
+                    {suggestedSlots.map((slot, index) => (
+                      <Chip
+                        key={index}
+                        label={formatTimeSlot(slot)}
+                        onClick={() => handleApplySuggestedSlot(slot.start, slot.end)}
+                        color="success"
+                        variant={
+                          formData.startTime === slot.start && formData.endTime === slot.end
+                            ? 'filled'
+                            : 'outlined'
+                        }
+                        icon={
+                          formData.startTime === slot.start && formData.endTime === slot.end
+                            ? <CheckIcon />
+                            : undefined
+                        }
+                        sx={{
+                          cursor: 'pointer',
+                          mb: 1,
+                          fontWeight: 500,
+                          '&:hover': {
+                            transform: 'scale(1.05)',
+                            transition: 'transform 0.2s',
+                          },
+                        }}
+                      />
+                    ))}
+                  </Stack>
+                  <Typography variant="caption" color="text.secondary" sx={{ display: 'block', mt: 1 }}>
+                    Haz clic en un horario para aplicarlo automáticamente
+                  </Typography>
+                </Box>
+                <Divider />
+              </>
+            )}
+
+            {/* Indicador si el horario actual es preferido */}
+            {isCurrentTimePreferred && (
+              <Alert severity="success" icon={<CheckIcon />} sx={{ borderRadius: 2 }}>
+                Este horario coincide con tus preferencias de estudio 🎯
+              </Alert>
             )}
 
             {/* Horarios */}

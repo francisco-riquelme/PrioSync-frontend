@@ -1,6 +1,6 @@
 'use client';
 
-import React, { useState, useMemo } from 'react';
+import React, { useState, useMemo, useEffect } from 'react';
 import type { CSSProperties } from 'react';
 import { Calendar as BigCalendar, momentLocalizer, View, Event } from 'react-big-calendar';
 import 'react-big-calendar/lib/css/react-big-calendar.css';
@@ -21,6 +21,8 @@ import CalendarToolbar from './CalendarToolbar';
 import StudySessionForm from './StudySessionForm';
 import StudySessionDetails from './StudySessionDetails';
 import ConfirmDeleteDialog from './ConfirmDeleteDialog';
+import { useUserPreferences } from '@/hooks/useUserPreferences';
+import { getPreferredSlotsForDate } from '@/utils/scheduleHelpers';
 
 // Type for SesionEstudio from schema
 type SesionEstudio = MainTypes["SesionEstudio"]["type"];
@@ -63,6 +65,9 @@ const Calendar: React.FC = () => {
     updateSession,
     deleteSession,
   } = useStudySessions({ usuarioId: userData?.usuarioId });
+
+  // Obtener preferencias de horarios del usuario
+  const { preferences } = useUserPreferences(userData?.usuarioId);
 
   // Convert backend sessions to frontend format
   const sessions = useMemo(() => 
@@ -182,6 +187,37 @@ const Calendar: React.FC = () => {
     },
   }), [theme]);
 
+  // Efecto para aplicar estilos a los días con horarios preferidos
+  useEffect(() => {
+    if (preferences.length === 0) return;
+
+    // Función para actualizar los estilos de las celdas del calendario
+    const updateCellStyles = () => {
+      const calendarCells = document.querySelectorAll('.rbc-day-bg');
+      
+      calendarCells.forEach((cell) => {
+        const dateAttr = cell.parentElement?.querySelector('.rbc-date-cell')?.textContent;
+        if (!dateAttr) return;
+
+        // Obtener la fecha de la celda
+        const cellDate = new Date((cell as HTMLElement).getAttribute('data-date') || '');
+        if (isNaN(cellDate.getTime())) return;
+
+        const slotsForDay = getPreferredSlotsForDate(cellDate, preferences);
+        
+        if (slotsForDay.length > 0) {
+          (cell as HTMLElement).style.backgroundColor = '#e8f5e9';
+          (cell as HTMLElement).style.borderLeft = '3px solid #4caf50';
+        }
+      });
+    };
+
+    // Ejecutar después de que el calendario se renderice
+    const timer = setTimeout(updateCellStyles, 100);
+    
+    return () => clearTimeout(timer);
+  }, [preferences, date, view]);
+
   // Función para obtener el color de los eventos (simplificado - un solo estilo)
   const getEventStyle = (): { style: CSSProperties } => {
     return {
@@ -284,7 +320,7 @@ const Calendar: React.FC = () => {
   return (
     <Box>
       <Paper elevation={2} sx={{ p: 3, borderRadius: 3 }}>
-        <Box sx={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', mb: 3 }}>
+        <Box sx={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', mb: 2 }}>
           <Box>
             <Typography variant="h5" gutterBottom sx={{ fontWeight: 700, mb: 1 }}>
               Mi Calendario Académico
@@ -299,6 +335,53 @@ const Calendar: React.FC = () => {
             </Typography>
           </Box>
         </Box>
+
+        {/* Leyenda de colores */}
+        {preferences.length > 0 && (
+          <Box 
+            sx={{ 
+              display: 'flex', 
+              gap: 3, 
+              mb: 2, 
+              p: 2, 
+              bgcolor: 'background.default', 
+              borderRadius: 2,
+              alignItems: 'center'
+            }}
+          >
+            <Typography variant="caption" color="text.secondary" sx={{ fontWeight: 600 }}>
+              Leyenda:
+            </Typography>
+            <Box sx={{ display: 'flex', alignItems: 'center', gap: 0.5 }}>
+              <Box 
+                sx={{ 
+                  width: 16, 
+                  height: 16, 
+                  bgcolor: '#e8f5e9', 
+                  border: '2px solid #4caf50',
+                  borderRadius: 0.5 
+                }} 
+              />
+              <Typography variant="caption" color="text.secondary">
+                Horarios preferidos
+              </Typography>
+            </Box>
+            <Box sx={{ display: 'flex', alignItems: 'center', gap: 0.5 }}>
+              <Box 
+                sx={{ 
+                  width: 16, 
+                  height: 16, 
+                  bgcolor: 'white', 
+                  border: '1px solid #e0e0e0',
+                  borderRadius: 0.5 
+                }} 
+              />
+              <Typography variant="caption" color="text.secondary">
+                Otros horarios
+              </Typography>
+            </Box>
+          </Box>
+        )}
         
         <Box sx={{ ...calendarStyle, height: 600 }}>
           <BigCalendar
@@ -383,8 +466,9 @@ const Calendar: React.FC = () => {
               success = result !== null;
             } else {
               // CREATE: Pass complete data
-              const result = await createSession({
-                sesionEstudioId: crypto.randomUUID(),
+              const sessionId = crypto.randomUUID();
+              const sessionData = {
+                sesionEstudioId: sessionId,
                 usuarioId: userData.usuarioId,
                 fecha: formData.startDate,
                 hora_inicio: formData.startTime,
@@ -395,7 +479,9 @@ const Calendar: React.FC = () => {
                 cursoId: undefined,
                 google_event_id: undefined,
                 recordatorios: undefined,
-              });
+              };
+              
+              const result = await createSession(sessionData);
               success = result !== null;
             }
             
