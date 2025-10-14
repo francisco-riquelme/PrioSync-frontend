@@ -54,6 +54,34 @@ export default function WelcomeModal({ open, onClose, onComplete }: WelcomeModal
     }
   }, [formData]);
 
+  // Resetear formulario cuando se abre el modal y no hay datos en localStorage (indica cancelación)
+  useEffect(() => {
+    if (open && typeof window !== 'undefined') {
+      const savedData = localStorage.getItem('welcomeFormData');
+      
+      // Si no hay datos guardados, resetear el formulario (usuario canceló anteriormente)
+      if (!savedData) {
+        setFormData({
+          nombre: '',
+          estudio: '',
+          youtubeUrl: '',
+          tiempoDisponible: []
+        });
+        setErrors({
+          nombre: false,
+          estudio: false,
+          youtubeUrl: false,
+          tiempoDisponible: false
+        });
+        setActiveStep(0);
+      } else {
+        // Si hay datos guardados, cargarlos (restaurar después de cierre accidental)
+        setFormData(JSON.parse(savedData));
+        setActiveStep(0);
+      }
+    }
+  }, [open]);
+
   // Limpiar formulario
   const clearForm = () => {
     const initialFormData = {
@@ -70,9 +98,7 @@ export default function WelcomeModal({ open, onClose, onComplete }: WelcomeModal
       youtubeUrl: false,
       tiempoDisponible: false
     });
-    if (typeof window !== 'undefined') {
-      localStorage.removeItem('welcomeFormData');
-    }
+    // localStorage se limpia en el padre (LandingPage) antes de cerrar el modal
   };
 
   // Manejar cancelar: cerrar modal y limpiar formulario

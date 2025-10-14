@@ -82,9 +82,10 @@ export default function ScheduleStep({ schedule, onChange, error }: ScheduleStep
       onChange([...schedule, newDaySchedule]);
     }
 
-    // Limpiar selección de horas (NO cerrar modal para permitir agregar más)
+    // Limpiar selección de horas y cerrar modal automáticamente
     setStartTime('');
     setEndTime('');
+    handleCloseModal();
   };
 
   const removeTimeSlot = (dayValue: string, slotIndex: number) => {

@@ -21,7 +21,7 @@ import { School, CalendarToday, Assessment } from '@mui/icons-material';
 import WelcomeModal from '../modals/welcome/WelcomeModal';
 import { WelcomeFormData } from '../modals/welcome/types';
 import RegistrationModal from '../modals/registration/RegistrationModal';
-
+import { RegistrationFormData } from '../modals/registration/types';
 export default function LandingPage() {
   const router = useRouter();
   const { userData, loading } = useUser();
@@ -35,14 +35,30 @@ export default function LandingPage() {
     setRegistrationModalOpen(true);
   };
 
-  const handleRegistration = () => {
-    // Registration is now handled by RegistrationModal with redirect to verification
-    // Just clean up state
+  const handleWelcomeClose = () => {
+    // Limpiar localStorage ANTES de cerrar el modal
+    if (typeof window !== 'undefined') {
+      localStorage.removeItem('welcomeFormData');
+    }
+    setWelcomeModalOpen(false);
+  };
+
+  const handleRegistration = (data: RegistrationFormData) => {
+    // Aquí enviarías los datos a tu backend de AWS
+    console.log('Datos completos del usuario:', data);
+    
+    // Cerrar modales y resetear
     setRegistrationModalOpen(false);
     setWelcomeData(null);
   };
 
-  // Dashboard navigation handled inline via buttons; helper removed
+  const handleRegistrationClose = () => {
+    // Limpiar localStorage ANTES de cerrar el modal
+    if (typeof window !== 'undefined') {
+      localStorage.removeItem('registrationFormData');
+    }
+    setRegistrationModalOpen(false);
+  };
 
   const openWelcomeModal = () => {
     setWelcomeModalOpen(true);
@@ -221,13 +237,13 @@ export default function LandingPage() {
       {/* Modales */}
       <WelcomeModal
         open={welcomeModalOpen}
-        onClose={() => setWelcomeModalOpen(false)}
+        onClose={handleWelcomeClose}
         onComplete={handleWelcomeComplete}
       />
 
       <RegistrationModal
         open={registrationModalOpen}
-        onClose={() => setRegistrationModalOpen(false)}
+        onClose={handleRegistrationClose}
         welcomeData={welcomeData || undefined}
         onRegister={handleRegistration}
       />
