@@ -33,6 +33,73 @@ export default function ScheduleStep({ schedule, onChange, error }: ScheduleStep
   const [startTime, setStartTime] = useState('');
   const [endTime, setEndTime] = useState('');
   const [modalOpen, setModalOpen] = useState(false);
+  const [overlapError, setOverlapError] = useState<string>('');
+
+  // Función para detectar si dos rangos de tiempo se superponen
+  const hasOverlap = (slot1: TimeSlot, slot2: TimeSlot): boolean => {
+    return (
+      (slot1.start >= slot2.start && slot1.start < slot2.end) || // inicio1 dentro de slot2
+      (slot1.end > slot2.start && slot1.end <= slot2.end) ||     // fin1 dentro de slot2
+      (slot1.start <= slot2.start && slot1.end >= slot2.end)     // slot1 contiene slot2
+    );
+  };
+
+  // Función para obtener todas las horas bloqueadas de un día específico
+  const getBlockedTimes = (dayValue: string, forStartTime: boolean = true): Set<string> => {
+    const daySchedule = getDaySchedule(dayValue);
+    const blocked = new Set<string>();
+    
+    if (!daySchedule) return blocked;
+    
+    daySchedule.timeSlots.forEach(slot => {
+      // Bloquear todas las horas entre inicio y fin (excluyendo el fin para permitir horarios contiguos)
+      const startIndex = timeSlots.indexOf(slot.start);
+      const endIndex = timeSlots.indexOf(slot.end);
+      
+      if (forStartTime) {
+        // Para hora de inicio: bloquear desde start hasta end (sin incluir end)
+        for (let i = startIndex; i < endIndex; i++) {
+          blocked.add(timeSlots[i]);
+        }
+      } else {
+        // Para hora de fin: bloquear desde start+1 hasta end (incluir end)
+        for (let i = startIndex + 1; i <= endIndex; i++) {
+          if (i < timeSlots.length) {
+            blocked.add(timeSlots[i]);
+          }
+        }
+      }
+    });
+    
+    return blocked;
+  };
+
+  // Función para obtener horas de fin válidas basadas en la hora de inicio seleccionada
+  const getValidEndTimes = (): string[] => {
+    if (!startTime || !selectedDay) return timeSlots;
+    
+    const startIndex = timeSlots.indexOf(startTime);
+    
+    // Filtrar horas de fin que sean:
+    // 1. Posteriores a la hora de inicio
+    // 2. No bloqueadas por otros horarios
+    return timeSlots.filter((time, index) => {
+      if (index <= startIndex) return false; // Debe ser posterior al inicio
+      
+      // Verificar si hay algún horario bloqueado entre startTime y este time
+      const daySchedule = getDaySchedule(selectedDay);
+      if (daySchedule) {
+        for (const existingSlot of daySchedule.timeSlots) {
+          // Si hay un slot existente que empieza después de startTime y antes o igual a time
+          if (existingSlot.start >= startTime && existingSlot.start < time) {
+            return false; // No permitir este time porque atravesaría un slot existente
+          }
+        }
+      }
+      
+      return true;
+    });
+  };
 
   // Count total time slots across all days
   const totalTimeSlots = schedule.reduce((total, day) => total + day.timeSlots.length, 0);
@@ -42,6 +109,7 @@ export default function ScheduleStep({ schedule, onChange, error }: ScheduleStep
     setSelectedDay(day);
     setStartTime('');
     setEndTime('');
+    setOverlapError('');
     setModalOpen(true);
   };
 
@@ -50,22 +118,36 @@ export default function ScheduleStep({ schedule, onChange, error }: ScheduleStep
     setSelectedDay('');
     setStartTime('');
     setEndTime('');
+    setOverlapError('');
   };
 
   const addTimeSlot = () => {
     if (!selectedDay || !startTime || !endTime) return;
     
-    if (!canAddMoreSlots) {
-      alert('Por el momento solo puedes agregar hasta 5 bloques de estudio. Podrás crear más bloques después del registro.');
-      return;
-    }
-    
+    // Validación: hora de inicio debe ser anterior a hora de fin
     if (startTime >= endTime) {
-      alert('La hora de inicio debe ser anterior a la hora de fin');
+      setOverlapError('La hora de inicio debe ser anterior a la hora de fin');
       return;
     }
 
+    // Validación: verificar superposición con horarios existentes
     const newTimeSlot: TimeSlot = { start: startTime, end: endTime };
+    const existingDaySchedule = getDaySchedule(selectedDay);
+
+    if (existingDaySchedule) {
+      const hasConflict = existingDaySchedule.timeSlots.some(
+        existingSlot => hasOverlap(newTimeSlot, existingSlot)
+      );
+      
+      if (hasConflict) {
+        setOverlapError('Este horario se superpone con uno existente. Por favor, selecciona otro rango de horas.');
+        return;
+      }
+    }
+
+    // Limpiar error si todo está bien
+    setOverlapError('');
+
     const existingDayIndex = schedule.findIndex(d => d.day === selectedDay);
 
     if (existingDayIndex >= 0) {
@@ -259,9 +341,16 @@ export default function ScheduleStep({ schedule, onChange, error }: ScheduleStep
         </DialogTitle>
         
         <DialogContent>
+          {/* Alert de error de superposición */}
+          {overlapError && (
+            <Alert severity="error" sx={{ mb: 2, mt: 1 }}>
+              {overlapError}
+            </Alert>
+          )}
+
           {/* Mostrar horarios ya agregados para este día */}
           {getDaySchedule(selectedDay) && getDaySchedule(selectedDay)!.timeSlots.length > 0 && (
-            <Box sx={{ mb: 3, mt: 2 }}>
+            <Box sx={{ mb: 3, mt: overlapError ? 1 : 2 }}>
               <Typography variant="subtitle2" gutterBottom sx={{ display: 'flex', alignItems: 'center', gap: 1 }}>
                 <AccessTime fontSize="small" />
                 Horarios agregados:
@@ -287,14 +376,27 @@ export default function ScheduleStep({ schedule, onChange, error }: ScheduleStep
                 <InputLabel>Hora inicio</InputLabel>
                 <Select
                   value={startTime}
-                  onChange={(e) => setStartTime(e.target.value)}
+                  onChange={(e) => {
+                    setStartTime(e.target.value);
+                    setEndTime(''); // Resetear hora fin al cambiar hora inicio
+                    setOverlapError(''); // Limpiar error
+                  }}
                   label="Hora inicio"
                 >
-                  {timeSlots.map((time) => (
-                    <MenuItem key={time} value={time}>
-                      {time}
-                    </MenuItem>
-                  ))}
+                  {timeSlots.map((time) => {
+                    const blockedStartTimes = getBlockedTimes(selectedDay, true);
+                    const isBlocked = blockedStartTimes.has(time);
+                    
+                    return (
+                      <MenuItem 
+                        key={time} 
+                        value={time}
+                        disabled={isBlocked}
+                      >
+                        {time} {isBlocked ? '(ocupado)' : ''}
+                      </MenuItem>
+                    );
+                  })}
                 </Select>
               </FormControl>
 
@@ -302,10 +404,14 @@ export default function ScheduleStep({ schedule, onChange, error }: ScheduleStep
                 <InputLabel>Hora fin</InputLabel>
                 <Select
                   value={endTime}
-                  onChange={(e) => setEndTime(e.target.value)}
+                  onChange={(e) => {
+                    setEndTime(e.target.value);
+                    setOverlapError(''); // Limpiar error
+                  }}
                   label="Hora fin"
+                  disabled={!startTime}
                 >
-                  {timeSlots.map((time) => (
+                  {getValidEndTimes().map((time) => (
                     <MenuItem key={time} value={time}>
                       {time}
                     </MenuItem>
