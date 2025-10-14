@@ -53,6 +53,12 @@ export const steps = [
 ];
 
 export const isValidYouTubeUrl = (url: string): boolean => {
-  const youtubeRegex = /^(https?:\/\/)?(www\.)?(youtube\.com|youtu\.be)\/.+/;
+  // Acepta URLs de YouTube con playlist o videos individuales
+  // Ejemplos válidos:
+  // - https://youtube.com/playlist?list=PLO9JpmNAsqM6RttdyDmPyW0vR_zf20ETI
+  // - https://www.youtube.com/watch?v=dQw4w9WgXcQ
+  // - https://youtu.be/dQw4w9WgXcQ
+  const youtubeRegex =
+    /^(https?:\/\/)?(www\.)?(youtube\.com\/(playlist\?list=|watch\?v=)|youtu\.be\/).+/;
   return youtubeRegex.test(url);
 };

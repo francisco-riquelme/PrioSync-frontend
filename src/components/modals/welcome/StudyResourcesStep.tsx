@@ -58,16 +58,17 @@ export default function StudyResourcesStep({
 
         <TextField
           fullWidth
-          label="URL de YouTube (opcional)"
+          required
+          label="URL de YouTube"
           value={youtubeUrl}
           onChange={(e) => onYouTubeChange(e.target.value)}
           error={youtubeError}
           helperText={
             youtubeError 
-              ? 'Por favor ingresa una URL válida de YouTube' 
-              : 'Si tienes algún video o canal de YouTube que quieras usar como recurso'
+              ? 'Por favor ingresa una URL válida de YouTube (playlist o video)' 
+              : 'Ejemplo: https://youtube.com/playlist?list=PLO9JpmNAsqM6RttdyDmPyW0vR_zf20ETI'
           }
-          placeholder="https://www.youtube.com/..."
+          placeholder="https://youtube.com/playlist?list=..."
           InputProps={{
             startAdornment: (
               <InputAdornment position="start">

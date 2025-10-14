@@ -119,8 +119,11 @@ export default function WelcomeModal({ open, onClose, onComplete }: WelcomeModal
         } else {
           newErrors.estudio = false;
         }
-        // YouTube es opcional, solo validar si tiene contenido
-        if (formData.youtubeUrl.trim() && !isValidYouTubeUrl(formData.youtubeUrl)) {
+        // YouTube es ahora obligatorio
+        if (!formData.youtubeUrl.trim()) {
+          newErrors.youtubeUrl = true;
+          isValid = false;
+        } else if (!isValidYouTubeUrl(formData.youtubeUrl)) {
           newErrors.youtubeUrl = true;
           isValid = false;
         } else {
