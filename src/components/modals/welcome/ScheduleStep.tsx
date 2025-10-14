@@ -10,9 +10,14 @@ import {
   InputLabel,
   Select,
   MenuItem,
-  Stack
+  Stack,
+  Dialog,
+  DialogTitle,
+  DialogContent,
+  DialogActions,
+  Alert,
 } from '@mui/material';
-import { Add, Delete } from '@mui/icons-material';
+import { Add, Delete, Schedule, AccessTime } from '@mui/icons-material';
 import { DaySchedule, TimeSlot, daysOfWeek, timeSlots } from './types';
 
 interface ScheduleStepProps {
@@ -27,6 +32,7 @@ export default function ScheduleStep({ schedule, onChange, error }: ScheduleStep
   const [selectedDay, setSelectedDay] = useState<string>('');
   const [startTime, setStartTime] = useState('');
   const [endTime, setEndTime] = useState('');
+  const [modalOpen, setModalOpen] = useState(false);
 
   // Count total time slots across all days
   const totalTimeSlots = schedule.reduce((total, day) => total + day.timeSlots.length, 0);
@@ -34,6 +40,14 @@ export default function ScheduleStep({ schedule, onChange, error }: ScheduleStep
 
   const handleDayClick = (day: string) => {
     setSelectedDay(day);
+    setStartTime('');
+    setEndTime('');
+    setModalOpen(true);
+  };
+
+  const handleCloseModal = () => {
+    setModalOpen(false);
+    setSelectedDay('');
     setStartTime('');
     setEndTime('');
   };
@@ -68,7 +82,7 @@ export default function ScheduleStep({ schedule, onChange, error }: ScheduleStep
       onChange([...schedule, newDaySchedule]);
     }
 
-    // Limpiar selección de horas
+    // Limpiar selección de horas (NO cerrar modal para permitir agregar más)
     setStartTime('');
     setEndTime('');
   };
@@ -224,21 +238,50 @@ export default function ScheduleStep({ schedule, onChange, error }: ScheduleStep
         })}
       </Box>
 
-      {/* Selector de horas - Solo visible cuando hay un día seleccionado */}
-      {selectedDay && (
-        <Box sx={{ 
-          p: 3, 
-          mb: 2, 
-          backgroundColor: '#f8f9fa', 
-          borderRadius: 2,
-          border: '2px solid #1976d2'
-        }}>
-          <Typography variant="subtitle1" gutterBottom sx={{ fontWeight: 600, color: '#1976d2', mb: 2 }}>
-            Agregar horario de estudio para {daysOfWeek.find(d => d.value === selectedDay)?.label}
-          </Typography>
-          
-          <Stack spacing={2}>
-            <Stack direction={{ xs: 'column', sm: 'row' }} spacing={2}>
+      {/* Mensaje de error */}
+      {error && (
+        <Alert severity="error" sx={{ mt: 2 }}>
+          Por favor agrega al menos un horario de estudio
+        </Alert>
+      )}
+
+      {/* Modal para seleccionar horas */}
+      <Dialog 
+        open={modalOpen} 
+        onClose={handleCloseModal}
+        maxWidth="sm"
+        fullWidth
+      >
+        <DialogTitle sx={{ display: 'flex', alignItems: 'center', gap: 1 }}>
+          <Schedule color="primary" />
+          Agregar horario - {daysOfWeek.find(d => d.value === selectedDay)?.label}
+        </DialogTitle>
+        
+        <DialogContent>
+          {/* Mostrar horarios ya agregados para este día */}
+          {getDaySchedule(selectedDay) && getDaySchedule(selectedDay)!.timeSlots.length > 0 && (
+            <Box sx={{ mb: 3, mt: 2 }}>
+              <Typography variant="subtitle2" gutterBottom sx={{ display: 'flex', alignItems: 'center', gap: 1 }}>
+                <AccessTime fontSize="small" />
+                Horarios agregados:
+              </Typography>
+              <Stack direction="row" spacing={1} flexWrap="wrap" useFlexGap>
+                {getDaySchedule(selectedDay)!.timeSlots.map((slot, index) => (
+                  <Chip
+                    key={index}
+                    label={`${slot.start} - ${slot.end}`}
+                    onDelete={() => removeTimeSlot(selectedDay, index)}
+                    color="primary"
+                    variant="outlined"
+                    size="small"
+                  />
+                ))}
+              </Stack>
+            </Box>
+          )}
+
+          <Stack spacing={3}>
+            <Stack direction="row" spacing={2}>
               <FormControl fullWidth>
                 <InputLabel>Hora inicio</InputLabel>
                 <Select
@@ -275,8 +318,9 @@ export default function ScheduleStep({ schedule, onChange, error }: ScheduleStep
               startIcon={<Add />}
               onClick={addTimeSlot}
               disabled={!startTime || !endTime}
+              fullWidth
               sx={{
-                alignSelf: 'flex-start',
+                py: 1.5,
                 borderRadius: 2,
                 background: 'linear-gradient(135deg, #1976d2 0%, #1565c0 100%)',
               }}
@@ -284,14 +328,14 @@ export default function ScheduleStep({ schedule, onChange, error }: ScheduleStep
               Agregar Horario
             </Button>
           </Stack>
-        </Box>
-      )}
+        </DialogContent>
 
-      {error && (
-        <Typography variant="caption" color="error" sx={{ mt: 1, display: 'block', textAlign: 'center' }}>
-          Por favor agrega al menos un horario de estudio
-        </Typography>
-      )}
+        <DialogActions>
+          <Button onClick={handleCloseModal} color="primary">
+            Cerrar
+          </Button>
+        </DialogActions>
+      </Dialog>
     </Box>
   );
 }
