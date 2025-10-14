@@ -3,9 +3,9 @@
 import React, { useState, useMemo, useEffect } from 'react';
 import type { CSSProperties } from 'react';
 import { Calendar as BigCalendar, momentLocalizer, View, Event } from 'react-big-calendar';
-import 'react-big-calendar/lib/css/react-big-calendar.css';
+
 import moment from 'moment';
-import 'moment/locale/es';
+
 import {
   Box,
   Paper,
@@ -424,7 +424,6 @@ const Calendar: React.FC = () => {
               time: 'Hora',
               event: 'Evento',
               noEventsInRange: 'No hay eventos en este rango',
-              showMore: '+ Ver más',
             }}
           />
         </Box>

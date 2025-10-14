@@ -22,6 +22,7 @@ import WelcomeModal from '../modals/welcome/WelcomeModal';
 import { WelcomeFormData } from '../modals/welcome/types';
 import RegistrationModal from '../modals/registration/RegistrationModal';
 import { RegistrationFormData } from '../modals/registration/types';
+import MessageDialog from '../common/MessageDialog';
 import { generateRecurringStudySessions, createSessionsInBatch } from '@/utils/studySessionUtils';
 import { useStudySessions } from '@/components/courses/hooks/useStudySessions';
 
@@ -33,6 +34,13 @@ export default function LandingPage() {
   const [registrationModalOpen, setRegistrationModalOpen] = useState(false);
   const [welcomeData, setWelcomeData] = useState<WelcomeFormData | null>(null);
   const [isCreatingSessions, setIsCreatingSessions] = useState(false);
+  const [messageDialog, setMessageDialog] = useState({
+    open: false,
+    type: 'success' as 'success' | 'error' | 'info' | 'warning',
+    title: '',
+    message: '' as string | React.ReactNode,
+    onConfirm: () => {},
+  });
 
   const handleWelcomeComplete = (data: WelcomeFormData) => {
     setWelcomeData(data);
@@ -88,13 +96,26 @@ export default function LandingPage() {
             localStorage.removeItem('registrationFormData');
           }
           
-          // Mostrar mensaje de éxito
-          alert(`¡Registro completado con éxito!\n\n` +
-                `✅ Se crearon ${result.success} sesiones de estudio en tu calendario.\n` +
-                `📅 Revisa las próximas 6 semanas de horarios disponibles.`);
-          
-          // Redirigir al calendario
-          router.push('/calendar');
+          // Mostrar mensaje de éxito con modal
+          setMessageDialog({
+            open: true,
+            type: 'success',
+            title: '¡Registro Completado con Éxito!',
+            message: (
+              <Box>
+                <Typography variant="body1" gutterBottom>
+                  ✅ Se crearon <strong>{result.success}</strong> sesiones de estudio en tu calendario.
+                </Typography>
+                <Typography variant="body1">
+                  📅 Revisa las próximas 6 semanas de horarios disponibles.
+                </Typography>
+              </Box>
+            ),
+            onConfirm: () => {
+              setMessageDialog({ ...messageDialog, open: false });
+              router.push('/calendar');
+            }
+          });
         } else {
           throw new Error('No se pudieron crear las sesiones de estudio');
         }
@@ -103,12 +124,29 @@ export default function LandingPage() {
         setRegistrationModalOpen(false);
         setWelcomeData(null);
         
-        alert('¡Registro completado con éxito!');
-        router.push('/dashboard');
+        // Mostrar mensaje de éxito simple
+        setMessageDialog({
+          open: true,
+          type: 'success',
+          title: '¡Registro Completado!',
+          message: 'Tu cuenta ha sido creada exitosamente.',
+          onConfirm: () => {
+            setMessageDialog({ ...messageDialog, open: false });
+            router.push('/dashboard');
+          }
+        });
       }
     } catch (error) {
       console.error('❌ Error en el registro:', error);
-      alert('Error al completar el registro. Por favor, intenta nuevamente.');
+      
+      // Mostrar mensaje de error con modal
+      setMessageDialog({
+        open: true,
+        type: 'error',
+        title: 'Error en el Registro',
+        message: 'No se pudo completar el registro. Por favor, intenta nuevamente.',
+        onConfirm: () => setMessageDialog({ ...messageDialog, open: false })
+      });
     } finally {
       setIsCreatingSessions(false);
     }
@@ -328,6 +366,16 @@ export default function LandingPage() {
           Creando tus sesiones de estudio para las próximas 6 semanas
         </Typography>
       </Backdrop>
+
+      {/* Modal de mensajes (éxito/error) */}
+      <MessageDialog
+        open={messageDialog.open}
+        onClose={() => setMessageDialog({ ...messageDialog, open: false })}
+        type={messageDialog.type}
+        title={messageDialog.title}
+        message={messageDialog.message}
+        onConfirm={messageDialog.onConfirm}
+      />
     </Box>
   );
 }
