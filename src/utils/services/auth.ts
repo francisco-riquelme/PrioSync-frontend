@@ -105,11 +105,6 @@ export const authService = {
     input: SignUpWithStudyPreferencesInput
   ): Promise<SignUpWithStudyPreferencesResult> {
     try {
-      // Extract time slots from schedule and map to custom attributes
-      const timeSlots = input.timeSlots
-        .flatMap((day) => day.timeSlots)
-        .slice(0, 5); // Take up to 5 slots
-
       // Map time slots to custom attributes (only include slots that exist)
       // IMPORTANT: Use camelCase attribute names that match backend
       const flat = input.timeSlots.flatMap((d) => d.timeSlots);

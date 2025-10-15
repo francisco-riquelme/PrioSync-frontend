@@ -36,7 +36,7 @@ export default function LandingPage() {
     setRegistrationModalOpen(true);
   };
 
-  const handleRegistration = (_data: RegistrationFormData) => {
+  const handleRegistration = () => {
     // Registration is now handled by RegistrationModal with redirect to verification
     // Just clean up state
     setRegistrationModalOpen(false);

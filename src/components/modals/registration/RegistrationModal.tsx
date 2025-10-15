@@ -60,7 +60,7 @@ interface RegistrationModalProps {
   onRegister: (data: RegistrationFormData) => void;
 }
 
-export default function RegistrationModal({ open, onClose, welcomeData, onRegister: _onRegister }: RegistrationModalProps) {
+export default function RegistrationModal({ open, onClose, welcomeData }: RegistrationModalProps) {
   const router = useRouter();
   const [formData, setFormData] = useState<RegistrationFormFields>(() => {
     // Cargar datos persistentes del localStorage si existen
@@ -237,7 +237,7 @@ export default function RegistrationModal({ open, onClose, welcomeData, onRegist
         setLocalError(errorMessage);
       }
       
-    } catch (_error) {
+    } catch {
       setLocalError(ERROR_MESSAGES.REGISTRATION_FAILED);
     } finally {
       setLoading(false);
