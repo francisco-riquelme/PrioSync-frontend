@@ -128,7 +128,8 @@ export default function WelcomeModal({ open, onClose, onComplete }: WelcomeModal
         }
         break;
       case 2: // Horarios
-        if (!formData.tiempoDisponible || formData.tiempoDisponible.length === 0) {
+        const totalTimeSlots = formData.tiempoDisponible?.reduce((total, day) => total + day.timeSlots.length, 0) || 0;
+        if (!formData.tiempoDisponible || formData.tiempoDisponible.length === 0 || totalTimeSlots < 1) {
           newErrors.tiempoDisponible = true;
           isValid = false;
         } else {

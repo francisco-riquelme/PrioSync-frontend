@@ -2,45 +2,103 @@
 
 import { UserData, useUser } from "@/contexts/UserContext";
 import { useState, useCallback, useMemo } from "react";
-
-// Hook para autenticación (preparado para AWS Cognito)
+import { signIn, signOut, getCurrentUser } from "aws-amplify/auth";
+import { useRouter } from "next/navigation";
+import { getQueryFactories } from "@/utils/commons/queries";
+import type { MainTypes } from "@/utils/api/schema";
+// Hook para autenticación con AWS Amplify
 export const useAuth = () => {
-  const { userData, loading } = useUser();
+  const { userData, loading, refreshUser } = useUser();
   const [authLoading, setAuthLoading] = useState(false);
+  const router = useRouter();
 
-  // eslint-disable-next-line @typescript-eslint/no-unused-vars
-  const login = useCallback(async (email: string, _password: string) => {
-    setAuthLoading(true);
-    try {
-      // Ahora: simulación
-      // Después: AWS Cognito authentication
-      await new Promise((resolve) => setTimeout(resolve, 1000));
+  const login = useCallback(
+    async (email: string, password: string) => {
+      setAuthLoading(true);
+      try {
+        // Use AWS Amplify signIn
+        const { isSignedIn, nextStep } = await signIn({
+          username: email,
+          password: password,
+        });
 
-      // Simular login exitoso
-      console.log("Login successful for:", email);
-      return { success: true };
-    } catch (error) {
-      console.error("Login error:", error);
-      return { success: false, error: "Credenciales inválidas" };
-    } finally {
-      setAuthLoading(false);
-    }
-  }, []);
+        if (isSignedIn) {
+          // Login successful, update last login timestamp
+          try {
+            const { Usuario } = await getQueryFactories<
+              Pick<MainTypes, "Usuario">,
+              "Usuario"
+            >({
+              entities: ["Usuario"],
+            });
+            const currentUser = await getCurrentUser();
+            if (currentUser?.userId) {
+              await Usuario.update({
+                input: {
+                  usuarioId: currentUser.userId,
+                  ultimo_login: new Date().toISOString(),
+                },
+              });
+            }
+          } catch (updateError) {
+            console.error("Failed to update last login:", updateError);
+            // Don't block login flow if update fails
+          }
+
+          // Refresh user data
+          await refreshUser();
+          return { success: true };
+        } else if (nextStep?.signInStep === "CONFIRM_SIGN_UP") {
+          // User needs to confirm email
+          return {
+            success: false,
+            error: "Por favor verifica tu email antes de iniciar sesión",
+          };
+        } else {
+          return { success: false, error: "Credenciales inválidas" };
+        }
+      } catch (error) {
+        console.error("Login error:", error);
+        let errorMessage = "Credenciales inválidas";
+
+        if (error instanceof Error) {
+          if (error.message.includes("UserNotFoundException")) {
+            errorMessage = "Usuario no encontrado";
+          } else if (error.message.includes("NotAuthorizedException")) {
+            errorMessage = "Contraseña incorrecta";
+          } else if (error.message.includes("UserNotConfirmedException")) {
+            errorMessage =
+              "Por favor verifica tu email antes de iniciar sesión";
+          }
+        }
+
+        return { success: false, error: errorMessage };
+      } finally {
+        setAuthLoading(false);
+      }
+    },
+    [refreshUser]
+  );
 
   const logout = useCallback(async () => {
     setAuthLoading(true);
     try {
-      // Ahora: limpiar localStorage
-      localStorage.removeItem("priosync_user_data");
+      // Use AWS Amplify signOut
+      await signOut();
 
-      // Después: AWS Cognito signOut
-      window.location.href = "/login";
+      // Clear any cached data
+      if (typeof window !== "undefined") {
+        localStorage.removeItem("priosync_user_data");
+      }
+
+      // Redirect to login page
+      router.push("/auth/login");
     } catch (error) {
       console.error("Logout error:", error);
     } finally {
       setAuthLoading(false);
     }
-  }, []);
+  }, [router]);
 
   const isAuthenticated = !!userData;
 

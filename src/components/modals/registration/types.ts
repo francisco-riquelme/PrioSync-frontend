@@ -3,7 +3,6 @@ import { WelcomeFormData } from "../welcome/types";
 export interface RegistrationFormFields {
   nombre: string;
   apellido: string;
-  telefono: string;
   email: string;
   password: string;
   confirmPassword: string;
@@ -12,7 +11,6 @@ export interface RegistrationFormFields {
 export interface RegistrationFormData {
   nombre: string;
   apellido: string;
-  telefono: string;
   email: string;
   password: string;
   confirmPassword: string;
@@ -30,8 +28,6 @@ export const VALIDATION_CONFIG = {
 export const ERROR_MESSAGES = {
   INVALID_NAME: "Por favor ingresa tu nombre",
   INVALID_LASTNAME: "Por favor ingresa tu apellido",
-  INVALID_PHONE:
-    "Por favor ingresa un número de teléfono chileno válido (ej: +56912345678)",
   INVALID_EMAIL: "Por favor ingresa un correo electrónico válido",
   PASSWORD_TOO_SHORT: `La contraseña debe tener al menos ${VALIDATION_CONFIG.PASSWORD_MIN_LENGTH} caracteres`,
   PASSWORD_WEAK:
@@ -67,12 +63,6 @@ export const validatePassword = (
   }
 
   return { isValid: true };
-};
-
-export const validateChileanPhone = (phone: string): boolean => {
-  // Formato: +56912345678 (móvil chileno)
-  const phoneRegex = /^\+569[0-9]{8}$/;
-  return phoneRegex.test(phone);
 };
 
 export const validateName = (name: string): boolean => {

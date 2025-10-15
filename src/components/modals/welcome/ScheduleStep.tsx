@@ -11,9 +11,10 @@ import {
   Select,
   MenuItem,
   Stack,
-  Paper
+  Paper,
+  Alert
 } from '@mui/material';
-import { Schedule, AccessTime, Add, Delete } from '@mui/icons-material';
+import { Schedule, AccessTime, Add, Delete, Info } from '@mui/icons-material';
 import { DaySchedule, TimeSlot, daysOfWeek, timeSlots } from './types';
 
 interface ScheduleStepProps {
@@ -22,13 +23,25 @@ interface ScheduleStepProps {
   error: boolean;
 }
 
+const MAX_SIGNUP_TIMESLOTS = 5;
+
 export default function ScheduleStep({ schedule, onChange, error }: ScheduleStepProps) {
   const [selectedDay, setSelectedDay] = useState('');
   const [startTime, setStartTime] = useState('');
   const [endTime, setEndTime] = useState('');
 
+  // Count total time slots across all days
+  const totalTimeSlots = schedule.reduce((total, day) => total + day.timeSlots.length, 0);
+  const canAddMoreSlots = totalTimeSlots < MAX_SIGNUP_TIMESLOTS;
+  // const hasMinimumSlots = totalTimeSlots >= 1; // currently unused
+
   const addTimeSlot = () => {
     if (!selectedDay || !startTime || !endTime) return;
+    
+    if (!canAddMoreSlots) {
+      alert('Por el momento solo puedes agregar hasta 5 bloques de estudio. Podrás crear más bloques después del registro.');
+      return;
+    }
     
     if (startTime >= endTime) {
       alert('La hora de inicio debe ser anterior a la hora de fin');
@@ -79,11 +92,20 @@ export default function ScheduleStep({ schedule, onChange, error }: ScheduleStep
         ¿Entre qué rango de horarios tienes disponibilidad para estudiar?
       </Typography>
 
+      {/* Info alert about slot limit */}
+      <Alert 
+        severity="info" 
+        icon={<Info />}
+        sx={{ mb: 3 }}
+      >
+        Durante el registro inicial puedes agregar entre 1 y 5 bloques de tiempo. Podrás crear más bloques después de completar tu registro.
+      </Alert>
+
       {/* Formulario para agregar horarios */}
       <Paper sx={{ p: 3, mb: 3, backgroundColor: '#f8f9fa' }}>
         <Typography variant="subtitle1" gutterBottom sx={{ display: 'flex', alignItems: 'center', gap: 1 }}>
           <Schedule color="primary" />
-          Agregar horario de estudio
+          Agregar horario de estudio ({totalTimeSlots} de {MAX_SIGNUP_TIMESLOTS} bloques)
         </Typography>
         
         <Stack spacing={2}>
@@ -138,7 +160,7 @@ export default function ScheduleStep({ schedule, onChange, error }: ScheduleStep
             variant="contained"
             startIcon={<Add />}
             onClick={addTimeSlot}
-            disabled={!selectedDay || !startTime || !endTime}
+            disabled={!selectedDay || !startTime || !endTime || !canAddMoreSlots}
             sx={{
               alignSelf: 'flex-start',
               borderRadius: 2,

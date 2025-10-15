@@ -19,11 +19,13 @@ import {
   DialogTitle,
   DialogContent,
   DialogActions,
+  CircularProgress,
 } from '@mui/material';
 import {
   Edit as EditIcon,
   Security as SecurityIcon,
 } from '@mui/icons-material';
+import { useUser } from '@/contexts/UserContext';
 
 interface TabPanelProps {
   children?: React.ReactNode;
@@ -48,11 +50,33 @@ function TabPanel(props: TabPanelProps) {
 }
 
 export default function UserProfile() {
+  const { userData, loading } = useUser();
   const [tabValue, setTabValue] = useState(0);
   const [openPasswordDialog, setOpenPasswordDialog] = useState(false);
 
   const handleTabChange = (event: React.SyntheticEvent, newValue: number) => {
     setTabValue(newValue);
+  };
+
+  // Loading state
+  if (loading) {
+    return (
+      <Box sx={{ display: 'flex', justifyContent: 'center', alignItems: 'center', minHeight: '50vh' }}>
+        <CircularProgress />
+      </Box>
+    );
+  }
+
+  // Helper function to get user initials
+  const getUserInitials = (nombre: string, apellido?: string | null) => {
+    const firstInitial = nombre ? nombre.charAt(0).toUpperCase() : '';
+    const lastInitial = apellido ? apellido.charAt(0).toUpperCase() : '';
+    return firstInitial + lastInitial;
+  };
+
+  // Helper function to get full name
+  const getFullName = (nombre: string, apellido?: string | null) => {
+    return apellido ? `${nombre} ${apellido}` : nombre;
   };
 
   const activityHistory = [
@@ -116,19 +140,19 @@ export default function UserProfile() {
                   sx={{
                     width: 80,
                     height: 80,
-                    backgroundColor: 'error.main',
+                    backgroundColor: 'primary.main',
                     fontSize: '2rem',
                     mr: 2,
                   }}
                 >
-                  FR
+                  {userData ? getUserInitials(userData.nombre, userData.apellido) : 'U'}
                 </Avatar>
                 <Box>
                   <Typography variant="h6" sx={{ fontWeight: 600 }}>
-                    Francisco Riquelme
+                    {userData ? getFullName(userData.nombre, userData.apellido) : 'Usuario'}
                   </Typography>
                   <Typography variant="body2" color="text.secondary">
-                    francisco.riquelme@duocuc.cl
+                    {userData?.email || 'No disponible'}
                   </Typography>
                   <Button
                     startIcon={<EditIcon />}
