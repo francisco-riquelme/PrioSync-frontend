@@ -66,6 +66,7 @@ interface UserContextType {
   updateCourseProgress: (courseId: string, progress: number) => Promise<void>;
   addActivity: (activity: Omit<Activity, 'id' | 'date'>) => Promise<void>;
   refreshUser: () => Promise<void>;
+  clearUserData: () => void;
 }
 
 const UserContext = createContext<UserContextType | undefined>(undefined);
@@ -225,6 +226,12 @@ export const UserProvider = ({ children }: { children: ReactNode }) => {
     }
   };
 
+  // Clear user data (for logout)
+  const clearUserData = (): void => {
+    setUserData(null);
+    setError(null);
+  };
+
   // Update user (for profile updates)
   const updateUser = async (updates: Partial<UserData>): Promise<void> => {
     setLoading(true);
@@ -333,7 +340,8 @@ export const UserProvider = ({ children }: { children: ReactNode }) => {
     updateUser,
     updateCourseProgress,
     addActivity,
-    refreshUser
+    refreshUser,
+    clearUserData
   };
 
   return (

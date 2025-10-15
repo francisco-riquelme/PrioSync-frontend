@@ -28,6 +28,7 @@ import {
   Menu as MenuIcon,
 } from '@mui/icons-material';
 import { useAuth } from '@/components/auth/hooks/auth';
+import { useUser } from '@/contexts/UserContext';
 
 const drawerWidth = 240;
 
@@ -48,6 +49,7 @@ export default function AppLayout({ children }: LayoutProps) {
   const router = useRouter();
   const pathname = usePathname();
   const { logout, authSession } = useAuth();
+  const { clearUserData } = useUser();
 
   useEffect(() => {
     setMounted(true);
@@ -67,7 +69,8 @@ export default function AppLayout({ children }: LayoutProps) {
 
   const handleLogout = async () => {
     await logout();
-    router.push('/auth/login');
+    clearUserData();
+    router.push('/');
   };
 
   // Get user initials for avatar
@@ -137,32 +140,6 @@ export default function AppLayout({ children }: LayoutProps) {
           );
         })}
       </List>
-
-      {/* Cerrar sesión */}
-      <Box sx={{ position: 'absolute', bottom: 16, left: 0, right: 0, px: 1 }}>
-        <ListItem disablePadding>
-          <ListItemButton
-            onClick={handleLogout}
-            sx={{
-              borderRadius: 2,
-              mx: 1,
-              '&:hover': {
-                backgroundColor: 'action.hover',
-              },
-            }}
-          >
-            <ListItemIcon sx={{ color: 'text.secondary', minWidth: 36 }}>
-              <LogoutIcon />
-            </ListItemIcon>
-            <ListItemText
-              primary="Cerrar sesión"
-              primaryTypographyProps={{
-                fontSize: '0.95rem',
-              }}
-            />
-          </ListItemButton>
-        </ListItem>
-      </Box>
     </div>
   );
 
@@ -216,6 +193,16 @@ export default function AppLayout({ children }: LayoutProps) {
             >
               {getUserInitials()}
             </Avatar>
+            
+            {/* Botón de cerrar sesión */}
+            <IconButton 
+              color="inherit" 
+              onClick={handleLogout}
+              sx={{ ml: 1 }}
+              title="Cerrar sesión"
+            >
+              <LogoutIcon />
+            </IconButton>
           </Box>
         </Toolbar>
       </AppBar>
