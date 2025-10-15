@@ -77,10 +77,8 @@ export default function LoginForm() {
     if (result.success && result.isSignedIn) {
       // Login successful, redirect to dashboard
       setTimeout(() => {
-        router.push('/');
+        router.push('/dashboard');
       }, 1500);
-    } else {
-      setFieldErrors({ email: true, password: true });
     }
   };
 

@@ -58,7 +58,7 @@ export default function VerificationPage() {
     if (result.success) {
       // Redirigir al dashboard (página principal) después de 2 segundos
       setTimeout(() => {
-        router.push('/');
+        router.push('/dashboard');
       }, 2000);
     }
   };
