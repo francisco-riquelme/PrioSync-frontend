@@ -1,9 +1,9 @@
 {
   "auth": {
-    "user_pool_id": "us-east-1_g8QVtVlT3",
+    "user_pool_id": "us-east-1_31rjZUJsr",
     "aws_region": "us-east-1",
-    "user_pool_client_id": "40orcutntjp54sln37mtmht3or",
-    "identity_pool_id": "us-east-1:6e88cfb7-7853-417a-9f24-417f96b8d278",
+    "user_pool_client_id": "19tbgggpt6ndaufq088nt8qmc4",
+    "identity_pool_id": "us-east-1:cd99b4d4-7d70-44f4-8168-a02f10e02166",
     "mfa_methods": [],
     "standard_required_attributes": [
       "email"
@@ -63,6 +63,13 @@
             },
             "apellido": {
               "name": "apellido",
+              "isArray": false,
+              "type": "String",
+              "isRequired": false,
+              "attributes": []
+            },
+            "area_interes": {
+              "name": "area_interes",
               "isArray": false,
               "type": "String",
               "isRequired": false,

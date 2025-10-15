@@ -1,6 +1,6 @@
 "use client";
 
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import {
   Dialog,
   DialogTitle,
@@ -17,6 +17,7 @@ import {
   CheckCircle,
   Error,
 } from '@mui/icons-material';
+import { useRouter } from 'next/navigation';
 import WelcomeSummary from './WelcomeSummary';
 import RegistrationForm from './RegistrationForm';
 import { 
@@ -25,10 +26,32 @@ import {
   ERROR_MESSAGES, 
   validateEmail, 
   validatePassword,
-  validateChileanPhone,
   validateName
 } from './types';
 import { WelcomeFormData } from '../welcome/types';
+import { authService } from '@/utils/services/auth';
+
+// Function to split name into nombre and apellido based on word count
+const splitName = (fullName: string): { nombre: string; apellido: string } => {
+  const words = fullName.trim().split(/\s+/).filter(word => word.length > 0);
+  
+  if (words.length === 0) {
+    return { nombre: '', apellido: '' };
+  } else if (words.length === 1) {
+    return { nombre: words[0], apellido: '' };
+  } else if (words.length === 2) {
+    return { nombre: words[0], apellido: words[1] };
+  } else if (words.length === 3) {
+    return { nombre: `${words[0]} ${words[1]}`, apellido: words[2] };
+  } else if (words.length === 4) {
+    return { nombre: `${words[0]} ${words[1]}`, apellido: `${words[2]} ${words[3]}` };
+  } else {
+    // 5+ words: first words as nombre, last 2 as apellido
+    const nombre = words.slice(0, -2).join(' ');
+    const apellido = words.slice(-2).join(' ');
+    return { nombre, apellido };
+  }
+};
 
 interface RegistrationModalProps {
   open: boolean;
@@ -37,7 +60,8 @@ interface RegistrationModalProps {
   onRegister: (data: RegistrationFormData) => void;
 }
 
-export default function RegistrationModal({ open, onClose, welcomeData, onRegister }: RegistrationModalProps) {
+export default function RegistrationModal({ open, onClose, welcomeData }: RegistrationModalProps) {
+  const router = useRouter();
   const [formData, setFormData] = useState<RegistrationFormFields>(() => {
     // Cargar datos persistentes del localStorage si existen
     if (typeof window !== 'undefined') {
@@ -46,19 +70,27 @@ export default function RegistrationModal({ open, onClose, welcomeData, onRegist
         return JSON.parse(savedData) as RegistrationFormFields;
       }
     }
-    return {
+    
+    // Pre-fill name fields from welcome data if available
+    const initialData: RegistrationFormFields = {
       nombre: '',
       apellido: '',
-      telefono: '',
       email: '',
       password: '',
       confirmPassword: ''
     };
+    
+    if (welcomeData?.nombre) {
+      const { nombre, apellido } = splitName(welcomeData.nombre);
+      initialData.nombre = nombre;
+      initialData.apellido = apellido;
+    }
+    
+    return initialData;
   });
   const [errors, setErrors] = useState({
     nombre: false,
     apellido: false,
-    telefono: false,
     email: false,
     password: false,
     confirmPassword: false
@@ -74,12 +106,23 @@ export default function RegistrationModal({ open, onClose, welcomeData, onRegist
     }
   }, [formData]);
 
+  // Update form data when welcomeData changes (pre-fill name fields)
+  useEffect(() => {
+    if (welcomeData?.nombre && (!formData.nombre || !formData.apellido)) {
+      const { nombre, apellido } = splitName(welcomeData.nombre);
+      setFormData(prev => ({
+        ...prev,
+        nombre: prev.nombre || nombre,
+        apellido: prev.apellido || apellido
+      }));
+    }
+  }, [welcomeData, formData.nombre, formData.apellido]);
+
   // Limpiar formulario
   const clearForm = () => {
     const initialFormData: RegistrationFormFields = {
       nombre: '',
       apellido: '',
-      telefono: '',
       email: '',
       password: '',
       confirmPassword: ''
@@ -88,7 +131,6 @@ export default function RegistrationModal({ open, onClose, welcomeData, onRegist
     setErrors({
       nombre: false,
       apellido: false,
-      telefono: false,
       email: false,
       password: false,
       confirmPassword: false
@@ -113,7 +155,6 @@ export default function RegistrationModal({ open, onClose, welcomeData, onRegist
     setErrors({ 
       nombre: false, 
       apellido: false, 
-      telefono: false, 
       email: false, 
       password: false, 
       confirmPassword: false 
@@ -130,13 +171,6 @@ export default function RegistrationModal({ open, onClose, welcomeData, onRegist
     if (!validateName(formData.apellido)) {
       setLocalError(ERROR_MESSAGES.INVALID_LASTNAME);
       setErrors(prev => ({ ...prev, apellido: true }));
-      return;
-    }
-
-    // Validar teléfono
-    if (!validateChileanPhone(formData.telefono)) {
-      setLocalError(ERROR_MESSAGES.INVALID_PHONE);
-      setErrors(prev => ({ ...prev, telefono: true }));
       return;
     }
 
@@ -166,23 +200,42 @@ export default function RegistrationModal({ open, onClose, welcomeData, onRegist
     setLoading(true);
     
     try {
-      // Aquí llamarías a tu servicio de AWS
-      const registrationData: RegistrationFormData = {
-        ...formData,
-        welcomeData
-      };
-      
-      // Simular delay de API
-      await new Promise(resolve => setTimeout(resolve, 2000));
-      
-      onRegister(registrationData);
-      setSuccess(true);
-      
-      // Cerrar modal después del éxito y limpiar datos
-      setTimeout(() => {
-        clearForm();
-        onClose();
-      }, 2000);
+      // Call AWS Amplify signup with study preferences
+      const signupResult = await authService.signUpWithStudyPreferences({
+        email: formData.email,
+        password: formData.password,
+        firstName: formData.nombre,
+        lastName: formData.apellido,
+        timeSlots: welcomeData?.tiempoDisponible || [],
+        playlistUrl: welcomeData?.youtubeUrl,
+        areaOfInterest: welcomeData?.estudio,
+      });
+
+      if (signupResult.success) {
+        setSuccess(true);
+        
+        // Redirect to verification page after short delay
+        setTimeout(() => {
+          clearForm();
+          onClose();
+          router.push(`/auth/verification?email=${encodeURIComponent(formData.email)}`);
+        }, 2000);
+      } else {
+        // Handle specific AWS Amplify errors
+        let errorMessage: string = ERROR_MESSAGES.REGISTRATION_FAILED;
+        
+        if (signupResult.error) {
+          if (signupResult.error.includes('UsernameExistsException')) {
+            errorMessage = 'Este correo ya está registrado';
+          } else if (signupResult.error.includes('InvalidPasswordException')) {
+            errorMessage = 'La contraseña no cumple los requisitos';
+          } else if (signupResult.error.includes('InvalidParameterException')) {
+            errorMessage = 'Formato de datos inválido';
+          }
+        }
+        
+        setLocalError(errorMessage);
+      }
       
     } catch {
       setLocalError(ERROR_MESSAGES.REGISTRATION_FAILED);
@@ -196,7 +249,6 @@ export default function RegistrationModal({ open, onClose, welcomeData, onRegist
     setErrors({ 
       nombre: false, 
       apellido: false, 
-      telefono: false, 
       email: false, 
       password: false, 
       confirmPassword: false 
@@ -211,11 +263,6 @@ export default function RegistrationModal({ open, onClose, welcomeData, onRegist
   const handleApellidoChange = (value: string) => {
     setFormData((prev: RegistrationFormFields) => ({ ...prev, apellido: value }));
     if (localError || errors.apellido) clearErrors();
-  };
-
-  const handleTelefonoChange = (value: string) => {
-    setFormData((prev: RegistrationFormFields) => ({ ...prev, telefono: value }));
-    if (localError || errors.telefono) clearErrors();
   };
 
   const handleEmailChange = (value: string) => {
@@ -339,7 +386,6 @@ export default function RegistrationModal({ open, onClose, welcomeData, onRegist
           loading={loading}
           onNombreChange={handleNombreChange}
           onApellidoChange={handleApellidoChange}
-          onTelefonoChange={handleTelefonoChange}
           onEmailChange={handleEmailChange}
           onPasswordChange={handlePasswordChange}
           onConfirmPasswordChange={handleConfirmPasswordChange}

@@ -1,12 +1,11 @@
 import React from 'react';
 import { TextField, InputAdornment, Stack } from '@mui/material';
-import { Person, Person2, Phone, Email, Lock } from '@mui/icons-material';
+import { Person, Person2, Email, Lock } from '@mui/icons-material';
 
 interface RegistrationFormProps {
   formData: {
     nombre: string;
     apellido: string;
-    telefono: string;
     email: string;
     password: string;
     confirmPassword: string;
@@ -14,7 +13,6 @@ interface RegistrationFormProps {
   errors: {
     nombre: boolean;
     apellido: boolean;
-    telefono: boolean;
     email: boolean;
     password: boolean;
     confirmPassword: boolean;
@@ -22,7 +20,6 @@ interface RegistrationFormProps {
   loading: boolean;
   onNombreChange: (value: string) => void;
   onApellidoChange: (value: string) => void;
-  onTelefonoChange: (value: string) => void;
   onEmailChange: (value: string) => void;
   onPasswordChange: (value: string) => void;
   onConfirmPasswordChange: (value: string) => void;
@@ -35,7 +32,6 @@ export default function RegistrationForm({
   loading,
   onNombreChange,
   onApellidoChange,
-  onTelefonoChange,
   onEmailChange,
   onPasswordChange,
   onConfirmPasswordChange,
@@ -109,39 +105,6 @@ export default function RegistrationForm({
             }}
           />
         </Stack>
-
-        <TextField
-          fullWidth
-          label="Teléfono móvil"
-          type="tel"
-          value={formData.telefono}
-          onChange={(e) => onTelefonoChange(e.target.value)}
-          placeholder="+56912345678"
-          disabled={loading}
-          error={errors.telefono}
-          required
-          autoComplete="tel"
-          helperText="Formato: +56912345678"
-          InputProps={{
-            startAdornment: (
-              <InputAdornment position="start">
-                <Phone color="action" />
-              </InputAdornment>
-            ),
-          }}
-          sx={{
-            '& .MuiOutlinedInput-root': {
-              borderRadius: 2,
-              backgroundColor: '#fafafa',
-              '&:hover': {
-                backgroundColor: '#ffffff',
-              },
-              '&.Mui-focused': {
-                backgroundColor: '#ffffff',
-              },
-            },
-          }}
-        />
 
         <TextField
           fullWidth

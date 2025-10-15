@@ -178,7 +178,9 @@ export default function ForgotPasswordForm() {
                   justifyContent: 'center',
                   gap: 2,
                   mb: 2,
+                  cursor: 'pointer',
                 }}
+                onClick={() => router.push('/')}
               >
                 <Box
                   sx={{

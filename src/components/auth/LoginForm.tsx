@@ -137,7 +137,9 @@ export default function LoginForm() {
                   justifyContent: 'center',
                   gap: 2,
                   mb: 2,
+                  cursor: 'pointer',
                 }}
+                onClick={() => router.push('/')}
               >
                 <Box
                   sx={{

@@ -2,6 +2,7 @@
 
 import React, { useState, useCallback } from 'react';
 import { useRouter } from 'next/navigation';
+import { useUser } from '@/contexts/UserContext';
 import {
   Box,
   Card,
@@ -17,22 +18,11 @@ import { Person as PersonIcon } from '@mui/icons-material';
 
 export default function Dashboard() {
   const router = useRouter();
+  const { userData, loading } = useUser();
   
-  // Static user data for now
-  const usuario = {
-    nombre: 'Usuario',
-    apellido: null,
-  };
-
-  const cursos = [
-    { cursoId: '1', titulo: 'Curso de Ejemplo 1', progreso_estimado: 45 },
-    { cursoId: '2', titulo: 'Curso de Ejemplo 2', progreso_estimado: 70 },
-    { cursoId: '3', titulo: 'Curso de Ejemplo 3', progreso_estimado: 20 },
-  ];
-
   const [aiAdvice, setAiAdvice] = useState<string>('**Evalúa tu conocimiento activamente sin consultar tus apuntes para identificar lagunas y reforzar el aprendizaje.**');
   const [loadingAdvice, setLoadingAdvice] = useState(false);
-
+  
   // Generate AI advice function
   const generateAIAdvice = useCallback(async () => {
     const advices = [
@@ -53,6 +43,24 @@ export default function Dashboard() {
     }
     return randomAdvice;
   }, []);
+  
+  // Guard: loading/auth
+  if (loading) {
+    return (
+      <Box sx={{ display: 'flex', justifyContent: 'center', alignItems: 'center', minHeight: '50vh' }}>
+        <CircularProgress />
+      </Box>
+    );
+  }
+
+  const displayName = userData?.nombre || 'Usuario';
+
+  const cursos = [
+    { cursoId: '1', titulo: 'Curso de Ejemplo 1', progreso_estimado: 45 },
+    { cursoId: '2', titulo: 'Curso de Ejemplo 2', progreso_estimado: 70 },
+    { cursoId: '3', titulo: 'Curso de Ejemplo 3', progreso_estimado: 20 },
+  ];
+
 
   const handleGenerateAdvice = async () => {
     setLoadingAdvice(true);
@@ -72,7 +80,7 @@ export default function Dashboard() {
 
 
   // Prepare user data
-  const greeting = `¡Hola, ${usuario.nombre}!`;
+  const greeting = `¡Hola, ${displayName}!`;
 
   return (
     <Box>

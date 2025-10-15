@@ -1,7 +1,9 @@
 'use client';
 
 import React, { createContext, useContext, useState, useEffect, ReactNode } from 'react';
-// import type { MainTypes } from '@/utils/api/schema';
+import { getCurrentUser, fetchAuthSession } from 'aws-amplify/auth';
+import { getQueryFactories } from '@/utils/commons/queries';
+import type { MainTypes } from '@/utils/api/schema';
 
 // Import schema types
 // type UsuarioSchema = MainTypes["Usuario"]["type"];
@@ -68,88 +70,78 @@ interface UserContextType {
 
 const UserContext = createContext<UserContextType | undefined>(undefined);
 
-// Default user data aligned with schema
-const getDefaultUserData = (): UserData => ({
-  usuarioId: 'user_francisco_riquelme',
-  nombre: 'Francisco',
-  apellido: 'Riquelme',
-  email: 'francisco.riquelme@duocuc.cl',
-  avatar: 'FR',
-  isValid: true,
-  ultimo_login: new Date().toISOString(),
-  createdAt: '2025-08-01T10:00:00Z',
-  updatedAt: new Date().toISOString(),
-  
-  InscripcionesCurso: [
-    {
-      usuarioId: 'user_francisco_riquelme',
-      cursoId: 'calculo-avanzado',
-      fecha_inscripcion: '2025-08-15T09:30:00Z',
-      estado: 'en_progreso',
-      createdAt: '2025-08-15T09:30:00Z',
-      updatedAt: '2025-09-11T09:30:00Z',
-      curso_titulo: 'Cálculo Avanzado',
-    },
-    {
-      usuarioId: 'user_francisco_riquelme',
-      cursoId: 'desarrollo-software',
-      fecha_inscripcion: '2025-08-20T14:20:00Z',
-      estado: 'en_progreso',
-      createdAt: '2025-08-20T14:20:00Z',
-      updatedAt: '2025-09-10T14:20:00Z',
-      curso_titulo: 'Desarrollo de Software',
-    },
-    {
-      usuarioId: 'user_francisco_riquelme',
-      cursoId: 'inteligencia-artificial',
-      fecha_inscripcion: '2025-08-25T16:45:00Z',
-      estado: 'en_progreso',
-      createdAt: '2025-08-25T16:45:00Z',
-      updatedAt: '2025-09-09T16:45:00Z',
-      curso_titulo: 'Inteligencia Artificial',
-    },
-    {
-      usuarioId: 'user_francisco_riquelme',
-      cursoId: 'gestion-proyectos',
-      fecha_inscripcion: '2025-09-01T11:15:00Z',
-      estado: 'completado',
-      createdAt: '2025-09-01T11:15:00Z',
-      updatedAt: '2025-09-08T11:15:00Z',
-      curso_titulo: 'Gestión de Proyectos',
+// Selection set for fetching user data from database
+const userSelectionSet = [
+  'usuarioId',
+  'email',
+  'nombre',
+  'apellido',
+  'ultimo_login',
+  'isValid',
+  'createdAt',
+  'updatedAt',
+  'Cursos.cursoId',
+  'Cursos.titulo',
+  'Cursos.descripcion',
+  'Cursos.imagen_portada',
+  'Cursos.duracion_estimada',
+  'Cursos.nivel_dificultad',
+  'Cursos.estado',
+  'Cursos.createdAt',
+  'Cursos.updatedAt',
+  'BloqueEstudio.bloqueEstudioId',
+  'BloqueEstudio.usuarioId',
+  'BloqueEstudio.hora_inicio',
+  'BloqueEstudio.hora_fin',
+  'BloqueEstudio.duracion_minutos',
+  'BloqueEstudio.createdAt',
+  'BloqueEstudio.updatedAt',
+] as const;
+
+// Function to fetch user data from database
+const fetchUserFromDatabase = async (usuarioId: string): Promise<UserData | null> => {
+  try {
+    const { Usuario } = await getQueryFactories<
+      Pick<MainTypes, "Usuario">,
+      "Usuario"
+    >({
+      entities: ["Usuario"],
+    });
+
+    const userRes = await Usuario.get({
+      input: { usuarioId },
+      selectionSet: userSelectionSet,
+    });
+
+    if (!userRes) {
+      return null;
     }
-  ],
-  
-  activities: [
-    {
-      id: 'activity_1',
-      title: 'Completado: Gestión de Proyectos',
-      subtitle: 'Curso Completo - Proyecto',
-      date: '01/09/2025',
-      type: 'course_completed'
-    },
-    {
-      id: 'activity_2',
-      title: 'HTML y CSS',
-      subtitle: 'Desarrollo de Software - Módulo',
-      date: '28/08/2025',
-      type: 'module_completed'
-    },
-    {
-      id: 'activity_3',
-      title: 'Evaluación Módulo 1',
-      subtitle: 'Cálculo Avanzado - Evaluación (100%)',
-      date: '25/08/2025',
-      type: 'evaluation_completed'
-    },
-    {
-      id: 'activity_4',
-      title: 'Introducción a Derivadas',
-      subtitle: 'Cálculo Avanzado - Módulo',
-      date: '23/08/2025',
-      type: 'module_completed'
-    }
-  ]
-});
+
+    // Transform database response to UserData format
+    const userData: UserData = {
+      usuarioId: userRes.usuarioId,
+      email: userRes.email,
+      nombre: userRes.nombre || '',
+      apellido: userRes.apellido,
+      ultimo_login: userRes.ultimo_login,
+      isValid: userRes.isValid,
+      createdAt: userRes.createdAt,
+      updatedAt: userRes.updatedAt,
+      avatar: userRes.nombre ? userRes.nombre.charAt(0).toUpperCase() : 'U',
+      
+      // TODO: Load courses separately - LazyLoader needs special handling
+      InscripcionesCurso: [],
+      
+      // Activities are UI-only for now (not persisted to DB)
+      activities: [],
+    };
+
+    return userData;
+  } catch (error) {
+    console.error('Error fetching user from database:', error);
+    return null;
+  }
+};
 
 // Provider
 export const UserProvider = ({ children }: { children: ReactNode }) => {
@@ -157,56 +149,90 @@ export const UserProvider = ({ children }: { children: ReactNode }) => {
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
 
-  // Load data on initialization
+  // Check authentication and load user data on initialization
   useEffect(() => {
-    const loadUserData = () => {
+    const checkAuthAndLoadUser = async () => {
       setLoading(true);
+      setError(null);
+      
       try {
-        const savedData = localStorage.getItem('priosync_user_data');
-        if (savedData) {
-          const parsedData = JSON.parse(savedData);
-          setUserData(parsedData);
+        // Check AWS Amplify auth session
+        const session = await fetchAuthSession();
+        
+        if (session.tokens) {
+          // User is authenticated, get user info
+          const cognitoUser = await getCurrentUser();
+          const usuarioId = cognitoUser.userId;
+          
+          // Fetch user data from database
+          const userData = await fetchUserFromDatabase(usuarioId);
+          
+          if (userData) {
+            setUserData(userData);
+          } else {
+            // User exists in Cognito but not in database
+            // This could happen if postConfirmation trigger failed
+            setError('Usuario no encontrado en la base de datos. Por favor contacta soporte.');
+            setUserData(null);
+          }
         } else {
-          // First time - use default data
-          const defaultData = getDefaultUserData();
-          setUserData(defaultData);
-          localStorage.setItem('priosync_user_data', JSON.stringify(defaultData));
+          // No auth session, user not logged in
+          setUserData(null);
         }
       } catch (err) {
-        console.error('Error loading user data:', err);
-        setError('Error al cargar datos del usuario');
-        // Fallback to default data
-        const defaultData = getDefaultUserData();
-        setUserData(defaultData);
+        console.error('Error checking auth or loading user data:', err);
+        setError('Error al verificar autenticación');
+        setUserData(null);
       } finally {
         setLoading(false);
       }
     };
 
-    loadUserData();
+    checkAuthAndLoadUser();
   }, []);
 
-  // Auto-save when data changes
-  useEffect(() => {
-    if (userData) {
-      try {
-        localStorage.setItem('priosync_user_data', JSON.stringify(userData));
-      } catch (err) {
-        console.error('Error saving user data:', err);
-        setError('Error al guardar datos del usuario');
+  // Refresh user data from database
+  const refreshUser = async (): Promise<void> => {
+    setLoading(true);
+    setError(null);
+    
+    try {
+      // Check auth session again
+      const session = await fetchAuthSession();
+      
+      if (session.tokens) {
+        const cognitoUser = await getCurrentUser();
+        const usuarioId = cognitoUser.userId;
+        
+        // Fetch fresh user data from database
+        const userData = await fetchUserFromDatabase(usuarioId);
+        
+        if (userData) {
+          setUserData(userData);
+        } else {
+          setError('Usuario no encontrado en la base de datos');
+          setUserData(null);
+        }
+      } else {
+        // No auth session
+        setUserData(null);
       }
+    } catch (err) {
+      console.error('Error refreshing user data:', err);
+      setError('Error al actualizar datos');
+    } finally {
+      setLoading(false);
     }
-  }, [userData]);
+  };
 
-  // Update user
+  // Update user (for profile updates)
   const updateUser = async (updates: Partial<UserData>): Promise<void> => {
     setLoading(true);
     setError(null);
     
     try {
-      // Simulate API delay
-      await new Promise(resolve => setTimeout(resolve, 500));
-      
+      // TODO: Implement actual API call to update user in database
+      // For now, just update local state
       setUserData(prev => {
         if (!prev) return null;
         
@@ -232,8 +258,8 @@ export const UserProvider = ({ children }: { children: ReactNode }) => {
     setError(null);
     
     try {
-      await new Promise(resolve => setTimeout(resolve, 300));
-      
+      // TODO: Implement actual API call to update course progress
+      // For now, just update local state
       setUserData(prev => {
         if (!prev) return null;
         
@@ -242,7 +268,6 @@ export const UserProvider = ({ children }: { children: ReactNode }) => {
             ? { 
                 ...inscripcion, 
                 updatedAt: new Date().toISOString(),
-                // You could add custom progress field or use estado
               }
             : inscripcion
         );
@@ -261,14 +286,12 @@ export const UserProvider = ({ children }: { children: ReactNode }) => {
     }
   };
 
-  // Add activity
+  // Add activity (UI-only for now)
   const addActivity = async (activity: Omit<Activity, 'id' | 'date'>): Promise<void> => {
     setLoading(true);
     setError(null);
 
     try {
-      await new Promise(resolve => setTimeout(resolve, 300));
-
       // Generate id and date only on client to avoid SSR mismatch
       let id = '';
       let date = '';
@@ -298,27 +321,6 @@ export const UserProvider = ({ children }: { children: ReactNode }) => {
     } catch (err) {
       console.error('Error adding activity:', err);
       setError('Error al agregar actividad');
-    } finally {
-      setLoading(false);
-    }
-  };
-
-  // Refresh user data
-  const refreshUser = async (): Promise<void> => {
-    setLoading(true);
-    setError(null);
-    
-    try {
-      // Simulate reload from API
-      await new Promise(resolve => setTimeout(resolve, 1000));
-      
-      const savedData = localStorage.getItem('priosync_user_data');
-      if (savedData) {
-        setUserData(JSON.parse(savedData));
-      }
-    } catch (err) {
-      console.error('Error refreshing user data:', err);
-      setError('Error al actualizar datos');
     } finally {
       setLoading(false);
     }

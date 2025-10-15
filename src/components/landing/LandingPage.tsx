@@ -3,6 +3,8 @@
 "use client";
 
 import React, { useState } from 'react';
+import { useRouter } from 'next/navigation';
+import { useUser } from '@/contexts/UserContext';
 import { 
   Box, 
   Typography, 
@@ -19,9 +21,10 @@ import { School, CalendarToday, Assessment } from '@mui/icons-material';
 import WelcomeModal from '../modals/welcome/WelcomeModal';
 import { WelcomeFormData } from '../modals/welcome/types';
 import RegistrationModal from '../modals/registration/RegistrationModal';
-import { RegistrationFormData } from '../modals/registration/types';
 
 export default function LandingPage() {
+  const router = useRouter();
+  const { userData, loading } = useUser();
   const [welcomeModalOpen, setWelcomeModalOpen] = useState(false);
   const [registrationModalOpen, setRegistrationModalOpen] = useState(false);
   const [welcomeData, setWelcomeData] = useState<WelcomeFormData | null>(null);
@@ -32,17 +35,14 @@ export default function LandingPage() {
     setRegistrationModalOpen(true);
   };
 
-  const handleRegistration = (data: RegistrationFormData) => {
-    // Aquí enviarías los datos a tu backend de AWS
-    console.log('Datos completos del usuario:', data);
-    
-    // Cerrar modales y resetear
+  const handleRegistration = () => {
+    // Registration is now handled by RegistrationModal with redirect to verification
+    // Just clean up state
     setRegistrationModalOpen(false);
     setWelcomeData(null);
-    
-    // Aquí podrías redirigir al dashboard o mostrar un mensaje de éxito
-    alert('¡Registro completado con éxito!');
   };
+
+  // Dashboard navigation handled inline via buttons; helper removed
 
   const openWelcomeModal = () => {
     setWelcomeModalOpen(true);
@@ -67,20 +67,24 @@ export default function LandingPage() {
                 Contacto
               </Link>
             </Stack>
-            <Button 
-              variant="outlined" 
-              sx={{ color: 'white', borderColor: 'white', mr: 1 }}
-            >
-              Iniciar Sesión
-            </Button>
-            <Link href="/dashboard" passHref>
+            {!loading && !userData && (
+              <Button 
+                variant="outlined" 
+                sx={{ color: 'white', borderColor: 'white', mr: 1 }}
+                onClick={() => router.push('/auth/login')}
+              >
+                Iniciar Sesión
+              </Button>
+            )}
+            {!loading && userData && (
               <Button 
                 variant="contained" 
                 sx={{ backgroundColor: 'white', color: '#1976d2' }}
+                onClick={() => router.push('/dashboard')}
               >
                 Dashboard
               </Button>
-            </Link>
+            )}
           </Toolbar>
         </Container>
       </AppBar>

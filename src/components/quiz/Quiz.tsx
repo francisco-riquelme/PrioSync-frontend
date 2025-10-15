@@ -1,7 +1,7 @@
 'use client';
 
 import React from 'react';
-import { Box, Stack } from '@mui/material';
+import { Box, Stack, Typography } from '@mui/material';
 import {
   QuizInstructions,
   QuizQuestion,
@@ -25,17 +25,37 @@ export interface QuizProps {
 
 const Quiz: React.FC<QuizProps> = ({ cuestionarioId, cursoId }) => {
   const { userData } = useUser();
-  const usuarioId = userData?.usuarioId || 'user_francisco_riquelme';
-  
-  // Use the new focused hooks
+  const usuarioId = userData?.usuarioId;
+
+  if (!usuarioId) {
+    return (
+      <Box sx={{ display: 'flex', justifyContent: 'center', alignItems: 'center', minHeight: '50vh' }}>
+        <Typography variant="h6" color="text.secondary">
+          Por favor inicia sesión para acceder a los cuestionarios
+        </Typography>
+      </Box>
+    );
+  }
+
+  return (
+    <QuizContent usuarioId={usuarioId} cuestionarioId={cuestionarioId || ''} cursoId={cursoId} />
+  );
+};
+
+interface QuizContentProps {
+  usuarioId: string;
+  cuestionarioId: string;
+  cursoId?: string;
+}
+
+const QuizContent: React.FC<QuizContentProps> = ({ usuarioId, cuestionarioId, cursoId }) => {
   const { quiz, preguntas, attempts, loading, error, refetch } = useQuizDetailData({
-    cuestionarioId: cuestionarioId || '',
+    cuestionarioId,
     usuarioId,
   });
 
   const quizAttempts = useQuizAttempts();
 
-  // Use the new actions hook
   const {
     currentScreen,
     currentQuestionIndex,
@@ -67,7 +87,6 @@ const Quiz: React.FC<QuizProps> = ({ cuestionarioId, cursoId }) => {
     cursoId,
   });
 
-  // Loading state
   if (loading) {
     return (
       <Box sx={{ display: 'flex', justifyContent: 'center', alignItems: 'center', minHeight: '50vh' }}>
@@ -76,7 +95,6 @@ const Quiz: React.FC<QuizProps> = ({ cuestionarioId, cursoId }) => {
     );
   }
 
-  // Error state
   if (error || !quiz) {
     return (
       <Box sx={{ display: 'flex', justifyContent: 'center', alignItems: 'center', minHeight: '50vh' }}>
@@ -85,10 +103,8 @@ const Quiz: React.FC<QuizProps> = ({ cuestionarioId, cursoId }) => {
     );
   }
 
-  // Datos calculados
   const currentQuestion = preguntas[currentQuestionIndex] || null;
 
-  // Renderizado condicional
   if (currentScreen === 'instructions') {
     return (
       <Box sx={{ p: 3 }}>
@@ -166,10 +182,8 @@ const Quiz: React.FC<QuizProps> = ({ cuestionarioId, cursoId }) => {
     );
   }
 
-  // Vista del quiz principal
   return (
     <Box sx={{ maxWidth: 1000, mx: 'auto', p: 3 }}>
-      {/* Timer */}
       <QuizTimer
         timeLeft={timeLeft}
         totalTime={quiz?.duracion_minutos || 30}
@@ -178,7 +192,6 @@ const Quiz: React.FC<QuizProps> = ({ cuestionarioId, cursoId }) => {
         onTick={setTimeLeft}
       />
 
-      {/* Pregunta actual */}
       <Box sx={{ mb: 4 }}>
         {currentQuestion && (
           <QuizQuestion
@@ -191,7 +204,6 @@ const Quiz: React.FC<QuizProps> = ({ cuestionarioId, cursoId }) => {
         )}
       </Box>
 
-      {/* Navegación */}
       <QuizNavigation
         currentQuestionIndex={currentQuestionIndex}
         totalQuestions={preguntas.length}
