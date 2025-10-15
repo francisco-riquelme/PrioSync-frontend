@@ -21,7 +21,6 @@ import { School, CalendarToday, Assessment } from '@mui/icons-material';
 import WelcomeModal from '../modals/welcome/WelcomeModal';
 import { WelcomeFormData } from '../modals/welcome/types';
 import RegistrationModal from '../modals/registration/RegistrationModal';
-import { RegistrationFormData } from '../modals/registration/types';
 
 export default function LandingPage() {
   const router = useRouter();
