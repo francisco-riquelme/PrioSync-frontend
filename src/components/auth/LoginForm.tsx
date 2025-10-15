@@ -25,6 +25,7 @@ import {
 import { useAuth } from './hooks/auth';
 import authService from '@/utils/services/auth';
 import Link from 'next/link';
+import { useUser } from '@/contexts/UserContext';
 
 // Configuración de validación
 const VALIDATION_CONFIG = {
@@ -43,6 +44,7 @@ const VALIDATION_CONFIG = {
 export default function LoginForm() {
   const router = useRouter();
   const { login, loginState, clearLoginError } = useAuth();
+  const { refreshUser } = useUser();
   const [mounted, setMounted] = useState(false);
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
@@ -75,6 +77,9 @@ export default function LoginForm() {
     const result = await login({ email, password });
 
     if (result.success && result.isSignedIn) {
+      // Refresh user data from database
+      await refreshUser();
+      
       // Login successful, redirect to dashboard
       setTimeout(() => {
         router.push('/dashboard');
