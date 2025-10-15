@@ -398,20 +398,20 @@ export default function VerificationPage() {
             <Box sx={{ textAlign: 'center', mt: 3 }}>
               <Typography variant="body2" color="text.secondary">
                 ¿Ya verificaste tu cuenta?{' '}
-                <Link href="/auth/login" passHref legacyBehavior>
-                  <MuiLink
-                    sx={{
-                      color: '#1976d2',
-                      textDecoration: 'none',
-                      fontWeight: 500,
-                      '&:hover': {
-                        textDecoration: 'underline',
-                      },
-                    }}
-                  >
-                    Iniciar sesión
-                  </MuiLink>
-                </Link>
+                <MuiLink
+                  component={Link}
+                  href="/auth/login"
+                  sx={{
+                    color: '#1976d2',
+                    textDecoration: 'none',
+                    fontWeight: 500,
+                    '&:hover': {
+                      textDecoration: 'underline',
+                    },
+                  }}
+                >
+                  Iniciar sesión
+                </MuiLink>
               </Typography>
             </Box>
           </CardContent>
