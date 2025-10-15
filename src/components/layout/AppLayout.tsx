@@ -68,9 +68,12 @@ export default function AppLayout({ children }: LayoutProps) {
   };
 
   const handleLogout = async () => {
+    // Primero navegar a la página de inicio
+    router.push('/');
+    
+    // Luego limpiar la sesión y datos del usuario
     await logout();
     clearUserData();
-    router.push('/');
   };
 
   // Get user initials for avatar
