@@ -28,6 +28,7 @@ import { useStudySessions } from '@/components/courses/hooks/useStudySessions';
 
 export default function LandingPage() {
   const router = useRouter();
+  const { userData, loading } = useUser();
   const { createSession } = useStudySessions();
   
   const [welcomeModalOpen, setWelcomeModalOpen] = useState(false);
