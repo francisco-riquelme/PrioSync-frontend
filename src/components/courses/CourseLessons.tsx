@@ -22,6 +22,7 @@ import {
   IconButton,
   Link,
   LinearProgress,
+  Button,
 } from '@mui/material';
 import {
   ExpandMore as ExpandMoreIcon,
@@ -95,9 +96,68 @@ function LeccionEstadoIndicador({ leccionId, usuarioId }: { leccionId: string; u
   );
 }
 
+// Pequeño componente responsable de verificar y crear el cuestionario mediante endpoints del servidor
+function ModuloGenerateButton({ moduloId, creating, setCreating }: { moduloId: string; creating: Record<string, boolean>; setCreating: React.Dispatch<React.SetStateAction<Record<string, boolean>>> }) {
+  const [loading, setLoading] = useState(false);
+
+  const handleGenerate = async () => {
+    try {
+      setLoading(true);
+      setCreating((prev: Record<string, boolean>) => ({ ...prev, [moduloId]: true }));
+
+      const checkRes = await fetch(`/api/puede-generar-questionario?moduloId=${encodeURIComponent(moduloId)}`);
+      const checkJson = await checkRes.json();
+
+      if (!checkRes.ok) {
+        throw new Error(checkJson?.message || 'Error al comprobar si se puede generar el cuestionario');
+      }
+
+      if (!checkJson.canGenerate) {
+        alert(checkJson.reason || 'No es posible generar el cuestionario para este módulo');
+        return;
+      }
+
+      const createRes = await fetch('/api/crear-questionario', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ moduloId }),
+      });
+
+      const createJson = await createRes.json();
+
+      if (!createRes.ok) {
+        throw new Error(createJson?.message || 'Error al crear el cuestionario');
+      }
+
+      alert('Cuestionario generado correctamente');
+      console.log('CrearQuestionario result:', createJson);
+    } catch (err) {
+      console.error('Error generando cuestionario:', err);
+      alert(String(err));
+    } finally {
+      setLoading(false);
+      setCreating(prev => ({ ...prev, [moduloId]: false }));
+    }
+  };
+
+  return (
+    <Button
+      variant="contained"
+      size="small"
+      color="secondary"
+      onClick={handleGenerate}
+      disabled={loading || !!creating[moduloId]}
+      sx={{ textTransform: 'none' }}
+    >
+      {loading ? 'Generando...' : 'Generar cuestionario'}
+    </Button>
+  );
+}
+
 export default function CourseLessons({ modulos, loading }: CourseLessonsProps) {
   const [expandedModule, setExpandedModule] = useState<string | false>(false);
   const { userData } = useUser();
+  const [creating, setCreating] = useState<Record<string, boolean>>({});
 
   const handleModuleChange = (moduleId: string) => (event: React.SyntheticEvent, isExpanded: boolean) => {
     setExpandedModule(isExpanded ? moduleId : false);
@@ -192,6 +252,10 @@ export default function CourseLessons({ modulos, loading }: CourseLessonsProps) 
                     />
                   </Box>
                 </Box>
+                          {/* Mostrar botón para generar cuestionario cuando el módulo está completado */}
+                          {userData && modulo && (
+                            <ModuloGenerateButton moduloId={modulo.moduloId} creating={creating} setCreating={setCreating} />
+                          )}
                 {/* Barra de progreso del módulo */}
                 {userData && (
                   <Box sx={{ width: '100%', pl: 5, pr: 2 }}>
