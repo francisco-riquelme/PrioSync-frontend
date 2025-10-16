@@ -98,7 +98,7 @@ export const useProgresoModulo = (
     } finally {
       setLoading(false);
     }
-  }, [modulo, usuarioId]);
+  }, [modulo, usuarioId, totalLecciones]);
 
   // Recargar progreso manualmente
   const recargar = useCallback(async () => {

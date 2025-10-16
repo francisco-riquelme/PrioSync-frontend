@@ -107,7 +107,7 @@ export const useProgresoCurso = (
     } finally {
       setLoading(false);
     }
-  }, [modulos, usuarioId]);
+  }, [modulos, usuarioId, totalLecciones]);
 
   // Recargar progreso manualmente
   const recargar = useCallback(async () => {
