@@ -108,14 +108,29 @@ function ModuloGenerateButton({ moduloId, creating, setCreating, onNotify }: { m
       setCreating((prev: Record<string, boolean>) => ({ ...prev, [moduloId]: true }));
 
       const checkRes = await fetch(`/api/puede-generar-questionario?moduloId=${encodeURIComponent(moduloId)}`);
-      const checkJson = await checkRes.json();
+      type CheckResponse = { canGenerate?: boolean; reason?: string; missing?: string[]; message?: string };
+      let checkJson: CheckResponse | null = null;
+      try {
+        checkJson = await checkRes.json();
+      } catch {
+        // If response is not JSON
+        if (!checkRes.ok) {
+          throw new Error('Error al comprobar si se puede generar el cuestionario');
+        }
+      }
 
       if (!checkRes.ok) {
+        // If backend indicates missing env vars, show them in the UI
+        if (checkJson && Array.isArray(checkJson.missing) && checkJson.missing.length > 0) {
+          const list = checkJson.missing.join(', ');
+          if (onNotify) onNotify(`Faltan variables de entorno necesarias en el servidor: ${list}`, 'error');
+          return;
+        }
         throw new Error(checkJson?.message || 'Error al comprobar si se puede generar el cuestionario');
       }
 
-      if (!checkJson.canGenerate) {
-        if (onNotify) onNotify(checkJson.reason || 'No es posible generar el cuestionario para este módulo', 'info');
+      if (!checkJson?.canGenerate) {
+        if (onNotify) onNotify(checkJson?.reason || 'No es posible generar el cuestionario para este módulo', 'info');
         return;
       }
   // ModuleBlock: encapsula el Accordion por módulo y decide si mostrar el botón
@@ -126,9 +141,15 @@ function ModuloGenerateButton({ moduloId, creating, setCreating, onNotify }: { m
         body: JSON.stringify({ moduloId }),
       });
 
-      const createJson = await createRes.json();
+  type CreateResponse = { cuestionarioId?: string; titulo?: string; tipo?: string; missing?: string[]; message?: string };
+  const createJson: CreateResponse = await createRes.json();
 
       if (!createRes.ok) {
+        if (createJson && Array.isArray(createJson.missing) && createJson.missing.length > 0) {
+          const list = createJson.missing.join(', ');
+          if (onNotify) onNotify(`Faltan variables de entorno necesarias en el servidor: ${list}`, 'error');
+          return;
+        }
         throw new Error(createJson?.message || 'Error al crear el cuestionario');
       }
 
