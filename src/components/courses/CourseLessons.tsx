@@ -396,7 +396,10 @@ export default function CourseLessons({ modulos, loading }: CourseLessonsProps) 
 
       {modulos.length > 0 ? (
         <Box sx={{ mb: 4 }}>
-          {modulos.map((modulo) => (
+          {modulos
+            .slice()
+            .sort((a, b) => (a.orden || 0) - (b.orden || 0))
+            .map((modulo) => (
             <ModuleBlock
               key={modulo.moduloId}
               modulo={modulo}

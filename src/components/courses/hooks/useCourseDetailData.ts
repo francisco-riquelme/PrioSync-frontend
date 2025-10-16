@@ -194,8 +194,21 @@ export const useCourseDetailData = (
           }
         }
 
+        // Ordenar quizzes por el orden del módulo al que pertenecen (ascendente).
+        // Si el módulo no está presente, se coloca al final (orden 0).
+        const moduloOrdenMap = new Map<string, number>();
+        for (const m of modulosOrdenados) {
+          moduloOrdenMap.set(m.moduloId, m.orden || 0);
+        }
+
+        const quizzesOrdenados = allQuizzes.sort((a, b) => {
+          const aModuloOrden = moduloOrdenMap.get(a.moduloId || '') ?? 0;
+          const bModuloOrden = moduloOrdenMap.get(b.moduloId || '') ?? 0;
+          return aModuloOrden - bModuloOrden;
+        });
+
         setMateriales(allMateriales);
-        setQuizzes(allQuizzes);
+        setQuizzes(quizzesOrdenados);
       } else {
         setError("Curso no encontrado.");
       }
