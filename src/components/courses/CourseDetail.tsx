@@ -32,7 +32,7 @@ export default function CourseDetail({ courseId }: CourseDetailProps) {
   const { userData } = useUser();
 
   // Fetch all course data with the new unified hook
-  const { course, modulos, materiales, quizzes, loading, error } = useCourseDetailData({ cursoId: courseId });
+  const { course, modulos, materiales, quizzes, loading, error, refetch } = useCourseDetailData({ cursoId: courseId });
 
   // Calcular progreso del curso
   const {
@@ -211,6 +211,7 @@ export default function CourseDetail({ courseId }: CourseDetailProps) {
         materialesLoading={false}
         cuestionarios={quizzes}
         quizzesLoading={false}
+        refetchCourseDetail={refetch}
       />
 
       {/* Sesiones de Estudio */}
