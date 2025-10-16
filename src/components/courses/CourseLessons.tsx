@@ -99,58 +99,37 @@ function LeccionEstadoIndicador({ leccionId, usuarioId }: { leccionId: string; u
 }
 
 // Pequeño componente responsable de verificar y crear el cuestionario mediante endpoints del servidor
+import { usePuedeGenerarQuestionario } from "../quiz/hooks/usePuedeGenerarQuestionario";
+import { useCrearQuestionario } from "../quiz/hooks/useCrearQuestionario";
+
 function ModuloGenerateButton({ moduloId, creating, setCreating, onNotify }: { moduloId: string; creating: Record<string, boolean>; setCreating: React.Dispatch<React.SetStateAction<Record<string, boolean>>>; onNotify?: (msg: string, severity?: 'success' | 'error' | 'info') => void }) {
   const [loading, setLoading] = useState(false);
+  const checkHook = usePuedeGenerarQuestionario();
+  const crearHook = useCrearQuestionario();
 
   const handleGenerate = async () => {
     try {
       setLoading(true);
       setCreating((prev: Record<string, boolean>) => ({ ...prev, [moduloId]: true }));
 
-      const checkRes = await fetch(`/api/puede-generar-questionario?moduloId=${encodeURIComponent(moduloId)}`);
-      type CheckResponse = { canGenerate?: boolean; reason?: string; missing?: string[]; message?: string };
-      let checkJson: CheckResponse | null = null;
-      try {
-        checkJson = await checkRes.json();
-      } catch {
-        // If response is not JSON
-        if (!checkRes.ok) {
-          throw new Error('Error al comprobar si se puede generar el cuestionario');
-        }
-      }
+      const checkJson = await checkHook.check(moduloId);
 
-      if (!checkRes.ok) {
-        // If backend indicates missing env vars, show them in the UI
-        if (checkJson && Array.isArray(checkJson.missing) && checkJson.missing.length > 0) {
+      if (!checkJson?.canGenerate) {
+        if (Array.isArray(checkJson?.missing) && checkJson.missing.length > 0) {
           const list = checkJson.missing.join(', ');
           if (onNotify) onNotify(`Faltan variables de entorno necesarias en el servidor: ${list}`, 'error');
           return;
         }
-        throw new Error(checkJson?.message || 'Error al comprobar si se puede generar el cuestionario');
-      }
-
-      if (!checkJson?.canGenerate) {
         if (onNotify) onNotify(checkJson?.reason || 'No es posible generar el cuestionario para este módulo', 'info');
         return;
       }
-  // ModuleBlock: encapsula el Accordion por módulo y decide si mostrar el botón
 
-      const createRes = await fetch('/api/crear-questionario', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ moduloId }),
-      });
+      const createJson = await crearHook.crear(moduloId);
 
-  type CreateResponse = { cuestionarioId?: string; titulo?: string; tipo?: string; missing?: string[]; message?: string };
-  const createJson: CreateResponse = await createRes.json();
-
-      if (!createRes.ok) {
-        if (createJson && Array.isArray(createJson.missing) && createJson.missing.length > 0) {
-          const list = createJson.missing.join(', ');
-          if (onNotify) onNotify(`Faltan variables de entorno necesarias en el servidor: ${list}`, 'error');
-          return;
-        }
-        throw new Error(createJson?.message || 'Error al crear el cuestionario');
+      if (Array.isArray(createJson?.missing) && createJson.missing.length > 0) {
+        const list = createJson.missing.join(', ');
+        if (onNotify) onNotify(`Faltan variables de entorno necesarias en el servidor: ${list}`, 'error');
+        return;
       }
 
       if (onNotify) onNotify('Cuestionario generado correctamente', 'success');
