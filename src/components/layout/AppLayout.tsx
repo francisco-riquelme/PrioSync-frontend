@@ -49,7 +49,7 @@ export default function AppLayout({ children }: LayoutProps) {
   const router = useRouter();
   const pathname = usePathname();
   const { logout, authSession } = useAuth();
-  const { clearUserData } = useUser();
+  const { userData, clearUserData } = useUser();
 
   useEffect(() => {
     setMounted(true);
@@ -78,6 +78,25 @@ export default function AppLayout({ children }: LayoutProps) {
 
   // Get user initials for avatar
   const getUserInitials = () => {
+    // Prioridad 1: Usar nombre del usuario desde la BD
+    if (userData?.nombre) {
+      const nameParts = userData.nombre.trim().split(' ');
+      
+      // Si tenemos apellido, usar primera letra de nombre + primera letra de apellido
+      if (userData.apellido) {
+        return (userData.nombre[0] + userData.apellido[0]).toUpperCase();
+      }
+      
+      // Si el nombre tiene múltiples palabras, tomar primera letra de cada una
+      if (nameParts.length >= 2) {
+        return (nameParts[0][0] + nameParts[1][0]).toUpperCase();
+      }
+      
+      // Si solo tiene un nombre, tomar las primeras 2 letras
+      return userData.nombre.substring(0, 2).toUpperCase();
+    }
+    
+    // Fallback: usar username o email de Cognito
     if (authSession.user?.username) {
       return authSession.user.username.substring(0, 2).toUpperCase();
     }
@@ -184,7 +203,10 @@ export default function AppLayout({ children }: LayoutProps) {
           {/* Perfil de usuario */}
           <Box sx={{ display: 'flex', alignItems: 'center', gap: 1 }}>
             <Typography variant="body2" sx={{ display: { xs: 'none', sm: 'block' } }}>
-              {authSession.user?.username || authSession.user?.email || 'Usuario'}
+              {userData?.nombre 
+                ? `${userData.nombre}${userData.apellido ? ' ' + userData.apellido : ''}`
+                : (authSession.user?.username || authSession.user?.email || 'Usuario')
+              }
             </Typography>
             <Avatar
               sx={{
