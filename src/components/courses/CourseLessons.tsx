@@ -39,6 +39,8 @@ import { useProgresoModulo } from './hooks/useProgresoModulo';
 import { useProgresoLeccion } from './hooks/useProgresoLeccion';
 import { useUser } from '@/contexts/UserContext';
 import type { ModuloWithLecciones, LeccionFromModulo } from './hooks/useCourseDetailData';
+import { usePuedeGenerarQuestionario } from "../quiz/hooks/usePuedeGenerarQuestionario";
+import { useCrearQuestionario } from "../quiz/hooks/useCrearQuestionario";
 
 interface CourseLessonsProps {
   modulos: ModuloWithLecciones[];
@@ -99,10 +101,8 @@ function LeccionEstadoIndicador({ leccionId, usuarioId }: { leccionId: string; u
 }
 
 // Pequeño componente responsable de verificar y crear el cuestionario mediante endpoints del servidor
-import { usePuedeGenerarQuestionario } from "../quiz/hooks/usePuedeGenerarQuestionario";
-import { useCrearQuestionario } from "../quiz/hooks/useCrearQuestionario";
-
-function ModuloGenerateButton({ moduloId, creating, setCreating, onNotify }: { moduloId: string; creating: Record<string, boolean>; setCreating: React.Dispatch<React.SetStateAction<Record<string, boolean>>>; onNotify?: (msg: string, severity?: 'success' | 'error' | 'info') => void }) {
+function ModuloGenerateButton({ moduloId, creating, setCreating, onNotify }: { 
+  moduloId: string; creating: Record<string, boolean>; setCreating: React.Dispatch<React.SetStateAction<Record<string, boolean>>>; onNotify?: (msg: string, severity?: 'success' | 'error' | 'info') => void }) {
   const [loading, setLoading] = useState(false);
   const checkHook = usePuedeGenerarQuestionario();
   const crearHook = useCrearQuestionario();
@@ -112,15 +112,31 @@ function ModuloGenerateButton({ moduloId, creating, setCreating, onNotify }: { m
       setLoading(true);
       setCreating((prev: Record<string, boolean>) => ({ ...prev, [moduloId]: true }));
 
-      const checkJson = await checkHook.check(moduloId);
+  let checkJson: unknown = null;
+      try {
+        checkJson = await checkHook.check(moduloId);
+      } catch (err) {
+        const msg = err instanceof Error ? err.message : String(err);
+        // Si el backend no expone la query, aplicar fallback y continuar
+        if (msg.includes('FieldUndefined') && msg.includes('puedeGenerarQuestionario')) {
+          checkJson = { canGenerate: true, reason: 'Backend no tiene resolver `puedeGenerarQuestionario` (fallback client-side).' };
+        } else {
+          throw err;
+        }
+      }
 
-      if (!checkJson?.canGenerate) {
-        if (Array.isArray(checkJson?.missing) && checkJson.missing.length > 0) {
-          const list = checkJson.missing.join(', ');
+      const checkObj = (checkJson && typeof checkJson === 'object') ? (checkJson as Record<string, unknown>) : {};
+      const maybeCanGenerate = typeof checkObj['canGenerate'] === 'boolean' ? (checkObj['canGenerate'] as boolean) : undefined;
+      const maybeMissing = Array.isArray(checkObj['missing']) ? (checkObj['missing'] as unknown[]) : undefined;
+
+      if (!maybeCanGenerate) {
+        if (Array.isArray(maybeMissing) && maybeMissing.length > 0) {
+          const list = (maybeMissing as string[]).join(', ');
           if (onNotify) onNotify(`Faltan variables de entorno necesarias en el servidor: ${list}`, 'error');
           return;
         }
-        if (onNotify) onNotify(checkJson?.reason || 'No es posible generar el cuestionario para este módulo', 'info');
+        const maybeReason = typeof checkObj['reason'] === 'string' ? (checkObj['reason'] as string) : undefined;
+        if (onNotify) onNotify(maybeReason || 'No es posible generar el cuestionario para este módulo', 'info');
         return;
       }
 
@@ -132,11 +148,12 @@ function ModuloGenerateButton({ moduloId, creating, setCreating, onNotify }: { m
         return;
       }
 
-      if (onNotify) onNotify('Cuestionario generado correctamente', 'success');
-      console.log('CrearQuestionario result:', createJson);
+  if (onNotify) onNotify('Cuestionario generado correctamente', 'success');
     } catch (err) {
-      console.error('Error generando cuestionario:', err);
-      if (onNotify) onNotify(String(err), 'error');
+      // Normalizar mensaje de error para la UI
+      const message = err instanceof Error ? err.message : String(err);
+      console.error('Error generando cuestionario:', message, err);
+      if (onNotify) onNotify(message, 'error');
     } finally {
       setLoading(false);
       setCreating(prev => ({ ...prev, [moduloId]: false }));

@@ -41,13 +41,16 @@ export const usePuedeGenerarQuestionario = () => {
 
       const query = `query PuedeGenerarQuestionario($moduloId: ID!) { puedeGenerarQuestionario(moduloId: $moduloId) { canGenerate reason } }`;
 
+      const payload = { query, variables: { moduloId } };
+      // Log payload so backend devs can inspect moduloId from client
+      console.debug('AppSync request - PuedeGenerarQuestionario payload:', payload);
       const resp = await fetch(appsyncUrl, {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
           'x-api-key': appsyncKey,
         },
-        body: JSON.stringify({ query, variables: { moduloId } }),
+        body: JSON.stringify(payload),
       });
 
       // Try to parse JSON but handle non-JSON responses
@@ -63,14 +66,28 @@ export const usePuedeGenerarQuestionario = () => {
 
       const parsed = json as { errors?: Array<{ message?: string }>; data?: Record<string, unknown> };
 
+      // Si la respuesta HTTP no es OK, aún así revisar si GraphQL devolvió errores
+      // y aplicar fallback para FieldUndefined antes de lanzar.
       if (!resp.ok) {
         const message = parsed?.errors?.[0]?.message || `HTTP ${resp.status}: ${resp.statusText}`;
+
+        if (parsed?.errors && message.includes('FieldUndefined') && message.includes('puedeGenerarQuestionario')) {
+          return { canGenerate: true, reason: 'Backend no tiene resolver `puedeGenerarQuestionario` (fallback client-side).' } as const;
+        }
+
         setError(message);
         throw new Error(message);
       }
 
       if (parsed.errors) {
         const message = parsed.errors[0]?.message || 'GraphQL error';
+
+        // Si la API GraphQL no expone la query puedeGenerarQuestionario
+        // (FieldUndefined), toleramos y permitimos generación por fallback.
+        if (message.includes('FieldUndefined') && message.includes("puedeGenerarQuestionario")) {
+          return { canGenerate: true, reason: 'Backend no tiene resolver `puedeGenerarQuestionario` (fallback client-side).' } as const;
+        }
+
         setError(message);
         throw new Error(message);
       }
