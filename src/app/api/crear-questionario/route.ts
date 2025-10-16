@@ -5,8 +5,11 @@ const APPSYNC_API_KEY = process.env.APPSYNC_API_KEY;
 
 export async function POST(req: Request) {
   try {
-    if (!APPSYNC_URL || !APPSYNC_API_KEY) {
-      return NextResponse.json({ message: 'AppSync not configured' }, { status: 500 });
+    const missing: string[] = [];
+    if (!APPSYNC_URL) missing.push('APPSYNC_URL');
+    if (!APPSYNC_API_KEY) missing.push('APPSYNC_API_KEY');
+    if (missing.length > 0) {
+      return NextResponse.json({ message: 'AppSync not configured', missing }, { status: 500 });
     }
 
     const body = await req.json();
@@ -16,11 +19,14 @@ export async function POST(req: Request) {
 
     const mutation = `mutation CrearQuestionario($moduloId: ID!) { crearQuestionario(moduloId: $moduloId) { cuestionarioId titulo tipo } }`;
 
-    const resp = await fetch(APPSYNC_URL, {
+    const appsyncUrl = APPSYNC_URL as string;
+    const appsyncApiKey = APPSYNC_API_KEY as string;
+
+    const resp = await fetch(appsyncUrl, {
       method: 'POST',
       headers: {
         'Content-Type': 'application/json',
-        'x-api-key': APPSYNC_API_KEY,
+        'x-api-key': appsyncApiKey,
       },
       body: JSON.stringify({ query: mutation, variables: { moduloId } }),
     });
