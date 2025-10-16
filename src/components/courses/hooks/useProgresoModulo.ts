@@ -1,8 +1,7 @@
-import { useState, useEffect, useCallback } from 'react';
-import { getQueryFactories } from '@/utils/commons/queries';
-import type { MainTypes } from '@/utils/api/schema';
-import type { ModuloWithLecciones } from './useCourseDetailData';
-
+import { useState, useEffect, useCallback } from "react";
+import { getQueryFactories } from "@/utils/commons/queries";
+import type { MainTypes } from "@/utils/api/schema";
+import type { ModuloWithLecciones } from "./useCourseDetailData";
 
 export interface UseProgresoModuloParams {
   modulo: ModuloWithLecciones;
@@ -58,10 +57,10 @@ export const useProgresoModulo = (
       }
 
       const { ProgresoLeccion } = await getQueryFactories<
-        Pick<MainTypes, 'ProgresoLeccion'>,
-        'ProgresoLeccion'
+        Pick<MainTypes, "ProgresoLeccion">,
+        "ProgresoLeccion"
       >({
-        entities: ['ProgresoLeccion'],
+        entities: ["ProgresoLeccion"],
       });
 
       // Obtener IDs de todas las lecciones del módulo
@@ -77,12 +76,9 @@ export const useProgresoModulo = (
       // Obtener todos los progresos del usuario para las lecciones de este módulo
       const resultado = await ProgresoLeccion.list({
         filter: {
-          and: [
-            { usuarioId: { eq: usuarioId } },
-            { completada: { eq: true } }
-          ]
+          and: [{ usuarioId: { eq: usuarioId } }, { completada: { eq: true } }],
         },
-        selectionSet: ['usuarioId', 'leccionId', 'completada'],
+        selectionSet: ["usuarioId", "leccionId", "completada"],
       });
 
       // Contar cuántas lecciones de este módulo están completadas
@@ -90,19 +86,19 @@ export const useProgresoModulo = (
         resultado.items?.map((item) => item.leccionId) || []
       );
 
-      const completadas = leccionIds.filter(id =>
+      const completadas = leccionIds.filter((id) =>
         leccionesCompletadasSet.has(id)
       ).length;
 
       setLeccionesCompletadas(completadas);
     } catch (err) {
-      console.error('Error calculando progreso del módulo:', err);
-      setError('Error al calcular el progreso del módulo');
+      console.error("Error calculando progreso del módulo:", err);
+      setError("Error al calcular el progreso del módulo");
       setLeccionesCompletadas(0);
     } finally {
       setLoading(false);
     }
-  }, [modulo, usuarioId, totalLecciones]);
+  }, [modulo, usuarioId]);
 
   // Recargar progreso manualmente
   const recargar = useCallback(async () => {
@@ -111,20 +107,14 @@ export const useProgresoModulo = (
 
   // Calcular progreso solo al montar o cuando cambien módulo/usuario
   useEffect(() => {
-    if (modulo && modulo.Lecciones && modulo.Lecciones.length > 0 && usuarioId) {
+    if (
+      modulo &&
+      modulo.Lecciones &&
+      modulo.Lecciones.length > 0 &&
+      usuarioId
+    ) {
       calcularProgreso();
     }
-  }, [modulo, usuarioId, calcularProgreso]);
-
-  // Actualizar progreso cada 5 segundos para mantener sincronización (solo si hay datos)
-  useEffect(() => {
-    if (!modulo || !modulo.Lecciones || modulo.Lecciones.length === 0 || !usuarioId) return;
-
-    const interval = setInterval(() => {
-      calcularProgreso();
-    }, 5000); // Aumentado a 5 segundos para reducir peticiones
-
-    return () => clearInterval(interval);
   }, [modulo, usuarioId, calcularProgreso]);
 
   // Calcular porcentaje
@@ -142,4 +132,3 @@ export const useProgresoModulo = (
     recargar,
   };
 };
-

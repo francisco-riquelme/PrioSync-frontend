@@ -261,7 +261,8 @@ function ModuleBlock({
         </Box>
 
         {/* Mostrar botón de generar sólo si el progreso es 100% */}
-        {userId && progreso === 100 && (
+        {true && (
+        //userId && progreso === 100 && (
           <Box sx={{ ml: 2 }}>
             <ModuloGenerateButton moduloId={modulo.moduloId} creating={creating} setCreating={setCreating} onNotify={onNotify} />
           </Box>

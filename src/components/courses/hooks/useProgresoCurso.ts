@@ -1,8 +1,7 @@
-import { useState, useEffect, useCallback } from 'react';
-import { getQueryFactories } from '@/utils/commons/queries';
-import type { MainTypes } from '@/utils/api/schema';
-import type { ModuloWithLecciones } from './useCourseDetailData';
-
+import { useState, useEffect, useCallback } from "react";
+import { getQueryFactories } from "@/utils/commons/queries";
+import type { MainTypes } from "@/utils/api/schema";
+import type { ModuloWithLecciones } from "./useCourseDetailData";
 
 export interface UseProgresoCursoParams {
   modulos: ModuloWithLecciones[];
@@ -36,7 +35,6 @@ export const useProgresoCurso = (
     return total + (modulo.Lecciones?.length || 0);
   }, 0);
 
-
   // Calcular el progreso del curso completo
   const calcularProgreso = useCallback(async () => {
     if (!usuarioId) {
@@ -62,10 +60,10 @@ export const useProgresoCurso = (
       }
 
       const { ProgresoLeccion } = await getQueryFactories<
-        Pick<MainTypes, 'ProgresoLeccion'>,
-        'ProgresoLeccion'
+        Pick<MainTypes, "ProgresoLeccion">,
+        "ProgresoLeccion"
       >({
-        entities: ['ProgresoLeccion'],
+        entities: ["ProgresoLeccion"],
       });
 
       // Obtener IDs de todas las lecciones de todos los módulos
@@ -87,12 +85,9 @@ export const useProgresoCurso = (
       // Obtener todos los progresos completados del usuario
       const resultado = await ProgresoLeccion.list({
         filter: {
-          and: [
-            { usuarioId: { eq: usuarioId } },
-            { completada: { eq: true } }
-          ]
+          and: [{ usuarioId: { eq: usuarioId } }, { completada: { eq: true } }],
         },
-        selectionSet: ['usuarioId', 'leccionId', 'completada'],
+        selectionSet: ["usuarioId", "leccionId", "completada"],
       });
 
       // Contar cuántas lecciones del curso están completadas
@@ -100,19 +95,19 @@ export const useProgresoCurso = (
         resultado.items?.map((item) => item.leccionId) || []
       );
 
-          const completadas = todasLasLeccionIds.filter(id =>
-            leccionesCompletadasSet.has(id)
-          ).length;
+      const completadas = todasLasLeccionIds.filter((id) =>
+        leccionesCompletadasSet.has(id)
+      ).length;
 
-          setLeccionesCompletadas(completadas);
+      setLeccionesCompletadas(completadas);
     } catch (err) {
-      console.error('Error calculando progreso del curso:', err);
-      setError('Error al calcular el progreso del curso');
+      console.error("Error calculando progreso del curso:", err);
+      setError("Error al calcular el progreso del curso");
       setLeccionesCompletadas(0);
     } finally {
       setLoading(false);
     }
-  }, [modulos, usuarioId, totalLecciones]);
+  }, [modulos, usuarioId]);
 
   // Recargar progreso manualmente
   const recargar = useCallback(async () => {
@@ -125,17 +120,6 @@ export const useProgresoCurso = (
       calcularProgreso();
     }
   }, [modulos, usuarioId, calcularProgreso]);
-
-  // Actualizar progreso cada 5 segundos para mantener sincronización (solo si hay datos)
-  useEffect(() => {
-    if (modulos.length === 0 || !usuarioId) return;
-
-    const interval = setInterval(() => {
-      calcularProgreso();
-    }, 5000); // Aumentado a 5 segundos para reducir peticiones
-
-    return () => clearInterval(interval);
-  }, [modulos.length, usuarioId, calcularProgreso]);
 
   // Calcular porcentaje
   const progreso =
@@ -152,4 +136,3 @@ export const useProgresoCurso = (
     recargar,
   };
 };
-
