@@ -1,4 +1,5 @@
 import { useState, useCallback } from "react";
+import amplifyOutputs from '../../../../amplify_outputs.json';
 
 export interface CrearQuestionarioResponse {
   cuestionarioId?: string;
@@ -16,23 +17,37 @@ export const useCrearQuestionario = () => {
     setLoading(true);
     setError(null);
     try {
-      const res = await fetch('/api/crear-questionario', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ moduloId }),
-      });
+      const appsyncUrl = amplifyOutputs?.data?.url as string | undefined;
+      const appsyncKey = amplifyOutputs?.data?.api_key as string | undefined;
 
-      const json: CrearQuestionarioResponse = await res.json();
-
-      if (!res.ok) {
-        const missing = Array.isArray(json?.missing) ? json.missing : undefined;
-        const msg = json?.message || 'Error al crear el cuestionario';
-        const err = new Error(msg + (missing ? `: ${missing.join(', ')}` : ''));
-        setError(String(err));
-        throw err;
+      if (!appsyncUrl || !appsyncKey) {
+        const missing = [] as string[];
+        if (!appsyncUrl) missing.push('APPSYNC_URL');
+        if (!appsyncKey) missing.push('APPSYNC_API_KEY');
+        const message = `AppSync no configurado: ${missing.join(', ')}`;
+        setError(message);
+        throw new Error(message);
       }
 
-      return json || {};
+      const mutation = `mutation CrearQuestionario($moduloId: ID!) { crearQuestionario(moduloId: $moduloId) { cuestionarioId titulo tipo } }`;
+
+      const resp = await fetch(appsyncUrl, {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+          'x-api-key': appsyncKey,
+        },
+        body: JSON.stringify({ query: mutation, variables: { moduloId } }),
+      });
+
+      const json = await resp.json();
+      if (json.errors) {
+        const message = json.errors[0]?.message || 'GraphQL error';
+        setError(message);
+        throw new Error(message);
+      }
+
+      return json.data?.crearQuestionario || {};
     } catch (err) {
       setError(String(err));
       throw err;
