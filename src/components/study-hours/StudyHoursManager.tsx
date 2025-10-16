@@ -33,6 +33,7 @@ import {
 import { useUser } from '@/contexts/UserContext';
 import { useUserPreferences } from '@/hooks/useUserPreferences';
 import { DaySchedule, TimeSlot, daysOfWeek, timeSlots } from '@/components/modals/welcome/types';
+import { studyBlocksService } from '@/utils/services/studyBlocks';
 
 export default function StudyHoursManager() {
   const router = useRouter();
@@ -154,25 +155,40 @@ export default function StudyHoursManager() {
   };
 
   // Guardar cambios
-  const handleSaveChanges = () => {
+  const handleSaveChanges = async () => {
     try {
-      // Obtener datos existentes de localStorage
+      if (!userData?.usuarioId) {
+        setSnackbarMessage('❌ Error: Usuario no autenticado');
+        setSnackbarOpen(true);
+        return;
+      }
+
+      // Guardar en backend usando el servicio
+      const success = await studyBlocksService.updateUserStudyBlocks(
+        userData.usuarioId,
+        schedule
+      );
+
+      if (!success) {
+        setSnackbarMessage('❌ Error al guardar en el backend');
+        setSnackbarOpen(true);
+        return;
+      }
+
+      // También guardar en localStorage como caché
       const savedData = localStorage.getItem('welcomeFormData');
       const existingData = savedData ? JSON.parse(savedData) : {};
       
-      // Actualizar con los nuevos horarios
       const updatedData = {
         ...existingData,
         tiempoDisponible: schedule
       };
       
-      // Guardar en localStorage
       localStorage.setItem('welcomeFormData', JSON.stringify(updatedData));
       
-      // Refrescar preferencias para que se actualicen en toda la app
+      // Refrescar preferencias
       refreshPreferences();
       
-      // Mostrar mensaje de éxito
       setSnackbarMessage('✅ Horarios guardados exitosamente');
       setSnackbarOpen(true);
     } catch (error) {

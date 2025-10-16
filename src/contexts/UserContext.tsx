@@ -4,6 +4,8 @@ import React, { createContext, useContext, useState, useEffect, ReactNode } from
 import { getCurrentUser, fetchAuthSession } from 'aws-amplify/auth';
 import { getQueryFactories } from '@/utils/commons/queries';
 import type { MainTypes } from '@/utils/api/schema';
+import { migrationService } from '@/utils/services/migrateStudyBlocks';
+import { useAmplify } from '@/components/providers/AmplifyProvider';
 
 // Import schema types
 // type UsuarioSchema = MainTypes["Usuario"]["type"];
@@ -149,9 +151,16 @@ export const UserProvider = ({ children }: { children: ReactNode }) => {
   const [userData, setUserData] = useState<UserData | null>(null);
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
+  const { isInitialized } = useAmplify();
 
   // Check authentication and load user data on initialization
   useEffect(() => {
+    // Don't run if Amplify is not initialized yet
+    if (!isInitialized) {
+      console.log('⏳ Waiting for Amplify to initialize...');
+      return;
+    }
+
     const checkAuthAndLoadUser = async () => {
       setLoading(true);
       setError(null);
@@ -190,10 +199,17 @@ export const UserProvider = ({ children }: { children: ReactNode }) => {
     };
 
     checkAuthAndLoadUser();
-  }, []);
+  }, [isInitialized]); // Run when Amplify initialization status changes
 
   // Refresh user data from database
   const refreshUser = async (): Promise<void> => {
+    // Ensure Amplify is initialized before attempting operations
+    if (!isInitialized) {
+      console.error('Cannot refresh user: Amplify not initialized');
+      setError('Sistema no inicializado. Por favor recarga la página.');
+      return;
+    }
+
     setLoading(true);
     setError(null);
     
@@ -210,6 +226,29 @@ export const UserProvider = ({ children }: { children: ReactNode }) => {
         
         if (userData) {
           setUserData(userData);
+          
+          // Try to migrate study blocks from Cognito or localStorage if needed
+          // This runs in background, doesn't block the UI
+          console.log('🔄 Starting study blocks migration for user:', usuarioId);
+          migrationService.migrateStudyBlocksFromCognito(usuarioId)
+            .then(result => {
+              if (!result.success) {
+                console.warn('⚠️ Cognito migration failed, trying localStorage:', result.error);
+                return migrationService.migrateStudyBlocksFromLocalStorage(usuarioId);
+              }
+              console.log('✅ Cognito migration successful');
+              return result;
+            })
+            .then(result => {
+              if (result.success) {
+                console.log('✅ Study blocks migration completed successfully');
+              } else {
+                console.warn('⚠️ Study blocks migration failed:', result.error);
+              }
+            })
+            .catch(err => {
+              console.error('❌ Error during study blocks migration:', err);
+            });
         } else {
           setError('Usuario no encontrado en la base de datos');
           setUserData(null);

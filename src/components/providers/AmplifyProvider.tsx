@@ -1,6 +1,6 @@
 'use client';
 
-import { useEffect, useState } from 'react';
+import { createContext, useContext, useEffect, useState } from 'react';
 import { AmplifyOutputsType, initializeQueries, AmplifyModelType } from "@/utils/commons/queries";
 import amplifyOutputs from "../../../amplify_outputs.json";
 import { MainSchema } from "@/utils/api/schema";
@@ -8,6 +8,14 @@ import { MainSchema } from "@/utils/api/schema";
 interface AmplifyProviderProps {
   children: React.ReactNode;
 }
+
+interface AmplifyContextType {
+  isInitialized: boolean;
+}
+
+const AmplifyContext = createContext<AmplifyContextType>({ isInitialized: false });
+
+export const useAmplify = () => useContext(AmplifyContext);
 
 export default function AmplifyProvider({ children }: AmplifyProviderProps) {
   const [isInitialized, setIsInitialized] = useState(false);
@@ -64,5 +72,9 @@ export default function AmplifyProvider({ children }: AmplifyProviderProps) {
     );
   }
 
-  return <>{children}</>;
+  return (
+    <AmplifyContext.Provider value={{ isInitialized }}>
+      {children}
+    </AmplifyContext.Provider>
+  );
 }
