@@ -45,7 +45,6 @@ import { useCrearQuestionario } from "../quiz/hooks/useCrearQuestionario";
 interface CourseLessonsProps {
   modulos: ModuloWithLecciones[];
   loading: boolean;
-  refetchCourseDetail?: () => Promise<void>;
 }
 
 // Componente para mostrar progreso de un módulo
@@ -102,8 +101,8 @@ function LeccionEstadoIndicador({ leccionId, usuarioId }: { leccionId: string; u
 }
 
 // Pequeño componente responsable de verificar y crear el cuestionario mediante endpoints del servidor
-function ModuloGenerateButton({ moduloId, creating, setCreating, onNotify, refetchCourseDetail }: { 
-  moduloId: string; creating: Record<string, boolean>; setCreating: React.Dispatch<React.SetStateAction<Record<string, boolean>>>; onNotify?: (msg: string, severity?: 'success' | 'error' | 'info') => void; refetchCourseDetail?: () => Promise<void>; }) {
+function ModuloGenerateButton({ moduloId, creating, setCreating, onNotify }: { 
+  moduloId: string; creating: Record<string, boolean>; setCreating: React.Dispatch<React.SetStateAction<Record<string, boolean>>>; onNotify?: (msg: string, severity?: 'success' | 'error' | 'info') => void }) {
   const [loading, setLoading] = useState(false);
   const checkHook = usePuedeGenerarQuestionario();
   const crearHook = useCrearQuestionario();
@@ -149,15 +148,7 @@ function ModuloGenerateButton({ moduloId, creating, setCreating, onNotify, refet
         return;
       }
 
-      if (onNotify) onNotify('Cuestionario generado correctamente', 'success');
-
-      // Refetch course detail so the UI shows the newly created quiz immediately
-      try {
-        if (refetchCourseDetail) await refetchCourseDetail();
-      } catch (rfErr) {
-        // No crítico: loguear y continuar
-        console.error('Error refrescando datos del curso tras crear cuestionario:', rfErr);
-      }
+  if (onNotify) onNotify('Cuestionario generado correctamente', 'success');
     } catch (err) {
       // Normalizar mensaje de error para la UI
       const message = err instanceof Error ? err.message : String(err);
@@ -200,7 +191,6 @@ function ModuleBlock({
   creating: Record<string, boolean>;
   setCreating: React.Dispatch<React.SetStateAction<Record<string, boolean>>>;
   onNotify?: (msg: string, severity?: 'success' | 'error' | 'info') => void;
-  refetchCourseDetail?: () => Promise<void>;
 }) {
   const { progreso } = useProgresoModulo({ modulo, usuarioId: userId || '' });
 
@@ -367,7 +357,7 @@ function ModuleBlock({
   );
 }
 
-export default function CourseLessons({ modulos, loading, refetchCourseDetail }: CourseLessonsProps) {
+export default function CourseLessons({ modulos, loading }: CourseLessonsProps) {
   const [expandedModule, setExpandedModule] = useState<string | false>(false);
   const { userData } = useUser();
   const [creating, setCreating] = useState<Record<string, boolean>>({});
@@ -410,17 +400,15 @@ export default function CourseLessons({ modulos, loading, refetchCourseDetail }:
             .slice()
             .sort((a, b) => (a.orden || 0) - (b.orden || 0))
             .map((modulo) => (
-              <ModuleBlock
-                key={modulo.moduloId}
-                modulo={modulo}
-                expanded={expandedModule === modulo.moduloId}
-                onChange={handleModuleChange(modulo.moduloId)}
-                userId={userData?.usuarioId}
-                creating={creating}
-                setCreating={setCreating}
-                onNotify={onNotify}
-                refetchCourseDetail={refetchCourseDetail}
-              />
+            <ModuleBlock
+              key={modulo.moduloId}
+              modulo={modulo}
+              expanded={expandedModule === modulo.moduloId}
+              onChange={handleModuleChange(modulo.moduloId)}
+              userId={userData?.usuarioId}
+              creating={creating}
+              setCreating={setCreating}
+              onNotify={onNotify} />
           ))}
         </Box>
       ) : (

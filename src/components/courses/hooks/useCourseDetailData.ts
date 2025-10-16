@@ -104,7 +104,6 @@ export interface UseCourseDetailDataReturn {
   quizzes: CuestionarioFromCourse[];
   loading: boolean;
   error: string | null;
-  refetch: () => Promise<void>;
 }
 
 /**
@@ -234,7 +233,6 @@ export const useCourseDetailData = (
     quizzes,
     loading,
     error,
-    refetch: loadCourseDetail,
   };
 };
 

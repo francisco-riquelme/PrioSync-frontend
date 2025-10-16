@@ -13,7 +13,6 @@ interface CourseContentProps {
   materialesLoading: boolean;
   cuestionarios: CuestionarioFromCourse[];
   quizzesLoading: boolean;
-  refetchCourseDetail?: () => Promise<void>;
 }
 
 export default function CourseContent({ 
@@ -21,12 +20,11 @@ export default function CourseContent({
   materiales, 
   materialesLoading, 
   cuestionarios, 
-  quizzesLoading,
-  refetchCourseDetail,
+  quizzesLoading 
 }: CourseContentProps) {
   return (
     <Box>
-      <CourseLessons modulos={modulos} loading={false} refetchCourseDetail={refetchCourseDetail} />
+      <CourseLessons modulos={modulos} loading={false} />
       <CourseMaterials materiales={materiales} loading={materialesLoading} />
       <CourseQuizzes cuestionarios={cuestionarios} loading={quizzesLoading} />
     </Box>
