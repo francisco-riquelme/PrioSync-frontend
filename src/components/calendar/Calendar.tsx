@@ -6,6 +6,7 @@ import { Calendar as BigCalendar, momentLocalizer, View, Event } from 'react-big
 import 'react-big-calendar/lib/css/react-big-calendar.css';
 import moment from 'moment';
 import 'moment/locale/es';
+import { useRouter } from 'next/navigation';
 import {
   Box,
   Paper,
@@ -57,6 +58,7 @@ const localizer = momentLocalizer(moment as unknown as moment.Moment);
 
 const Calendar: React.FC = () => {
   const theme = useTheme();
+  const router = useRouter();
   const { userData } = useUser();
   const {
     sessions: rawSessions,
@@ -406,6 +408,7 @@ const Calendar: React.FC = () => {
                     setSelectedSlot(null);
                     setFormDialogOpen(true);
                   }}
+                  onStudyHours={() => router.push('/study-hours')}
                 />
               ),
             }}
