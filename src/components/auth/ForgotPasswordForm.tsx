@@ -499,20 +499,20 @@ export default function ForgotPasswordForm() {
             <Box sx={{ textAlign: 'center', mt: 3 }}>
               <Typography variant="body2" color="text.secondary">
                 ¿Recordaste tu contraseña?{' '}
-                <Link href="/auth/login" passHref legacyBehavior>
-                  <MuiLink
-                    sx={{
-                      color: '#1976d2',
-                      textDecoration: 'none',
-                      fontWeight: 500,
-                      '&:hover': {
-                        textDecoration: 'underline',
-                      },
-                    }}
-                  >
-                    Volver al inicio de sesión
-                  </MuiLink>
-                </Link>
+                <MuiLink
+                  component={Link}
+                  href="/auth/login"
+                  sx={{
+                    color: '#1976d2',
+                    textDecoration: 'none',
+                    fontWeight: 500,
+                    '&:hover': {
+                      textDecoration: 'underline',
+                    },
+                  }}
+                >
+                  Volver al inicio de sesión
+                </MuiLink>
               </Typography>
             </Box>
           </CardContent>

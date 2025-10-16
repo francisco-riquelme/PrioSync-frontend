@@ -25,6 +25,7 @@ import {
 import { useAuth } from './hooks/auth';
 import authService from '@/utils/services/auth';
 import Link from 'next/link';
+import { useUser } from '@/contexts/UserContext';
 
 // Configuración de validación
 const VALIDATION_CONFIG = {
@@ -43,6 +44,7 @@ const VALIDATION_CONFIG = {
 export default function LoginForm() {
   const router = useRouter();
   const { login, loginState, clearLoginError } = useAuth();
+  const { refreshUser } = useUser();
   const [mounted, setMounted] = useState(false);
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
@@ -75,12 +77,13 @@ export default function LoginForm() {
     const result = await login({ email, password });
 
     if (result.success && result.isSignedIn) {
+      // Refresh user data from database
+      await refreshUser();
+      
       // Login successful, redirect to dashboard
       setTimeout(() => {
-        router.push('/');
+        router.push('/dashboard');
       }, 1500);
-    } else {
-      setFieldErrors({ email: true, password: true });
     }
   };
 
@@ -282,20 +285,20 @@ export default function LoginForm() {
 
               {/* Forgot Password Link */}
               <Box sx={{ textAlign: 'right', mb: 3 }}>
-                <Link href="/auth/forgot-password" passHref legacyBehavior>
-                  <MuiLink
-                    sx={{
-                      color: '#1976d2',
-                      textDecoration: 'none',
-                      fontSize: '0.875rem',
-                      '&:hover': {
-                        textDecoration: 'underline',
-                      },
-                    }}
-                  >
+                <MuiLink
+                  component={Link}
+                  href="/auth/forgot-password"
+                  sx={{
+                    color: '#1976d2',
+                    textDecoration: 'none',
+                    fontSize: '0.875rem',
+                    '&:hover': {
+                      textDecoration: 'underline',
+                    },
+                  }}
+                >
                     ¿Olvidaste tu contraseña?
                   </MuiLink>
-                </Link>
               </Box>
 
               <Button
@@ -328,20 +331,20 @@ export default function LoginForm() {
             <Box sx={{ textAlign: 'center', mt: 3 }}>
               <Typography variant="body2" color="text.secondary">
                 ¿No tienes una cuenta?{' '}
-                <Link href="/auth/register" passHref legacyBehavior>
-                  <MuiLink
-                    sx={{
-                      color: '#1976d2',
-                      textDecoration: 'none',
-                      fontWeight: 500,
-                      '&:hover': {
-                        textDecoration: 'underline',
-                      },
-                    }}
-                  >
-                    Crear cuenta
-                  </MuiLink>
-                </Link>
+                <MuiLink
+                  component={Link}
+                  href="/auth/register"
+                  sx={{
+                    color: '#1976d2',
+                    textDecoration: 'none',
+                    fontWeight: 500,
+                    '&:hover': {
+                      textDecoration: 'underline',
+                    },
+                  }}
+                >
+                  Crear cuenta
+                </MuiLink>
               </Typography>
             </Box>
           </CardContent>

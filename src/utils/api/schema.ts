@@ -15,6 +15,15 @@ const EstadoInscripcion = a.enum([
   "abandonado",
   "inscrito",
 ]);
+const DiaSemana = a.enum([
+  "Lunes",
+  "Martes",
+  "Miércoles",
+  "Jueves",
+  "Viernes",
+  "Sábado",
+  "Domingo",
+]);
 
 export const MainSchema = a.schema({
   Usuario: a
@@ -46,13 +55,19 @@ export const MainSchema = a.schema({
   BloqueEstudio: a
     .model({
       bloqueEstudioId: a.id().required(),
+      dia_semana: DiaSemana,
       hora_inicio: a.time().required(),
       hora_fin: a.time().required(),
       duracion_minutos: a.integer(),
       usuarioId: a.id().required(),
       Usuario: a.belongsTo("Usuario", "usuarioId"),
     })
-    .identifier(["bloqueEstudioId"]),
+    .identifier(["bloqueEstudioId"])
+    .secondaryIndexes((index) => [
+      index("usuarioId")
+        .sortKeys(["dia_semana"])
+        .queryField("BloquesByUsuarioAndDia"),
+    ]),
 
   Video: a.customType({
     videoId: a.string().required(),

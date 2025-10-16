@@ -28,6 +28,7 @@ import {
   Menu as MenuIcon,
 } from '@mui/icons-material';
 import { useAuth } from '@/components/auth/hooks/auth';
+import { useUser } from '@/contexts/UserContext';
 
 const drawerWidth = 240;
 
@@ -48,6 +49,7 @@ export default function AppLayout({ children }: LayoutProps) {
   const router = useRouter();
   const pathname = usePathname();
   const { logout, authSession } = useAuth();
+  const { userData, clearUserData } = useUser();
 
   useEffect(() => {
     setMounted(true);
@@ -66,12 +68,35 @@ export default function AppLayout({ children }: LayoutProps) {
   };
 
   const handleLogout = async () => {
+    // Primero navegar a la página de inicio
+    router.push('/');
+    
+    // Luego limpiar la sesión y datos del usuario
     await logout();
-    router.push('/auth/login');
+    clearUserData();
   };
 
   // Get user initials for avatar
   const getUserInitials = () => {
+    // Prioridad 1: Usar nombre del usuario desde la BD
+    if (userData?.nombre) {
+      const nameParts = userData.nombre.trim().split(' ');
+      
+      // Si tenemos apellido, usar primera letra de nombre + primera letra de apellido
+      if (userData.apellido) {
+        return (userData.nombre[0] + userData.apellido[0]).toUpperCase();
+      }
+      
+      // Si el nombre tiene múltiples palabras, tomar primera letra de cada una
+      if (nameParts.length >= 2) {
+        return (nameParts[0][0] + nameParts[1][0]).toUpperCase();
+      }
+      
+      // Si solo tiene un nombre, tomar las primeras 2 letras
+      return userData.nombre.substring(0, 2).toUpperCase();
+    }
+    
+    // Fallback: usar username o email de Cognito
     if (authSession.user?.username) {
       return authSession.user.username.substring(0, 2).toUpperCase();
     }
@@ -137,32 +162,6 @@ export default function AppLayout({ children }: LayoutProps) {
           );
         })}
       </List>
-
-      {/* Cerrar sesión */}
-      <Box sx={{ position: 'absolute', bottom: 16, left: 0, right: 0, px: 1 }}>
-        <ListItem disablePadding>
-          <ListItemButton
-            onClick={handleLogout}
-            sx={{
-              borderRadius: 2,
-              mx: 1,
-              '&:hover': {
-                backgroundColor: 'action.hover',
-              },
-            }}
-          >
-            <ListItemIcon sx={{ color: 'text.secondary', minWidth: 36 }}>
-              <LogoutIcon />
-            </ListItemIcon>
-            <ListItemText
-              primary="Cerrar sesión"
-              primaryTypographyProps={{
-                fontSize: '0.95rem',
-              }}
-            />
-          </ListItemButton>
-        </ListItem>
-      </Box>
     </div>
   );
 
@@ -204,7 +203,10 @@ export default function AppLayout({ children }: LayoutProps) {
           {/* Perfil de usuario */}
           <Box sx={{ display: 'flex', alignItems: 'center', gap: 1 }}>
             <Typography variant="body2" sx={{ display: { xs: 'none', sm: 'block' } }}>
-              {authSession.user?.username || authSession.user?.email || 'Usuario'}
+              {userData?.nombre 
+                ? `${userData.nombre}${userData.apellido ? ' ' + userData.apellido : ''}`
+                : (authSession.user?.username || authSession.user?.email || 'Usuario')
+              }
             </Typography>
             <Avatar
               sx={{
@@ -216,6 +218,16 @@ export default function AppLayout({ children }: LayoutProps) {
             >
               {getUserInitials()}
             </Avatar>
+            
+            {/* Botón de cerrar sesión */}
+            <IconButton 
+              color="inherit" 
+              onClick={handleLogout}
+              sx={{ ml: 1 }}
+              title="Cerrar sesión"
+            >
+              <LogoutIcon />
+            </IconButton>
           </Box>
         </Toolbar>
       </AppBar>

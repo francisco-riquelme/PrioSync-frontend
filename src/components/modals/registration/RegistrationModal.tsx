@@ -106,17 +106,36 @@ export default function RegistrationModal({ open, onClose, welcomeData }: Regist
     }
   }, [formData]);
 
-  // Update form data when welcomeData changes (pre-fill name fields)
-  useEffect(() => {
-    if (welcomeData?.nombre && (!formData.nombre || !formData.apellido)) {
-      const { nombre, apellido } = splitName(welcomeData.nombre);
-      setFormData(prev => ({
-        ...prev,
-        nombre: prev.nombre || nombre,
-        apellido: prev.apellido || apellido
-      }));
+  // Resetear formulario cuando se abre el modal y no hay datos en localStorage (indica cancelación)
+  React.useEffect(() => {
+    if (open && typeof window !== 'undefined') {
+      const savedData = localStorage.getItem('registrationFormData');
+      
+      // Si no hay datos guardados, resetear el formulario (usuario canceló anteriormente)
+      if (!savedData) {
+        setFormData({
+          nombre: '',
+          apellido: '',
+          email: '',
+          password: '',
+          confirmPassword: ''
+        });
+        setErrors({
+          nombre: false,
+          apellido: false,
+          email: false,
+          password: false,
+          confirmPassword: false
+        });
+        setLocalError('');
+        setLoading(false);
+        setSuccess(false);
+      } else {
+        // Si hay datos guardados, cargarlos (restaurar después de cierre accidental)
+        setFormData(JSON.parse(savedData));
+      }
     }
-  }, [welcomeData, formData.nombre, formData.apellido]);
+  }, [open]);
 
   // Limpiar formulario
   const clearForm = () => {
@@ -138,9 +157,7 @@ export default function RegistrationModal({ open, onClose, welcomeData }: Regist
     setLocalError('');
     setLoading(false);
     setSuccess(false);
-    if (typeof window !== 'undefined') {
-      localStorage.removeItem('registrationFormData');
-    }
+    // localStorage se limpia en el padre (LandingPage) antes de cerrar el modal
   };
 
   // Manejar cancelar: cerrar modal y limpiar formulario
