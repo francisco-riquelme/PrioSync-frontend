@@ -91,11 +91,9 @@ export default function LandingPage() {
           setRegistrationModalOpen(false);
           setWelcomeData(null);
           
-          // Limpiar localStorage
-          if (typeof window !== 'undefined') {
-            localStorage.removeItem('welcomeFormData');
-            localStorage.removeItem('registrationFormData');
-          }
+          // NO limpiar localStorage aquí - será necesario para la migración después del login
+          // localStorage.removeItem('welcomeFormData'); // ❌ NO BORRAR TODAVÍA
+          // localStorage.removeItem('registrationFormData');
           
           // Mostrar mensaje de éxito con modal
           setMessageDialog({

@@ -242,6 +242,13 @@ export const UserProvider = ({ children }: { children: ReactNode }) => {
             .then(result => {
               if (result.success) {
                 console.log('✅ Study blocks migration completed successfully');
+                
+                // Clean up localStorage after successful migration
+                if (typeof window !== 'undefined') {
+                  localStorage.removeItem('welcomeFormData');
+                  localStorage.removeItem('registrationFormData');
+                  console.log('🧹 Cleaned up localStorage after successful migration');
+                }
               } else {
                 console.warn('⚠️ Study blocks migration failed:', result.error);
               }

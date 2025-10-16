@@ -9,8 +9,18 @@ import { DaySchedule } from "@/components/modals/welcome/types";
 
 const client = generateClient<MainTypes>();
 
+export type DiaSemana =
+  | "Lunes"
+  | "Martes"
+  | "Miércoles"
+  | "Jueves"
+  | "Viernes"
+  | "Sábado"
+  | "Domingo";
+
 export interface StudyBlock {
   bloqueEstudioId: string;
+  dia_semana: DiaSemana;
   hora_inicio: string;
   hora_fin: string;
   duracion_minutos?: number;
@@ -44,6 +54,7 @@ export const getUserStudyBlocks = async (
 
     return (data || []).map((block) => ({
       bloqueEstudioId: block.bloqueEstudioId,
+      dia_semana: block.dia_semana as DiaSemana,
       hora_inicio: block.hora_inicio,
       hora_fin: block.hora_fin,
       duracion_minutos: block.duracion_minutos || undefined,
@@ -57,23 +68,69 @@ export const getUserStudyBlocks = async (
 
 /**
  * Convert StudyBlock[] to DaySchedule[] format for UI consumption
- * Note: Backend stores flat time slots without day association
- * Returns empty array for now since backend doesn't store day information
+ * Groups blocks by day of the week
  */
 export const convertStudyBlocksToDaySchedule = (
   blocks: StudyBlock[]
 ): DaySchedule[] => {
-  // Backend doesn't store day information, only time ranges
-  // Return empty schedule - user will need to reorganize their blocks in the UI
-  // TODO: Update backend schema to include day_of_week field
-  console.log(
-    `Found ${blocks.length} study blocks in backend (day grouping not supported yet)`
+  if (!blocks || blocks.length === 0) {
+    return [];
+  }
+
+  // Group blocks by day
+  const blocksByDay: Record<string, StudyBlock[]> = {};
+
+  blocks.forEach((block) => {
+    const day = block.dia_semana;
+    if (!blocksByDay[day]) {
+      blocksByDay[day] = [];
+    }
+    blocksByDay[day].push(block);
+  });
+
+  // Convert to DaySchedule format
+  const daySchedules: DaySchedule[] = Object.entries(blocksByDay).map(
+    ([day, dayBlocks]) => ({
+      day,
+      timeSlots: dayBlocks.map((block) => ({
+        start: block.hora_inicio,
+        end: block.hora_fin,
+      })),
+    })
   );
-  return [];
+
+  console.log(
+    `✅ Converted ${blocks.length} study blocks into ${daySchedules.length} day schedules`
+  );
+
+  return daySchedules;
+};
+
+/**
+ * Normalize day name to match DiaSemana enum
+ */
+const normalizeDayName = (day: string): DiaSemana => {
+  const normalized = day.charAt(0).toUpperCase() + day.slice(1).toLowerCase();
+
+  // Mapping for special cases
+  const dayMap: Record<string, DiaSemana> = {
+    Lunes: "Lunes",
+    Martes: "Martes",
+    Miercoles: "Miércoles",
+    Miércoles: "Miércoles",
+    Jueves: "Jueves",
+    Viernes: "Viernes",
+    Sabado: "Sábado",
+    Sábado: "Sábado",
+    Domingo: "Domingo",
+  };
+
+  return dayMap[normalized] || ("Lunes" as DiaSemana); // Fallback to Monday
 };
 
 /**
  * Convert DaySchedule[] to StudyBlock[] format for backend storage
+ * Includes day of the week for each block
  */
 export const convertDayScheduleToStudyBlocks = (
   schedules: DaySchedule[],
@@ -84,6 +141,7 @@ export const convertDayScheduleToStudyBlocks = (
   schedules.forEach((daySchedule) => {
     daySchedule.timeSlots.forEach((slot) => {
       blocks.push({
+        dia_semana: normalizeDayName(daySchedule.day),
         hora_inicio: slot.start,
         hora_fin: slot.end,
         duracion_minutos: calculateDuration(slot.start, slot.end),
@@ -109,6 +167,7 @@ export const createStudyBlocks = async (
     const createPromises = blocks.map((block) =>
       client.models.BloqueEstudio.create({
         bloqueEstudioId: crypto.randomUUID(),
+        dia_semana: block.dia_semana as DiaSemana,
         hora_inicio: block.hora_inicio,
         hora_fin: block.hora_fin,
         duracion_minutos: block.duracion_minutos,

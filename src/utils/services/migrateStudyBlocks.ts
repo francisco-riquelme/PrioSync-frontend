@@ -86,6 +86,7 @@ const extractTimeSlotsFromAttributes = (
 
 /**
  * Migrate study blocks from Cognito custom attributes to DynamoDB BloqueEstudio table
+ * NOTE: Cognito attributes don't store day information, so we try localStorage first
  * Should be called after successful login for first-time users
  */
 export const migrateStudyBlocksFromCognito = async (
@@ -97,9 +98,24 @@ export const migrateStudyBlocksFromCognito = async (
       await studyBlocksService.getUserStudyBlocks(usuarioId);
 
     if (existingBlocks && existingBlocks.length > 0) {
-      console.log("User already has study blocks, skipping migration");
+      console.log("✅ User already has study blocks, skipping migration");
       return { success: true };
     }
+
+    // Try localStorage first (has day information)
+    console.log("🔄 Attempting migration from localStorage first...");
+    const localStorageResult =
+      await migrateStudyBlocksFromLocalStorage(usuarioId);
+
+    if (localStorageResult.success) {
+      console.log("✅ Successfully migrated from localStorage");
+      return { success: true };
+    }
+
+    // Fallback to Cognito attributes (doesn't have day info, limited use)
+    console.log(
+      "⚠️ localStorage migration failed, trying Cognito attributes..."
+    );
 
     // Fetch Cognito user attributes
     const attributes = await fetchUserAttributes();
@@ -110,15 +126,18 @@ export const migrateStudyBlocksFromCognito = async (
     );
 
     if (timeSlots.length === 0) {
-      console.log("No time slots found in Cognito attributes");
-      return { success: true }; // Not an error, just no data to migrate
+      console.log("⚠️ No time slots found in Cognito attributes");
+      return {
+        success: false,
+        error: "No study blocks found in localStorage or Cognito",
+      };
     }
 
-    // Convert to DaySchedule format (without day grouping for now)
-    // Backend doesn't store day information yet
+    // Save with placeholder day (user will need to reorganize)
+    // This is not ideal but better than losing data
     const schedules: DaySchedule[] = [
       {
-        day: "general", // Temporary placeholder
+        day: "Lunes", // Default to Monday for Cognito-only migration
         timeSlots: timeSlots,
       },
     ];
@@ -134,12 +153,12 @@ export const migrateStudyBlocksFromCognito = async (
     }
 
     console.log(
-      `Successfully migrated ${timeSlots.length} study blocks for user ${usuarioId}`
+      `✅ Migrated ${timeSlots.length} study blocks from Cognito (default day: Lunes)`
     );
 
     return { success: true };
   } catch (error) {
-    console.error("Error migrating study blocks from Cognito:", error);
+    console.error("❌ Error migrating study blocks from Cognito:", error);
     return {
       success: false,
       error:
