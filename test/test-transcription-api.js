@@ -1,9 +1,8 @@
 // Script de prueba para la API route /api/transcribe-course
 // Para ejecutar: node test-transcription-api.js
 
-const https = require('https');
-const http = require('http');
-const { Buffer } = require('buffer');
+import http from 'http';
+import { Buffer } from 'buffer';
 
 const BASE_URL = 'http://localhost:3000';
 
@@ -48,11 +47,11 @@ function makeRequest(method, path, formData = null) {
         res.on('data', chunk => responseData += chunk);
         res.on('end', () => {
           try {
-            const jsonResponse = JSON.parse(responseData);
-            resolve({ status: res.statusCode, data: jsonResponse });
-          } catch (e) {
-            resolve({ status: res.statusCode, data: responseData });
-          }
+              const jsonResponse = JSON.parse(responseData);
+              resolve({ status: res.statusCode, data: jsonResponse });
+            } catch {
+              resolve({ status: res.statusCode, data: responseData });
+            }
         });
       });
       
@@ -66,11 +65,11 @@ function makeRequest(method, path, formData = null) {
         res.on('data', chunk => responseData += chunk);
         res.on('end', () => {
           try {
-            const jsonResponse = JSON.parse(responseData);
-            resolve({ status: res.statusCode, data: jsonResponse });
-          } catch (e) {
-            resolve({ status: res.statusCode, data: responseData });
-          }
+              const jsonResponse = JSON.parse(responseData);
+              resolve({ status: res.statusCode, data: jsonResponse });
+            } catch {
+              resolve({ status: res.statusCode, data: responseData });
+            }
         });
       });
       
@@ -262,7 +261,7 @@ async function runAllTests() {
 }
 
 // Ejecutar tests automáticamente
-if (require.main === module) {
+if (typeof process !== 'undefined' && process.argv && process.argv[1] && process.argv[1].endsWith('test-transcription-api.js')) {
   runAllTests().then(() => {
     process.exit(0);
   }).catch((error) => {
@@ -271,7 +270,7 @@ if (require.main === module) {
   });
 }
 
-module.exports = {
+export {
   testSuccessfulUpload,
   testMissingFile,
   testMissingData,
