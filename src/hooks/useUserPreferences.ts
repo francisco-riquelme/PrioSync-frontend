@@ -1,10 +1,11 @@
 /**
  * Hook para gestionar las preferencias de horarios del usuario
- * Por ahora lee de localStorage, en el futuro leerá del backend (Usuario.horarios_disponibles)
+ * Lee desde el backend (BloqueEstudio) y mantiene localStorage como fallback
  */
 
 import { useState, useEffect } from "react";
 import { DaySchedule } from "@/components/modals/welcome/types";
+import { studyBlocksService } from "@/utils/services/studyBlocks";
 
 interface UseUserPreferencesReturn {
   preferences: DaySchedule[];
@@ -17,6 +18,7 @@ interface UseUserPreferencesReturn {
 
 /**
  * Hook para obtener y gestionar las preferencias de horarios del usuario
+ * Prioriza datos del backend, usa localStorage como fallback
  */
 export const useUserPreferences = (
   userId?: string
@@ -27,34 +29,41 @@ export const useUserPreferences = (
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
 
-  const loadPreferences = () => {
+  const loadPreferences = async () => {
     try {
       setLoading(true);
       setError(null);
 
-      // Por ahora: leer de localStorage (datos del welcome modal)
-      const savedWelcomeData = localStorage.getItem("welcomeFormData");
+      // Si hay userId, intentar cargar desde backend primero
+      if (userId) {
+        try {
+          const blocks = await studyBlocksService.getUserStudyBlocks(userId);
 
-      if (savedWelcomeData) {
-        const welcomeData = JSON.parse(savedWelcomeData);
-
-        setPreferences(welcomeData.tiempoDisponible || []);
-        setAreaEstudio(welcomeData.estudio || "");
-        setCanalYoutube(welcomeData.youtubeUrl || "");
+          if (blocks && blocks.length > 0) {
+            // TODO: Backend no almacena día de la semana aún
+            // Por ahora, cargar desde localStorage como fallback
+            const savedWelcomeData = localStorage.getItem("welcomeFormData");
+            if (savedWelcomeData) {
+              const welcomeData = JSON.parse(savedWelcomeData);
+              setPreferences(welcomeData.tiempoDisponible || []);
+              setAreaEstudio(welcomeData.estudio || "");
+              setCanalYoutube(welcomeData.youtubeUrl || "");
+            }
+          } else {
+            // No hay blocks en backend, cargar de localStorage
+            loadFromLocalStorage();
+          }
+        } catch (backendError) {
+          console.error(
+            "Error loading from backend, falling back to localStorage:",
+            backendError
+          );
+          loadFromLocalStorage();
+        }
       } else {
-        // Si no hay datos guardados, dejar vacío
-        setPreferences([]);
-        setAreaEstudio("");
-        setCanalYoutube("");
+        // No hay userId, cargar solo de localStorage
+        loadFromLocalStorage();
       }
-
-      // TODO: En el futuro, implementar fetch desde backend
-      // if (userId) {
-      //   const userPrefs = await fetchUserPreferences(userId);
-      //   setPreferences(userPrefs.horarios_disponibles || []);
-      //   setAreaEstudio(userPrefs.area_estudio || '');
-      //   setCanalYoutube(userPrefs.canal_youtube_favorito || '');
-      // }
     } catch (err) {
       console.error("Error al cargar preferencias:", err);
       setError("Error al cargar preferencias de usuario");
@@ -66,8 +75,24 @@ export const useUserPreferences = (
     }
   };
 
+  const loadFromLocalStorage = () => {
+    const savedWelcomeData = localStorage.getItem("welcomeFormData");
+
+    if (savedWelcomeData) {
+      const welcomeData = JSON.parse(savedWelcomeData);
+      setPreferences(welcomeData.tiempoDisponible || []);
+      setAreaEstudio(welcomeData.estudio || "");
+      setCanalYoutube(welcomeData.youtubeUrl || "");
+    } else {
+      setPreferences([]);
+      setAreaEstudio("");
+      setCanalYoutube("");
+    }
+  };
+
   useEffect(() => {
     loadPreferences();
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [userId]);
 
   return {

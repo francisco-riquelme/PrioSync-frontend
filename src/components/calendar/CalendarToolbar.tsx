@@ -14,15 +14,17 @@ import {
   ChevronRight,
   Today,
   Add as AddIcon,
+  Schedule as ScheduleIcon,
 } from '@mui/icons-material';
 import { CalendarToolbarProps } from './componentTypes';
 
-const CalendarToolbar: React.FC<CalendarToolbarProps & { onAddSession: () => void }> = ({
+const CalendarToolbar: React.FC<CalendarToolbarProps & { onAddSession: () => void; onStudyHours?: () => void }> = ({
   label,
   onNavigate,
   onView,
   currentView,
   onAddSession,
+  onStudyHours,
 }) => {
   return (
     <Toolbar sx={{ justifyContent: 'space-between', mb: 2, px: 0 }}>
@@ -64,10 +66,21 @@ const CalendarToolbar: React.FC<CalendarToolbarProps & { onAddSession: () => voi
         </ButtonGroup>
         
         <Button
+          variant="outlined"
+          startIcon={<ScheduleIcon />}
+          onClick={onStudyHours}
+          sx={{ 
+            textTransform: 'none',
+            fontWeight: 600,
+          }}
+        >
+          Mis Horas de Estudio
+        </Button>
+        
+        <Button
           variant="contained"
           startIcon={<AddIcon />}
           onClick={onAddSession}
-          sx={{ ml: 1 }}
         >
           Nueva Sesión
         </Button>

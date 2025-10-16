@@ -1,7 +1,5 @@
 "use client";
 
-"use client";
-
 import React, { useState } from 'react';
 import { useRouter } from 'next/navigation';
 import { useUser } from '@/contexts/UserContext';
@@ -14,20 +12,36 @@ import {
   Container,
   Stack,
   Card,
-  CardContent
+  CardContent,
+  Backdrop,
+  CircularProgress
 } from '@mui/material';
 import Link from 'next/link';
 import { School, CalendarToday, Assessment } from '@mui/icons-material';
 import WelcomeModal from '../modals/welcome/WelcomeModal';
 import { WelcomeFormData } from '../modals/welcome/types';
 import RegistrationModal from '../modals/registration/RegistrationModal';
+import { RegistrationFormData } from '../modals/registration/types';
+import MessageDialog from '../common/MessageDialog';
+import { generateRecurringStudySessions, createSessionsInBatch } from '@/utils/studySessionUtils';
+import { useStudySessions } from '@/components/courses/hooks/useStudySessions';
 
 export default function LandingPage() {
   const router = useRouter();
   const { userData, loading } = useUser();
+  const { createSession } = useStudySessions();
+  
   const [welcomeModalOpen, setWelcomeModalOpen] = useState(false);
   const [registrationModalOpen, setRegistrationModalOpen] = useState(false);
   const [welcomeData, setWelcomeData] = useState<WelcomeFormData | null>(null);
+  const [isCreatingSessions, setIsCreatingSessions] = useState(false);
+  const [messageDialog, setMessageDialog] = useState({
+    open: false,
+    type: 'success' as 'success' | 'error' | 'info' | 'warning',
+    title: '',
+    message: '' as string | React.ReactNode,
+    onConfirm: () => {},
+  });
 
   const handleWelcomeComplete = (data: WelcomeFormData) => {
     setWelcomeData(data);
@@ -35,14 +49,115 @@ export default function LandingPage() {
     setRegistrationModalOpen(true);
   };
 
-  const handleRegistration = () => {
-    // Registration is now handled by RegistrationModal with redirect to verification
-    // Just clean up state
-    setRegistrationModalOpen(false);
-    setWelcomeData(null);
+  const handleWelcomeClose = () => {
+    // Limpiar localStorage ANTES de cerrar el modal
+    if (typeof window !== 'undefined') {
+      localStorage.removeItem('welcomeFormData');
+    }
+    setWelcomeModalOpen(false);
   };
 
-  // Dashboard navigation handled inline via buttons; helper removed
+  const handleRegistration = async (data: RegistrationFormData) => {
+    try {
+      setIsCreatingSessions(true);
+      
+      // TODO: Aquí deberías crear el usuario en AWS Amplify Auth/Cognito
+      // Por ahora simulamos un usuarioId temporal
+      const tempUsuarioId = crypto.randomUUID();
+      
+      console.log('📝 Datos del registro:', data);
+      console.log('📅 Datos de disponibilidad:', welcomeData);
+      
+      // Si hay datos de disponibilidad, crear sesiones recurrentes
+      if (welcomeData && welcomeData.tiempoDisponible.length > 0) {
+        console.log('🔄 Generando sesiones recurrentes para las próximas 6 semanas...');
+        
+        // Generar las sesiones basadas en la disponibilidad
+        const sessions = generateRecurringStudySessions(
+          welcomeData.tiempoDisponible,
+          tempUsuarioId,
+          6 // 6 semanas
+        );
+        
+        console.log(`📊 Total de sesiones a crear: ${sessions.length}`);
+        
+        // Crear las sesiones en batch
+        const result = await createSessionsInBatch(sessions, createSession);
+        
+        console.log('✅ Resultado de creación:', result);
+        
+        if (result.success > 0) {
+          // Cerrar modales y limpiar
+          setRegistrationModalOpen(false);
+          setWelcomeData(null);
+          
+          // NO limpiar localStorage aquí - será necesario para la migración después del login
+          // localStorage.removeItem('welcomeFormData'); // ❌ NO BORRAR TODAVÍA
+          // localStorage.removeItem('registrationFormData');
+          
+          // Mostrar mensaje de éxito con modal
+          setMessageDialog({
+            open: true,
+            type: 'success',
+            title: '¡Registro Completado con Éxito!',
+            message: (
+              <Box>
+                <Typography variant="body1" gutterBottom>
+                  ✅ Se crearon <strong>{result.success}</strong> sesiones de estudio en tu calendario.
+                </Typography>
+                <Typography variant="body1">
+                  📅 Revisa las próximas 6 semanas de horarios disponibles.
+                </Typography>
+              </Box>
+            ),
+            onConfirm: () => {
+              setMessageDialog({ ...messageDialog, open: false });
+              router.push('/calendar');
+            }
+          });
+        } else {
+          throw new Error('No se pudieron crear las sesiones de estudio');
+        }
+      } else {
+        // Si no hay disponibilidad, solo completar registro
+        setRegistrationModalOpen(false);
+        setWelcomeData(null);
+        
+        // Mostrar mensaje de éxito simple
+        setMessageDialog({
+          open: true,
+          type: 'success',
+          title: '¡Registro Completado!',
+          message: 'Tu cuenta ha sido creada exitosamente.',
+          onConfirm: () => {
+            setMessageDialog({ ...messageDialog, open: false });
+            router.push('/dashboard');
+          }
+        });
+      }
+    } catch (error) {
+      console.error('❌ Error en el registro:', error);
+      
+      // Mostrar mensaje de error con modal
+      setMessageDialog({
+        open: true,
+        type: 'error',
+        title: 'Error en el Registro',
+        message: 'No se pudo completar el registro. Por favor, intenta nuevamente.',
+        onConfirm: () => setMessageDialog({ ...messageDialog, open: false })
+      });
+    } finally {
+      setIsCreatingSessions(false);
+    }
+  };
+
+  const handleRegistrationClose = () => {
+    // Limpiar localStorage ANTES de cerrar el modal
+    if (typeof window !== 'undefined') {
+      localStorage.removeItem('registrationFormData');
+    }
+    setRegistrationModalOpen(false);
+  };
 
   const openWelcomeModal = () => {
     setWelcomeModalOpen(true);
@@ -221,15 +336,44 @@ export default function LandingPage() {
       {/* Modales */}
       <WelcomeModal
         open={welcomeModalOpen}
-        onClose={() => setWelcomeModalOpen(false)}
+        onClose={handleWelcomeClose}
         onComplete={handleWelcomeComplete}
       />
 
       <RegistrationModal
         open={registrationModalOpen}
-        onClose={() => setRegistrationModalOpen(false)}
+        onClose={handleRegistrationClose}
         welcomeData={welcomeData || undefined}
         onRegister={handleRegistration}
+      />
+
+      {/* Backdrop de carga mientras se crean las sesiones */}
+      <Backdrop
+        sx={{ 
+          color: '#fff', 
+          zIndex: (theme) => theme.zIndex.modal + 1,
+          flexDirection: 'column',
+          gap: 2
+        }}
+        open={isCreatingSessions}
+      >
+        <CircularProgress color="inherit" size={60} />
+        <Typography variant="h6">
+          Configurando tu calendario...
+        </Typography>
+        <Typography variant="body2">
+          Creando tus sesiones de estudio para las próximas 6 semanas
+        </Typography>
+      </Backdrop>
+
+      {/* Modal de mensajes (éxito/error) */}
+      <MessageDialog
+        open={messageDialog.open}
+        onClose={() => setMessageDialog({ ...messageDialog, open: false })}
+        type={messageDialog.type}
+        title={messageDialog.title}
+        message={messageDialog.message}
+        onConfirm={messageDialog.onConfirm}
       />
     </Box>
   );
