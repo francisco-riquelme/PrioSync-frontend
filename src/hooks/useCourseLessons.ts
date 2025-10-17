@@ -23,8 +23,6 @@ type CursoWithLessons = SelectionSet<
 >;
 
 // Extract nested types
-type ModuloFromCurso = NonNullable<CursoWithLessons["Modulos"]>[number];
-type LeccionFromModulo = NonNullable<ModuloFromCurso["Lecciones"]>[number];
 
 export interface LessonOption {
   leccionId: string;

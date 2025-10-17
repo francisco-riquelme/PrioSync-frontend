@@ -13,7 +13,7 @@ import type { SelectionSet } from 'aws-amplify/data';
 
 // Type for courses from UserContext using SelectionSet
 type Usuario = MainTypes["Usuario"]["type"];
-const userCoursesSelectionSet = [
+type UserCoursesSelectionSet = [
   'Cursos.cursoId',
   'Cursos.titulo',
   'Cursos.descripcion',
@@ -22,10 +22,10 @@ const userCoursesSelectionSet = [
   'Cursos.nivel_dificultad',
   'Cursos.estado',
   'Cursos.createdAt',
-  'Cursos.updatedAt',
-] as const;
+  'Cursos.updatedAt'
+];
 
-type UserCourse = NonNullable<SelectionSet<Usuario, typeof userCoursesSelectionSet>["Cursos"]>[0];
+type UserCourse = NonNullable<SelectionSet<Usuario, UserCoursesSelectionSet>["Cursos"]>[0];
 
 interface CourseCardProps {
   course: CourseListItem | UserCourse;
