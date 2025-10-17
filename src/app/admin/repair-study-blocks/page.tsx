@@ -1,16 +1,33 @@
 /**
  * Herramienta administrativa para reparar bloques de estudio
  * 
- * Agregar esta ruta temporalmente para reparar usuarios existentes:
- * /admin/repair-study-blocks
+ * TEMPORALMENTE DESHABILITADO - Error de schema Amplify detectado
+ * Error: dia_semana is not a field of model BloqueEstudio
+ * 
+ * Necesita regeneración de tipos Amplify antes de usar esta herramienta
  */
 
 'use client';
 
-import React, { useState } from 'react';
+export default function RepairStudyBlocksPage() {
+  return (
+    <div style={{ padding: '2rem', fontFamily: 'system-ui' }}>
+      <h1>⚠️ Página Temporalmente Deshabilitada</h1>
+      <p><strong>Error de schema Amplify detectado:</strong></p>
+      <code style={{ background: '#f5f5f5', padding: '1rem', display: 'block', margin: '1rem 0' }}>
+        Error: dia_semana is not a field of model BloqueEstudio
+      </code>
+      <p>El campo <code>dia_semana</code> existe en DynamoDB pero no está reconocido en el schema TypeScript de Amplify.</p>
+      <p><strong>Solución necesaria:</strong> Regenerar tipos de Amplify para sincronizar con el backend.</p>
+    </div>
+  );
+}
+
+/* CÓDIGO ORIGINAL COMENTADO HASTA RESOLVER SCHEMA DE AMPLIFY
+
 import { Box, Button, Typography, Alert, CircularProgress, Paper, List, ListItem, ListItemText } from '@mui/material';
 import { useUser } from '@/contexts/UserContext';
-import { getUserStudyBlocks, deleteStudyBlock, createStudyBlocks } from '@/utils/services/studyBlocks';
+import { getUserStudyBlocks, deleteAllUserStudyBlocks, createStudyBlocks } from '@/utils/services/studyBlocks';
 import type { DaySchedule } from '@/types/studySession';
 
 interface RepairLog {
@@ -234,3 +251,5 @@ export default function RepairStudyBlocksPage() {
     </Box>
   );
 }
+*/
+
