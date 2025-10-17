@@ -13,7 +13,7 @@ import type { SelectionSet } from 'aws-amplify/data';
 
 // Type for courses from UserContext using SelectionSet
 type Usuario = MainTypes["Usuario"]["type"];
-const userCoursesSelectionSet = [
+const _userCoursesSelectionSet = [
   'Cursos.cursoId',
   'Cursos.titulo',
   'Cursos.descripcion',

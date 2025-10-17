@@ -6,7 +6,6 @@ import type { SelectionSet } from "aws-amplify/data";
 import {
   StudyBlock,
   DiaSemana,
-  studyBlocksService,
   convertStudyBlocksToDaySchedule,
   normalizeDayNameToBackend,
 } from "@/utils/services/studyBlocks";
