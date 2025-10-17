@@ -37,7 +37,7 @@ import { DaySchedule, TimeSlot, daysOfWeek, timeSlots } from '@/components/modal
 export default function StudyHoursManager() {
   const router = useRouter();
   const { userData } = useUser();
-  const { daySchedules, loading: studyBlocksLoading, updateStudyBlocks } = useStudyBlocks({ usuarioId: userData?.usuarioId });
+  const { daySchedules, loading: studyBlocksLoading, createSingleBlock, deleteSingleBlock, updateSingleBlock } = useStudyBlocks({ usuarioId: userData?.usuarioId });
   
   const [schedule, setSchedule] = useState<DaySchedule[]>([]);
   const [selectedDay, setSelectedDay] = useState<string>('');
@@ -47,6 +47,7 @@ export default function StudyHoursManager() {
   const [overlapError, setOverlapError] = useState<string>('');
   const [snackbarOpen, setSnackbarOpen] = useState(false);
   const [snackbarMessage, setSnackbarMessage] = useState('');
+  const [editingSlot, setEditingSlot] = useState<{ day: string; slot: TimeSlot; index: number } | null>(null);
 
   // Cargar horarios cuando estén disponibles
   useEffect(() => {
@@ -72,9 +73,14 @@ export default function StudyHoursManager() {
     );
   };
 
+  // Get all time slots (show all options with scrolling)
+  const getAllTimeSlots = (): string[] => {
+    return timeSlots; // Return all 48 time slots
+  };
+
   // Obtener horas de fin válidas basadas en la hora de inicio
   const getValidEndTimes = (): string[] => {
-    if (!startTime || !selectedDay) return timeSlots;
+    if (!startTime || !selectedDay) return getAllTimeSlots();
     
     const startIndex = timeSlots.indexOf(startTime);
     const daySchedule = getDaySchedule(selectedDay);
@@ -83,7 +89,11 @@ export default function StudyHoursManager() {
       if (index <= startIndex) return false;
       
       if (daySchedule) {
-        for (const existingSlot of daySchedule.timeSlots) {
+        for (let i = 0; i < daySchedule.timeSlots.length; i++) {
+          const existingSlot = daySchedule.timeSlots[i];
+          // Skip overlap check with the slot being edited
+          if (editingSlot && i === editingSlot.index) continue;
+          
           if (existingSlot.start >= startTime && existingSlot.start < time) {
             return false;
           }
@@ -99,12 +109,23 @@ export default function StudyHoursManager() {
     setSelectedDay(dayValue);
     setStartTime('');
     setEndTime('');
+    setEditingSlot(null); // Clear edit mode
+    setOverlapError('');
+    setModalOpen(true);
+  };
+
+  // Manejar edición de un horario existente
+  const handleEditTimeSlot = (dayValue: string, slot: TimeSlot, index: number) => {
+    setSelectedDay(dayValue);
+    setStartTime(slot.start);
+    setEndTime(slot.end);
+    setEditingSlot({ day: dayValue, slot, index });
     setOverlapError('');
     setModalOpen(true);
   };
 
   // Agregar horario a un día
-  const handleAddTimeSlot = () => {
+  const handleAddTimeSlot = async () => {
     if (!startTime || !endTime) {
       setOverlapError('Debes seleccionar hora de inicio y fin');
       return;
@@ -113,9 +134,13 @@ export default function StudyHoursManager() {
     const newSlot: TimeSlot = { start: startTime, end: endTime };
     const daySchedule = getDaySchedule(selectedDay);
 
-    // Validar overlaps
+    // Validar overlaps (skip the slot being edited)
     if (daySchedule) {
-      for (const existingSlot of daySchedule.timeSlots) {
+      for (let i = 0; i < daySchedule.timeSlots.length; i++) {
+        const existingSlot = daySchedule.timeSlots[i];
+        // Skip overlap check with the slot being edited
+        if (editingSlot && i === editingSlot.index) continue;
+        
         if (hasOverlap(newSlot, existingSlot)) {
           setOverlapError('Este horario se superpone con uno existente');
           return;
@@ -123,26 +148,83 @@ export default function StudyHoursManager() {
       }
     }
 
-    // Agregar el nuevo slot
-    setSchedule(prev => prev.map(day => {
-      if (day.day === selectedDay) {
-        return {
-          ...day,
-          timeSlots: [...day.timeSlots, newSlot].sort((a, b) => a.start.localeCompare(b.start))
-        };
+    let success = false;
+
+    if (editingSlot) {
+      // UPDATE MODE
+      // Optimistic update
+      const updatedSchedule = schedule.map(day => {
+        if (day.day === selectedDay) {
+          return {
+            ...day,
+            timeSlots: day.timeSlots.map((slot, idx) => 
+              idx === editingSlot.index ? newSlot : slot
+            ).sort((a, b) => a.start.localeCompare(b.start))
+          };
+        }
+        return day;
+      });
+
+      setSchedule(updatedSchedule);
+
+      // Update in backend
+      success = await updateSingleBlock(selectedDay, editingSlot.slot, newSlot);
+      
+      if (!success) {
+        // Revert optimistic update on error
+        setSchedule(schedule);
+        setSnackbarMessage('❌ Error al actualizar el horario');
+      } else {
+        setSnackbarMessage('✅ Horario actualizado exitosamente');
       }
-      return day;
-    }));
+    } else {
+      // CREATE MODE
+      // Optimistic update
+      const updatedSchedule = schedule.map(day => {
+        if (day.day === selectedDay) {
+          return {
+            ...day,
+            timeSlots: [...day.timeSlots, newSlot].sort((a, b) => a.start.localeCompare(b.start))
+          };
+        }
+        return day;
+      });
+
+      setSchedule(updatedSchedule);
+
+      // Save to backend
+      success = await createSingleBlock(selectedDay, newSlot);
+      
+      if (!success) {
+        // Revert optimistic update on error
+        setSchedule(schedule);
+        setSnackbarMessage('❌ Error al guardar el horario');
+      } else {
+        setSnackbarMessage('✅ Horario agregado exitosamente');
+      }
+    }
+    
+    setSnackbarOpen(true);
 
     // Limpiar y cerrar
     setStartTime('');
     setEndTime('');
     setOverlapError('');
+    setEditingSlot(null);
+    setModalOpen(false);
   };
 
   // Eliminar horario de un día
-  const handleRemoveTimeSlot = (dayValue: string, slotIndex: number) => {
-    setSchedule(prev => prev.map(day => {
+  const handleRemoveTimeSlot = async (dayValue: string, slotIndex: number, event: React.MouseEvent) => {
+    event.stopPropagation(); // Prevent opening edit modal
+    
+    const daySchedule = getDaySchedule(dayValue);
+    const slotToRemove = daySchedule?.timeSlots[slotIndex];
+    
+    if (!slotToRemove) return;
+
+    // Optimistic update
+    const updatedSchedule = schedule.map(day => {
       if (day.day === dayValue) {
         return {
           ...day,
@@ -150,45 +232,21 @@ export default function StudyHoursManager() {
         };
       }
       return day;
-    }));
-  };
+    });
 
-  // Guardar cambios
-  const handleSaveChanges = async () => {
-    try {
-      if (!userData?.usuarioId) {
-        setSnackbarMessage('❌ Error: Usuario no autenticado');
-        setSnackbarOpen(true);
-        return;
-      }
+    setSchedule(updatedSchedule);
 
-      // Guardar usando el hook
-      const success = await updateStudyBlocks(schedule);
-
-      if (!success) {
-        setSnackbarMessage('❌ Error al guardar en el backend');
-        setSnackbarOpen(true);
-        return;
-      }
-
-      // También guardar en localStorage como caché
-      const savedData = localStorage.getItem('welcomeFormData');
-      const existingData = savedData ? JSON.parse(savedData) : {};
-      
-      const updatedData = {
-        ...existingData,
-        tiempoDisponible: schedule
-      };
-      
-      localStorage.setItem('welcomeFormData', JSON.stringify(updatedData));
-      
-      setSnackbarMessage('✅ Horarios guardados exitosamente');
-      setSnackbarOpen(true);
-    } catch (error) {
-      console.error('Error al guardar horarios:', error);
-      setSnackbarMessage('❌ Error al guardar los horarios');
-      setSnackbarOpen(true);
+    // Delete from backend
+    const success = await deleteSingleBlock(dayValue, slotToRemove);
+    
+    if (!success) {
+      // Revert optimistic update on error
+      setSchedule(schedule);
+      setSnackbarMessage('❌ Error al eliminar el horario');
+    } else {
+      setSnackbarMessage('✅ Horario eliminado exitosamente');
     }
+    setSnackbarOpen(true);
   };
 
   // Calcular total de horas configuradas
@@ -282,6 +340,9 @@ export default function StudyHoursManager() {
                 transition: 'all 0.3s',
                 border: '2px solid',
                 borderColor: hasSlots ? 'primary.main' : 'divider',
+                minHeight: '200px', // Make cards taller to show multiple study blocks
+                display: 'flex',
+                flexDirection: 'column',
                 '&:hover': {
                   transform: 'translateY(-4px)',
                   boxShadow: 4,
@@ -289,7 +350,7 @@ export default function StudyHoursManager() {
                 },
               }}
             >
-              <CardContent>
+              <CardContent sx={{ flex: 1, display: 'flex', flexDirection: 'column' }}>
                 <Box sx={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', mb: 2 }}>
                   <Typography variant="h6" sx={{ fontWeight: 600 }}>
                     {day.label}
@@ -301,28 +362,39 @@ export default function StudyHoursManager() {
                   />
                 </Box>
 
-                {hasSlots ? (
-                  <Stack spacing={1}>
-                    {daySchedule!.timeSlots.map((slot, idx) => (
-                      <Chip
-                        key={idx}
-                        label={`${slot.start} - ${slot.end}`}
-                        onDelete={(e) => {
-                          e.stopPropagation();
-                          handleRemoveTimeSlot(day.value, idx);
-                        }}
-                        deleteIcon={<DeleteIcon />}
-                        color="primary"
-                        variant="outlined"
-                        sx={{ justifyContent: 'space-between' }}
-                      />
-                    ))}
-                  </Stack>
-                ) : (
-                  <Typography variant="body2" color="text.secondary" sx={{ fontStyle: 'italic' }}>
-                    Sin horarios configurados
-                  </Typography>
-                )}
+                <Box sx={{ flex: 1 }}>
+                  {hasSlots ? (
+                    <Stack spacing={1}>
+                      {daySchedule!.timeSlots.map((slot, idx) => (
+                        <Chip
+                          key={idx}
+                          label={`${slot.start} - ${slot.end}`}
+                          onClick={(e) => {
+                            e.stopPropagation();
+                            handleEditTimeSlot(day.value, slot, idx);
+                          }}
+                          onDelete={(e) => {
+                            handleRemoveTimeSlot(day.value, idx, e);
+                          }}
+                          deleteIcon={<DeleteIcon />}
+                          color="primary"
+                          variant="outlined"
+                          sx={{ 
+                            justifyContent: 'space-between',
+                            cursor: 'pointer',
+                            '&:hover': {
+                              backgroundColor: 'primary.light',
+                            }
+                          }}
+                        />
+                      ))}
+                    </Stack>
+                  ) : (
+                    <Typography variant="body2" color="text.secondary" sx={{ fontStyle: 'italic' }}>
+                      Sin horarios configurados
+                    </Typography>
+                  )}
+                </Box>
               </CardContent>
             </Card>
           );
@@ -340,7 +412,7 @@ export default function StudyHoursManager() {
           <Box sx={{ display: 'flex', alignItems: 'center', gap: 1 }}>
             <ScheduleIcon color="primary" />
             <Typography variant="h6">
-              Agregar horario - {daysOfWeek.find(d => d.value === selectedDay)?.label}
+              {editingSlot ? 'Editar horario' : 'Agregar horario'} - {daysOfWeek.find(d => d.value === selectedDay)?.label}
             </Typography>
           </Box>
         </DialogTitle>
@@ -359,12 +431,22 @@ export default function StudyHoursManager() {
                 value={startTime}
                 onChange={(e) => {
                   setStartTime(e.target.value);
-                  setEndTime('');
+                  // Only clear end time if not editing (to avoid clearing during edit)
+                  if (!editingSlot) {
+                    setEndTime('');
+                  }
                   setOverlapError('');
                 }}
                 label="Hora de inicio"
+                MenuProps={{
+                  PaperProps: {
+                    style: {
+                      maxHeight: 225, // Limit height to show ~9 items (9 * 25px per item)
+                    },
+                  },
+                }}
               >
-                {timeSlots.map((time) => (
+                {getAllTimeSlots().map((time) => (
                   <MenuItem key={time} value={time}>
                     {time}
                   </MenuItem>
@@ -381,6 +463,13 @@ export default function StudyHoursManager() {
                   setOverlapError('');
                 }}
                 label="Hora de fin"
+                MenuProps={{
+                  PaperProps: {
+                    style: {
+                      maxHeight: 225, // Limit height to show ~9 items (9 * 25px per item)
+                    },
+                  },
+                }}
               >
                 {getValidEndTimes().map((time) => (
                   <MenuItem key={time} value={time}>
@@ -419,37 +508,12 @@ export default function StudyHoursManager() {
             variant="contained"
             onClick={handleAddTimeSlot}
             disabled={!startTime || !endTime}
-            startIcon={<AddIcon />}
+            startIcon={editingSlot ? <CheckCircleIcon /> : <AddIcon />}
           >
-            Agregar Horario
+            {editingSlot ? 'Actualizar Horario' : 'Agregar Horario'}
           </Button>
         </DialogActions>
       </Dialog>
-
-      {/* Botón guardar cambios (flotante) */}
-      <Box
-        sx={{
-          position: 'fixed',
-          bottom: 24,
-          right: 24,
-          zIndex: 1000,
-        }}
-      >
-        <Button
-          variant="contained"
-          size="large"
-          onClick={handleSaveChanges}
-          startIcon={<CheckCircleIcon />}
-          sx={{
-            boxShadow: 4,
-            '&:hover': {
-              boxShadow: 8,
-            },
-          }}
-        >
-          Guardar Cambios
-        </Button>
-      </Box>
 
       {/* Snackbar para mensajes */}
       <Snackbar
