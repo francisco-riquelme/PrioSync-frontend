@@ -6,6 +6,8 @@ export interface CalendarStudySessionFormData {
   startDate: string; // YYYY-MM-DD format
   startTime: string; // HH:MM format
   endTime: string; // HH:MM format
+  cursoId?: string; // NEW: Optional course ID
+  leccionId?: string; // NEW: Optional lesson ID
 }
 
 // Evento para el calendario (BigCalendar)

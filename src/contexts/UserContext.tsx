@@ -93,13 +93,6 @@ const userSelectionSet = [
   'Cursos.estado',
   'Cursos.createdAt',
   'Cursos.updatedAt',
-  'BloqueEstudio.bloqueEstudioId',
-  'BloqueEstudio.usuarioId',
-  'BloqueEstudio.hora_inicio',
-  'BloqueEstudio.hora_fin',
-  'BloqueEstudio.duracion_minutos',
-  'BloqueEstudio.createdAt',
-  'BloqueEstudio.updatedAt',
 ] as const;
 
 // Use SelectionSet to infer proper types

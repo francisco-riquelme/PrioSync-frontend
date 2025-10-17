@@ -1,27 +1,31 @@
 import { useState, useEffect, useCallback } from "react";
 import { getQueryFactories } from "@/utils/commons/queries";
 import { MainTypes } from "@/utils/api/schema";
-import { DaySchedule } from "@/components/modals/welcome/types";
+import { DaySchedule, TimeSlot } from "@/components/modals/welcome/types";
+import type { SelectionSet } from "aws-amplify/data";
 import {
   StudyBlock,
   DiaSemana,
-  studyBlocksService,
   convertStudyBlocksToDaySchedule,
+  normalizeDayNameToBackend,
 } from "@/utils/services/studyBlocks";
 
-// Define selection set for BloqueEstudio queries
-const studyBlockSelectionSet = [
-  "bloqueEstudioId",
-  "dia_semana",
-  "hora_inicio",
-  "hora_fin",
-  "duracion_minutos",
+// Define selection set for Usuario with BloqueEstudio relationship
+const usuarioWithBloqueEstudioSelectionSet = [
   "usuarioId",
-  "createdAt",
-  "updatedAt",
+  "BloqueEstudio.bloqueEstudioId",
+  "BloqueEstudio.dia_semana",
+  "BloqueEstudio.hora_inicio",
+  "BloqueEstudio.hora_fin",
+  "BloqueEstudio.duracion_minutos",
+  "BloqueEstudio.usuarioId",
 ] as const;
 
-// Note: StudyBlockWithRelations type available if needed for future extensions
+// Use SelectionSet to infer proper types
+type UsuarioWithBloqueEstudio = SelectionSet<
+  MainTypes["Usuario"]["type"],
+  typeof usuarioWithBloqueEstudioSelectionSet
+>;
 
 export interface UseStudyBlocksParams {
   usuarioId?: string;
@@ -32,7 +36,13 @@ export interface UseStudyBlocksReturn {
   daySchedules: DaySchedule[];
   loading: boolean;
   error: string | null;
-  updateStudyBlocks: (schedules: DaySchedule[]) => Promise<boolean>;
+  createSingleBlock: (day: string, slot: TimeSlot) => Promise<boolean>;
+  deleteSingleBlock: (day: string, slot: TimeSlot) => Promise<boolean>;
+  updateSingleBlock: (
+    day: string,
+    oldSlot: TimeSlot,
+    newSlot: TimeSlot
+  ) => Promise<boolean>;
   refreshStudyBlocks: () => Promise<void>;
 }
 
@@ -50,6 +60,13 @@ export const useStudyBlocks = (
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
 
+  // Helper function to calculate duration
+  const calculateDuration = (startTime: string, endTime: string): number => {
+    const [startHour, startMin] = startTime.split(":").map(Number);
+    const [endHour, endMin] = endTime.split(":").map(Number);
+    return endHour * 60 + endMin - (startHour * 60 + startMin);
+  };
+
   const loadStudyBlocks = useCallback(async () => {
     if (!usuarioId) {
       setStudyBlocks([]);
@@ -62,27 +79,30 @@ export const useStudyBlocks = (
       setLoading(true);
       setError(null);
 
-      const { BloqueEstudio } = await getQueryFactories<
-        Pick<MainTypes, "BloqueEstudio">,
-        "BloqueEstudio"
+      const { Usuario } = await getQueryFactories<
+        Pick<MainTypes, "Usuario">,
+        "Usuario"
       >({
-        entities: ["BloqueEstudio"],
+        entities: ["Usuario"],
       });
 
-      // Get all study blocks for the user
-      const result = await BloqueEstudio.list({
-        filter: { usuarioId: { eq: usuarioId } },
-        selectionSet: studyBlockSelectionSet,
-      });
+      // Get user with their study blocks via relationship
+      const userRes = (await Usuario.get({
+        input: { usuarioId },
+        selectionSet: usuarioWithBloqueEstudioSelectionSet,
+      })) as unknown as UsuarioWithBloqueEstudio;
 
-      const blocks: StudyBlock[] = (result.items || []).map((block) => ({
-        bloqueEstudioId: block.bloqueEstudioId,
-        dia_semana: block.dia_semana as DiaSemana,
-        hora_inicio: block.hora_inicio,
-        hora_fin: block.hora_fin,
-        duracion_minutos: block.duracion_minutos || undefined,
-        usuarioId: block.usuarioId,
-      }));
+      // Access the BloqueEstudio relationship data
+      const blocks: StudyBlock[] = (userRes?.BloqueEstudio || []).map(
+        (block) => ({
+          bloqueEstudioId: block.bloqueEstudioId,
+          dia_semana: block.dia_semana as DiaSemana,
+          hora_inicio: block.hora_inicio,
+          hora_fin: block.hora_fin,
+          duracion_minutos: block.duracion_minutos || undefined,
+          usuarioId: block.usuarioId,
+        })
+      );
 
       setStudyBlocks(blocks);
 
@@ -101,37 +121,215 @@ export const useStudyBlocks = (
     }
   }, [usuarioId]);
 
-  const updateStudyBlocks = useCallback(
-    async (schedules: DaySchedule[]): Promise<boolean> => {
-      if (!usuarioId) {
-        setError("Usuario no autenticado");
-        return false;
-      }
+  const createSingleBlock = useCallback(
+    async (day: string, slot: TimeSlot): Promise<boolean> => {
+      if (!usuarioId) return false;
 
       try {
-        setError(null);
+        const { BloqueEstudio } = await getQueryFactories<
+          Pick<MainTypes, "BloqueEstudio">,
+          "BloqueEstudio"
+        >({
+          entities: ["BloqueEstudio"],
+        });
 
-        // Use the service to update study blocks
-        const success = await studyBlocksService.updateUserStudyBlocks(
+        const newBlock = {
+          bloqueEstudioId: crypto.randomUUID(),
+          dia_semana: normalizeDayNameToBackend(day),
+          hora_inicio: slot.start,
+          hora_fin: slot.end,
+          duracion_minutos: calculateDuration(slot.start, slot.end),
           usuarioId,
-          schedules
-        );
+        };
 
-        if (success) {
-          // Refresh the data after successful update
-          await loadStudyBlocks();
-        } else {
-          setError("Error al guardar los horarios de estudio");
-        }
+        await BloqueEstudio.create({
+          input: newBlock,
+          selectionSet: [
+            "bloqueEstudioId",
+            "dia_semana",
+            "hora_inicio",
+            "hora_fin",
+            "duracion_minutos",
+            "usuarioId",
+          ],
+        });
 
-        return success;
-      } catch (err) {
-        console.error("Error updating study blocks:", err);
-        setError("Error al actualizar los horarios de estudio");
+        // Update local studyBlocks state
+        setStudyBlocks((prev) => [...prev, newBlock as StudyBlock]);
+
+        // Update local daySchedules state
+        setDaySchedules((prev) => {
+          const existingDay = prev.find((d) => d.day === day);
+          if (existingDay) {
+            return prev.map((d) =>
+              d.day === day
+                ? {
+                    ...d,
+                    timeSlots: [...d.timeSlots, slot].sort((a, b) =>
+                      a.start.localeCompare(b.start)
+                    ),
+                  }
+                : d
+            );
+          } else {
+            return [...prev, { day, timeSlots: [slot] }];
+          }
+        });
+
+        return true;
+      } catch (error) {
+        console.error("Error creating study block:", error);
         return false;
       }
     },
-    [usuarioId, loadStudyBlocks]
+    [usuarioId]
+  );
+
+  const deleteSingleBlock = useCallback(
+    async (day: string, slot: TimeSlot): Promise<boolean> => {
+      if (!usuarioId) return false;
+
+      try {
+        // Find the block ID by matching day and time
+        const blockToDelete = studyBlocks.find(
+          (b) =>
+            convertStudyBlocksToDaySchedule([b])[0]?.day === day &&
+            b.hora_inicio === slot.start &&
+            b.hora_fin === slot.end
+        );
+
+        if (!blockToDelete) {
+          console.error("Block not found to delete");
+          return false;
+        }
+
+        const { BloqueEstudio } = await getQueryFactories<
+          Pick<MainTypes, "BloqueEstudio">,
+          "BloqueEstudio"
+        >({
+          entities: ["BloqueEstudio"],
+        });
+
+        await BloqueEstudio.delete({
+          input: { bloqueEstudioId: blockToDelete.bloqueEstudioId },
+        });
+
+        // Update local studyBlocks state
+        setStudyBlocks((prev) =>
+          prev.filter(
+            (b) => b.bloqueEstudioId !== blockToDelete.bloqueEstudioId
+          )
+        );
+
+        // Update local daySchedules state
+        setDaySchedules((prev) =>
+          prev
+            .map((d) =>
+              d.day === day
+                ? {
+                    ...d,
+                    timeSlots: d.timeSlots.filter(
+                      (t) => !(t.start === slot.start && t.end === slot.end)
+                    ),
+                  }
+                : d
+            )
+            .filter((d) => d.timeSlots.length > 0)
+        );
+
+        return true;
+      } catch (error) {
+        console.error("Error deleting study block:", error);
+        return false;
+      }
+    },
+    [usuarioId, studyBlocks]
+  );
+
+  const updateSingleBlock = useCallback(
+    async (
+      day: string,
+      oldSlot: TimeSlot,
+      newSlot: TimeSlot
+    ): Promise<boolean> => {
+      if (!usuarioId) return false;
+
+      try {
+        // Find the block to update
+        const blockToUpdate = studyBlocks.find(
+          (b) =>
+            convertStudyBlocksToDaySchedule([b])[0]?.day === day &&
+            b.hora_inicio === oldSlot.start &&
+            b.hora_fin === oldSlot.end
+        );
+
+        if (!blockToUpdate) {
+          console.error("Block not found to update");
+          return false;
+        }
+
+        const { BloqueEstudio } = await getQueryFactories<
+          Pick<MainTypes, "BloqueEstudio">,
+          "BloqueEstudio"
+        >({
+          entities: ["BloqueEstudio"],
+        });
+
+        const updatedBlock = {
+          bloqueEstudioId: blockToUpdate.bloqueEstudioId,
+          dia_semana: normalizeDayNameToBackend(day),
+          hora_inicio: newSlot.start,
+          hora_fin: newSlot.end,
+          duracion_minutos: calculateDuration(newSlot.start, newSlot.end),
+          usuarioId,
+        };
+
+        await BloqueEstudio.update({
+          input: updatedBlock,
+          selectionSet: [
+            "bloqueEstudioId",
+            "dia_semana",
+            "hora_inicio",
+            "hora_fin",
+            "duracion_minutos",
+            "usuarioId",
+          ],
+        });
+
+        // Update local studyBlocks state
+        setStudyBlocks((prev) =>
+          prev.map((b) =>
+            b.bloqueEstudioId === blockToUpdate.bloqueEstudioId
+              ? (updatedBlock as StudyBlock)
+              : b
+          )
+        );
+
+        // Update local daySchedules state
+        setDaySchedules((prev) =>
+          prev.map((d) =>
+            d.day === day
+              ? {
+                  ...d,
+                  timeSlots: d.timeSlots
+                    .map((t) =>
+                      t.start === oldSlot.start && t.end === oldSlot.end
+                        ? newSlot
+                        : t
+                    )
+                    .sort((a, b) => a.start.localeCompare(b.start)),
+                }
+              : d
+          )
+        );
+
+        return true;
+      } catch (error) {
+        console.error("Error updating study block:", error);
+        return false;
+      }
+    },
+    [usuarioId, studyBlocks]
   );
 
   const refreshStudyBlocks = useCallback(async () => {
@@ -148,7 +346,9 @@ export const useStudyBlocks = (
     daySchedules,
     loading,
     error,
-    updateStudyBlocks,
+    createSingleBlock,
+    deleteSingleBlock,
+    updateSingleBlock,
     refreshStudyBlocks,
   };
 };

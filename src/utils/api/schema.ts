@@ -191,6 +191,13 @@ export const MainSchema = a.schema({
       google_event_id: a.string(),
       recordatorios: a.string(),
 
+      // Partial session support
+      isPartial: a.boolean(),
+      videoStartTime: a.integer(), // Seconds into the video where this session should start
+      videoEndTime: a.integer(), // Seconds into the video where this session should end
+      sessionPart: a.integer(), // Part number if lesson is split (1, 2, 3, etc.)
+      totalParts: a.integer(), // Total number of parts this lesson is split into
+
       // Relationships
       usuarioId: a.id().required(),
       Usuario: a.belongsTo("Usuario", "usuarioId"),

@@ -1,8 +1,8 @@
 'use client';
 
-import React, { useState, useMemo, useEffect } from 'react';
+import React, { useState, useMemo, useCallback, useEffect } from 'react';
 import type { CSSProperties } from 'react';
-import { Calendar as BigCalendar, momentLocalizer, View, Event } from 'react-big-calendar';
+import { Calendar as BigCalendar, momentLocalizer, View, Event, NavigateAction } from 'react-big-calendar';
 import 'react-big-calendar/lib/css/react-big-calendar.css';
 import moment from 'moment';
 import 'moment/locale/es';
@@ -14,7 +14,7 @@ import {
   useTheme,
 } from '@mui/material';
 import { useUser } from '@/contexts/UserContext';
-import { useStudySessions } from '@/components/courses/hooks/useStudySessions';
+import { useCalendarData } from '@/hooks/useCalendarData';
 import type { MainTypes } from '@/utils/api/schema';
 import { StudySession } from '@/types/studySession';
 import { CalendarEvent } from './componentTypes';
@@ -22,8 +22,7 @@ import CalendarToolbar from './CalendarToolbar';
 import StudySessionForm from './StudySessionForm';
 import StudySessionDetails from './StudySessionDetails';
 import ConfirmDeleteDialog from './ConfirmDeleteDialog';
-import { useUserPreferences } from '@/hooks/useUserPreferences';
-import { getPreferredSlotsForDate } from '@/utils/scheduleHelpers';
+import { getDayName } from '@/utils/scheduleHelpers';
 
 // Type for SesionEstudio from schema
 type SesionEstudio = MainTypes["SesionEstudio"]["type"];
@@ -33,9 +32,17 @@ const convertToStudySession = (sesion: SesionEstudio): StudySession => {
   const startTime = new Date(`${sesion.fecha}T${sesion.hora_inicio}`);
   const endTime = new Date(`${sesion.fecha}T${sesion.hora_fin}`);
   
+  // Create contextual title based on associations
+  let title = 'Sesión de estudio';
+  if (sesion.leccionId) {
+    title = '📖 Lección';
+  } else if (sesion.cursoId) {
+    title = '📚 Curso';
+  }
+  
   return {
     id: sesion.sesionEstudioId || '',
-    title: `Sesión de ${sesion.tipo || 'estudio'}`,
+    title,
     subject: sesion.cursoId || 'Estudio Personal',
     startTime,
     endTime,
@@ -49,6 +56,8 @@ const convertToStudySession = (sesion: SesionEstudio): StudySession => {
     tags: [],
     createdAt: sesion.createdAt ? new Date(sesion.createdAt) : new Date(),
     updatedAt: sesion.updatedAt ? new Date(sesion.updatedAt) : new Date(),
+    cursoId: sesion.cursoId || undefined, // NEW
+    leccionId: sesion.leccionId || undefined, // NEW
   };
 };
 
@@ -62,20 +71,43 @@ const Calendar: React.FC = () => {
   const { userData } = useUser();
   const {
     sessions: rawSessions,
+    studyBlockPreferences: preferences,
     loading: sessionsLoading,
     createSession,
     updateSession,
     deleteSession,
-  } = useStudySessions({ usuarioId: userData?.usuarioId });
-
-  // Obtener preferencias de horarios del usuario
-  const { preferences } = useUserPreferences(userData?.usuarioId);
+  } = useCalendarData(userData?.usuarioId);
 
   // Convert backend sessions to frontend format
   const sessions = useMemo(() => 
     rawSessions.map(convertToStudySession), 
     [rawSessions]
   );
+
+  // Optimistic updates state
+  const [optimisticSessions, setOptimisticSessions] = useState<StudySession[]>([]);
+  const [isOptimisticUpdate, setIsOptimisticUpdate] = useState(false);
+
+  // Use optimistic sessions when available, otherwise use real sessions
+  const displaySessions = isOptimisticUpdate ? optimisticSessions : sessions;
+
+  // Update optimistic sessions when real sessions change
+  useEffect(() => {
+    if (!isOptimisticUpdate) {
+      setOptimisticSessions(sessions);
+    } else {
+      // If we're in optimistic mode, check if the real data has caught up
+      // This happens when the backend operation completes and data is refetched
+      const hasNewData = sessions.length !== optimisticSessions.length || 
+        sessions.some(session => !optimisticSessions.find(opt => opt.id === session.id));
+      
+      if (hasNewData) {
+        // Real data has been updated, clear optimistic mode
+        setIsOptimisticUpdate(false);
+        setOptimisticSessions(sessions);
+      }
+    }
+  }, [sessions, isOptimisticUpdate, optimisticSessions]);
 
   const [view, setView] = useState<View>('month');
   const [date, setDate] = useState(new Date());
@@ -92,9 +124,27 @@ const Calendar: React.FC = () => {
 
 
 
+  // dayPropGetter for past dates and study block highlighting
+  const dayPropGetter = useCallback((date: Date) => {
+    const today = new Date();
+    today.setHours(0, 0, 0, 0);
+    const cellDate = new Date(date);
+    cellDate.setHours(0, 0, 0, 0);
+    
+    const isPast = cellDate < today;
+    const dayName = getDayName(date);
+    const hasStudyBlock = preferences.some(p => p.day === dayName);
+    const shouldHighlight = !isPast && hasStudyBlock;
+    
+    return {
+      className: isPast ? 'past-date' : (shouldHighlight ? 'study-block-day' : ''),
+      style: {}
+    };
+  }, [preferences]);
+
   // Estilos personalizados para el calendario
   const calendarStyle = useMemo(() => ({
-    height: 600,
+    height: 700,
     fontFamily: "'Inter', 'Roboto', 'Arial', sans-serif",
     backgroundColor: theme.palette.background.paper,
     border: 'none',
@@ -118,9 +168,15 @@ const Calendar: React.FC = () => {
     '& .rbc-header:last-child': {
       borderRight: 'none !important',
     },
-    '& .rbc-row-bg, & .rbc-day-bg, & .rbc-time-slot, & .rbc-timeslot-group, & .rbc-time-header, & .rbc-time-content, & .rbc-month-row': {
+    '& .rbc-row-bg, & .rbc-time-slot, & .rbc-timeslot-group, & .rbc-time-header, & .rbc-time-content, & .rbc-month-row': {
       backgroundColor: '#ffffff !important',
       border: `1px solid ${theme.palette.divider} !important`,
+      minHeight: 32,
+      transition: 'background 0.2s',
+    },
+    '& .rbc-day-bg': {
+      backgroundColor: '#ffffff',
+      border: `1px solid ${theme.palette.divider}`,
       minHeight: 32,
       transition: 'background 0.2s',
     },
@@ -138,8 +194,8 @@ const Calendar: React.FC = () => {
       backgroundColor: theme.palette.error.main,
     },
     '& .rbc-today': {
-      backgroundColor: '#e8f5e9 !important', // Verde claro minimalista
-      border: '1px solid #81c784 !important',
+      backgroundColor: '#e8f5e9', // Verde claro minimalista
+      border: '1px solid #81c784',
     },
     '& .rbc-off-range-bg': {
       backgroundColor: `${theme.palette.action.disabledBackground} !important`,
@@ -153,6 +209,12 @@ const Calendar: React.FC = () => {
     '& .rbc-date-cell.past-date': {
       color: `${theme.palette.text.disabled} !important`,
       cursor: 'not-allowed !important',
+    },
+    // Estilos para días con bloques de estudio
+    '& .rbc-day-bg.study-block-day': {
+      backgroundColor: '#e8f5e9 !important',
+      borderLeft: '3px solid #4caf50 !important',
+      border: '1px solid #81c784 !important',
     },
     '& .rbc-event': {
       borderRadius: 8,
@@ -174,7 +236,7 @@ const Calendar: React.FC = () => {
       background: 'transparent',
     },
     '& .rbc-month-row': {
-      minHeight: 80,
+      minHeight: 120, // Increase from 80 to 120 to show more events
     },
     '& .rbc-date-cell': {
       textAlign: 'right',
@@ -189,36 +251,6 @@ const Calendar: React.FC = () => {
     },
   }), [theme]);
 
-  // Efecto para aplicar estilos a los días con horarios preferidos
-  useEffect(() => {
-    if (preferences.length === 0) return;
-
-    // Función para actualizar los estilos de las celdas del calendario
-    const updateCellStyles = () => {
-      const calendarCells = document.querySelectorAll('.rbc-day-bg');
-      
-      calendarCells.forEach((cell) => {
-        const dateAttr = cell.parentElement?.querySelector('.rbc-date-cell')?.textContent;
-        if (!dateAttr) return;
-
-        // Obtener la fecha de la celda
-        const cellDate = new Date((cell as HTMLElement).getAttribute('data-date') || '');
-        if (isNaN(cellDate.getTime())) return;
-
-        const slotsForDay = getPreferredSlotsForDate(cellDate, preferences);
-        
-        if (slotsForDay.length > 0) {
-          (cell as HTMLElement).style.backgroundColor = '#e8f5e9';
-          (cell as HTMLElement).style.borderLeft = '3px solid #4caf50';
-        }
-      });
-    };
-
-    // Ejecutar después de que el calendario se renderice
-    const timer = setTimeout(updateCellStyles, 100);
-    
-    return () => clearTimeout(timer);
-  }, [preferences, date, view]);
 
   // Función para obtener el color de los eventos (simplificado - un solo estilo)
   const getEventStyle = (): { style: CSSProperties } => {
@@ -283,11 +315,20 @@ const Calendar: React.FC = () => {
   // Confirmar eliminación
   const handleConfirmDelete = async () => {
     if (selectedSession) {
+      // Optimistic update: Remove from UI immediately
+      setOptimisticSessions(prev => prev.filter(s => s.id !== selectedSession.id));
+      setIsOptimisticUpdate(true);
+
       try {
         await deleteSession(selectedSession.id);
+        // Success: Keep optimistic update until real data arrives
+        // Don't clear isOptimisticUpdate - let it persist until next fetch
         setDeleteConfirmOpen(false);
         setSelectedSession(null);
       } catch (error) {
+        // Error: Revert optimistic update
+        setOptimisticSessions(prev => [...prev, selectedSession]);
+        setIsOptimisticUpdate(false);
         console.error('Error al eliminar sesión:', error);
       }
     }
@@ -306,7 +347,7 @@ const Calendar: React.FC = () => {
 
   // Solo mostrar sesiones de estudio creadas por el usuario
   const events = useMemo(() => {
-    const studySessionEvents: CalendarEvent[] = sessions.map(session => ({
+    const studySessionEvents: CalendarEvent[] = displaySessions.map(session => ({
       id: session.id,
       title: session.title,
       start: session.startTime,
@@ -317,7 +358,7 @@ const Calendar: React.FC = () => {
     }));
 
     return studySessionEvents;
-  }, [sessions]);
+  }, [displaySessions]);
 
   return (
     <Box>
@@ -385,7 +426,7 @@ const Calendar: React.FC = () => {
           </Box>
         )}
         
-        <Box sx={{ ...calendarStyle, height: 600 }}>
+        <Box sx={{ ...calendarStyle, height: 700 }}>
           <BigCalendar
             localizer={localizer}
             events={events}
@@ -396,11 +437,12 @@ const Calendar: React.FC = () => {
             date={date}
             onNavigate={setDate}
             eventPropGetter={getEventStyle}
+            dayPropGetter={dayPropGetter}
             components={{
-              toolbar: (props: { label: string; onNavigate: (action: string) => void; onView: (view: View) => void }) => (
+              toolbar: (props: { label: string; onNavigate: (navigate: NavigateAction, date?: Date) => void; onView: (view: View) => void }) => (
                 <CalendarToolbar
                   label={props.label}
-                  onNavigate={props.onNavigate}
+                  onNavigate={(action: string) => props.onNavigate(action as NavigateAction)}
                   onView={handleViewChange}
                   currentView={view as 'month' | 'week' | 'day'}
                   onAddSession={() => {
@@ -415,6 +457,7 @@ const Calendar: React.FC = () => {
             onSelectSlot={handleSelectSlot}
             onSelectEvent={handleSelectEvent}
             selectable
+            allDayMaxRows={3}
             messages={{
               next: 'Siguiente',
               previous: 'Anterior',
@@ -427,6 +470,7 @@ const Calendar: React.FC = () => {
               time: 'Hora',
               event: 'Evento',
               noEventsInRange: 'No hay eventos en este rango',
+              showMore: (total: number) => `+${total} más`,
             }}
           />
         </Box>
@@ -455,36 +499,114 @@ const Calendar: React.FC = () => {
             let success = false;
             
             if (editingSession) {
-              // UPDATE: Pass single object with id
-              const result = await updateSession({
-                sesionEstudioId: editingSession.id,
-                fecha: formData.startDate,
-                hora_inicio: formData.startTime,
-                hora_fin: formData.endTime,
-                duracion_minutos,
-                tipo: 'estudio' as const,
-                estado: 'programada' as const,
-              });
-              success = result !== null;
-            } else {
-              // CREATE: Pass complete data
-              const sessionId = crypto.randomUUID();
-              const sessionData = {
-                sesionEstudioId: sessionId,
-                usuarioId: userData.usuarioId,
-                fecha: formData.startDate,
-                hora_inicio: formData.startTime,
-                hora_fin: formData.endTime,
-                duracion_minutos,
-                tipo: 'estudio' as const,
-                estado: 'programada' as const,
-                cursoId: undefined,
-                google_event_id: undefined,
-                recordatorios: undefined,
+              // UPDATE: Optimistic update
+              const updatedSession: StudySession = {
+                ...editingSession,
+                title: formData.leccionId ? '📖 Lección' : formData.cursoId ? '📚 Curso' : 'Sesión de estudio',
+                subject: formData.cursoId || 'Estudio Personal',
+                startTime: startDateTime,
+                endTime: endDateTime,
+                updatedAt: new Date(),
+                cursoId: formData.cursoId || undefined,
+                leccionId: formData.leccionId || undefined,
               };
-              
-              const result = await createSession(sessionData);
-              success = result !== null;
+
+              // Optimistic update: Update in UI immediately
+              setOptimisticSessions(prev => 
+                prev.map(s => s.id === editingSession.id ? updatedSession : s)
+              );
+              setIsOptimisticUpdate(true);
+
+              try {
+                const result = await updateSession({
+                  sesionEstudioId: editingSession.id,
+                  fecha: formData.startDate,
+                  hora_inicio: formData.startTime,
+                  hora_fin: formData.endTime,
+                  duracion_minutos,
+                  tipo: 'estudio' as const,
+                  estado: 'programada' as const,
+                  cursoId: formData.cursoId || undefined,
+                  leccionId: formData.leccionId || undefined,
+                });
+                success = result !== null;
+                
+                if (success) {
+                  // Success: Keep optimistic update until real data arrives
+                  // Don't clear isOptimisticUpdate - let it persist until next fetch
+                } else {
+                  // Error: Revert optimistic update
+                  setOptimisticSessions(prev => 
+                    prev.map(s => s.id === editingSession.id ? editingSession : s)
+                  );
+                  setIsOptimisticUpdate(false);
+                }
+              } catch (error) {
+                // Error: Revert optimistic update
+                setOptimisticSessions(prev => 
+                  prev.map(s => s.id === editingSession.id ? editingSession : s)
+                );
+                setIsOptimisticUpdate(false);
+                throw error;
+              }
+            } else {
+              // CREATE: Optimistic update
+              const sessionId = crypto.randomUUID();
+              const newSession: StudySession = {
+                id: sessionId,
+                title: formData.leccionId ? '📖 Lección' : formData.cursoId ? '📚 Curso' : 'Sesión de estudio',
+                subject: formData.cursoId || 'Estudio Personal',
+                startTime: startDateTime,
+                endTime: endDateTime,
+                description: '',
+                location: '',
+                priority: 'medium',
+                status: 'planned',
+                reminder: 15,
+                tags: [],
+                createdAt: new Date(),
+                updatedAt: new Date(),
+                cursoId: formData.cursoId || undefined,
+                leccionId: formData.leccionId || undefined,
+              };
+
+              // Optimistic update: Add to UI immediately
+              setOptimisticSessions(prev => [...prev, newSession]);
+              setIsOptimisticUpdate(true);
+
+              try {
+                const sessionData = {
+                  sesionEstudioId: sessionId,
+                  usuarioId: userData.usuarioId,
+                  fecha: formData.startDate,
+                  hora_inicio: formData.startTime,
+                  hora_fin: formData.endTime,
+                  duracion_minutos,
+                  tipo: 'estudio' as const,
+                  estado: 'programada' as const,
+                  cursoId: formData.cursoId || undefined,
+                  leccionId: formData.leccionId || undefined,
+                  google_event_id: undefined,
+                  recordatorios: undefined,
+                };
+                
+                const result = await createSession(sessionData);
+                success = result !== null;
+                
+                if (success) {
+                  // Success: Keep optimistic update until real data arrives
+                  // Don't clear isOptimisticUpdate - let it persist until next fetch
+                } else {
+                  // Error: Revert optimistic update
+                  setOptimisticSessions(prev => prev.filter(s => s.id !== sessionId));
+                  setIsOptimisticUpdate(false);
+                }
+              } catch (error) {
+                // Error: Revert optimistic update
+                setOptimisticSessions(prev => prev.filter(s => s.id !== sessionId));
+                setIsOptimisticUpdate(false);
+                throw error;
+              }
             }
             
             if (success) {

@@ -1,4 +1,4 @@
-import { type ClientSchema, a } from "@aws-amplify/backend";
+import { type ClientSchema, a } from "@aws-amplify/data-schema";
 
 export const ResolverSchema = a
   .schema({

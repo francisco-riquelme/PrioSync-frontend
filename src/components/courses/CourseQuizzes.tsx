@@ -50,6 +50,11 @@ const formatDuration = (minutes?: number | null) => {
 export default function CourseQuizzes({ cuestionarios, loading }: CourseQuizzesProps) {
   const router = useRouter();
 
+  // Debug: Log the quizzes data
+  console.log('📊 CourseQuizzes - cuestionarios:', cuestionarios);
+  console.log('📊 CourseQuizzes - loading:', loading);
+  console.log('📊 CourseQuizzes - cuestionarios length:', cuestionarios?.length || 0);
+
   // Loading state
   if (loading) {
     return (

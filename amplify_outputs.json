@@ -1,9 +1,9 @@
 {
   "auth": {
-    "user_pool_id": "us-east-1_vtP9w0RXs",
+    "user_pool_id": "us-east-1_2fZRSwhFW",
     "aws_region": "us-east-1",
-    "user_pool_client_id": "29oefea9j8rkn8o5ge3nks7mg3",
-    "identity_pool_id": "us-east-1:f878ad6a-2443-43e6-8a31-bccc3bf46e99",
+    "user_pool_client_id": "7qud9jprkc43h6vb590kiresv0",
+    "identity_pool_id": "us-east-1:45bdc7f1-d553-490d-a78e-973c0bf7474c",
     "mfa_methods": [],
     "standard_required_attributes": [
       "email"
@@ -3800,6 +3800,53 @@
               "attributes": []
             }
           }
+        },
+        "CreateCourseFromPlaylistResolverReturnType": {
+          "name": "CreateCourseFromPlaylistResolverReturnType",
+          "fields": {
+            "message": {
+              "name": "message",
+              "isArray": false,
+              "type": "String",
+              "isRequired": true,
+              "attributes": []
+            },
+            "executionArn": {
+              "name": "executionArn",
+              "isArray": false,
+              "type": "String",
+              "isRequired": false,
+              "attributes": []
+            },
+            "cursoId": {
+              "name": "cursoId",
+              "isArray": false,
+              "type": "String",
+              "isRequired": false,
+              "attributes": []
+            },
+            "playlistId": {
+              "name": "playlistId",
+              "isArray": false,
+              "type": "String",
+              "isRequired": false,
+              "attributes": []
+            },
+            "usuarioId": {
+              "name": "usuarioId",
+              "isArray": false,
+              "type": "String",
+              "isRequired": false,
+              "attributes": []
+            },
+            "status": {
+              "name": "status",
+              "isArray": false,
+              "type": "String",
+              "isRequired": false,
+              "attributes": []
+            }
+          }
         }
       },
       "mutations": {
@@ -3835,6 +3882,12 @@
           "arguments": {
             "playlistId": {
               "name": "playlistId",
+              "isArray": false,
+              "type": "String",
+              "isRequired": true
+            },
+            "usuarioId": {
+              "name": "usuarioId",
               "isArray": false,
               "type": "String",
               "isRequired": true
@@ -3899,6 +3952,28 @@
           "arguments": {
             "cursoId": {
               "name": "cursoId",
+              "isArray": false,
+              "type": "String",
+              "isRequired": true
+            },
+            "usuarioId": {
+              "name": "usuarioId",
+              "isArray": false,
+              "type": "String",
+              "isRequired": true
+            }
+          }
+        },
+        "createCourseFromPlaylistResolver": {
+          "name": "createCourseFromPlaylistResolver",
+          "isArray": false,
+          "type": {
+            "nonModel": "CreateCourseFromPlaylistResolverReturnType"
+          },
+          "isRequired": false,
+          "arguments": {
+            "playlistId": {
+              "name": "playlistId",
               "isArray": false,
               "type": "String",
               "isRequired": true

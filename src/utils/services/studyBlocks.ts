@@ -80,6 +80,46 @@ export const getUserStudyBlocks = async (
 };
 
 /**
+ * Map frontend day names (lowercase, with accents) to backend format (capitalized, no accents)
+ */
+const frontendToBackendDayMap: Record<string, DiaSemana> = {
+  lunes: "Lunes",
+  martes: "Martes",
+  miércoles: "Miercoles",
+  jueves: "Jueves",
+  viernes: "Viernes",
+  sábado: "Sabado",
+  domingo: "Domingo",
+};
+
+/**
+ * Normalize frontend day name to backend format
+ */
+export const normalizeDayNameToBackend = (frontendDay: string): DiaSemana => {
+  return frontendToBackendDayMap[frontendDay] as DiaSemana;
+};
+
+/**
+ * Map backend day names (capitalized, no accents) to frontend format (lowercase, with accents)
+ */
+const backendToFrontendDayMap: Record<string, string> = {
+  Lunes: "lunes",
+  Martes: "martes",
+  Miercoles: "miércoles",
+  Jueves: "jueves",
+  Viernes: "viernes",
+  Sabado: "sábado",
+  Domingo: "domingo",
+};
+
+/**
+ * Normalize backend day name to frontend format
+ */
+const normalizeDayNameForUI = (backendDay: string): string => {
+  return backendToFrontendDayMap[backendDay] || backendDay.toLowerCase();
+};
+
+/**
  * Convert StudyBlock[] to DaySchedule[] format for UI consumption
  * Groups blocks by day of the week
  */
@@ -104,7 +144,7 @@ export const convertStudyBlocksToDaySchedule = (
   // Convert to DaySchedule format
   const daySchedules: DaySchedule[] = Object.entries(blocksByDay).map(
     ([day, dayBlocks]) => ({
-      day,
+      day: normalizeDayNameForUI(day), // Normalize to frontend format
       timeSlots: dayBlocks.map((block) => ({
         start: block.hora_inicio,
         end: block.hora_fin,

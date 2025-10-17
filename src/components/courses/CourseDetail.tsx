@@ -19,6 +19,7 @@ import {
 } from '@mui/icons-material';
 import { useCourseDetailData } from '@/components/courses/hooks/useCourseDetailData';
 import { useProgresoCurso } from '@/components/courses/hooks/useProgresoCurso';
+import { useCourseStudySessions } from '@/components/courses/hooks/useCourseStudySessions';
 import { useUser } from '@/contexts/UserContext';
 import StudySessionsTable from './StudySessionsTable';
 import CourseContent from './CourseContent';
@@ -32,7 +33,26 @@ export default function CourseDetail({ courseId }: CourseDetailProps) {
   const { userData } = useUser();
 
   // Fetch all course data with the new unified hook
-  const { course, modulos, materiales, quizzes, loading, error } = useCourseDetailData({ cursoId: courseId });
+  const { course, modulos, materiales, quizzes, loading, error, refreshCourseData } = useCourseDetailData({ cursoId: courseId });
+
+  // Debug: Log quiz data
+  console.log('🎯 CourseDetail - quizzes:', quizzes);
+  console.log('🎯 CourseDetail - quizzes length:', quizzes?.length || 0);
+
+  // Create refresh callback with debugging
+  const handleQuizCreated = () => {
+    console.log('🔄 CourseDetail - Quiz created, refreshing course data...');
+    refreshCourseData();
+  };
+
+  // Fetch study sessions for this course
+  const { 
+    sessions: courseSessions, 
+    loading: sessionsLoading
+  } = useCourseStudySessions({ 
+    cursoId: courseId, 
+    usuarioId: userData?.usuarioId 
+  });
 
   // Calcular progreso del curso
   const {
@@ -211,10 +231,11 @@ export default function CourseDetail({ courseId }: CourseDetailProps) {
         materialesLoading={false}
         cuestionarios={quizzes}
         quizzesLoading={false}
+        onQuizCreated={handleQuizCreated}
       />
 
       {/* Sesiones de Estudio */}
-      <StudySessionsTable sessions={[]} loading={false} />
+      <StudySessionsTable sessions={courseSessions} loading={sessionsLoading} />
 
     </Box>
   );
