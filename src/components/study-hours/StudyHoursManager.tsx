@@ -51,9 +51,15 @@ export default function StudyHoursManager() {
 
   // Cargar preferencias cuando estén disponibles
   useEffect(() => {
+    console.log('🔍 [StudyHoursManager] useEffect triggered');
+    console.log('📦 [StudyHoursManager] preferences:', preferences);
+    console.log('📊 [StudyHoursManager] preferences.length:', preferences.length);
+    
     if (preferences.length > 0) {
+      console.log('✅ [StudyHoursManager] Setting schedule with preferences:', preferences);
       setSchedule(preferences);
     } else {
+      console.warn('⚠️ [StudyHoursManager] No preferences found, initializing with empty days');
       // Inicializar con días vacíos si no hay preferencias
       setSchedule(daysOfWeek.map(day => ({ day: day.value, timeSlots: [] })));
     }
@@ -61,7 +67,15 @@ export default function StudyHoursManager() {
 
   // Obtener horarios de un día específico
   const getDaySchedule = (dayValue: string): DaySchedule | undefined => {
-    return schedule.find(s => s.day === dayValue);
+    // Normalizar ambos a minúsculas para la comparación (case-insensitive)
+    const result = schedule.find(s => s.day.toLowerCase() === dayValue.toLowerCase());
+    console.log(`🔎 [getDaySchedule] Buscando "${dayValue}" en schedule:`, {
+      dayValue,
+      scheduleLength: schedule.length,
+      scheduleDays: schedule.map(s => s.day),
+      found: result ? `✅ ${result.timeSlots.length} slots` : '❌ No encontrado'
+    });
+    return result;
   };
 
   // Función para detectar si dos rangos de tiempo se superponen

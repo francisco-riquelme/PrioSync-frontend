@@ -1,6 +1,6 @@
 "use client";
 
-import React, { useState, useEffect } from 'react';
+import React, { useState } from 'react';
 import {
   Dialog,
   DialogTitle,
@@ -242,12 +242,20 @@ export default function RegistrationModal({ open, onClose, welcomeData }: Regist
         let errorMessage: string = ERROR_MESSAGES.REGISTRATION_FAILED;
         
         if (signupResult.error) {
+          // Check if error message already contains the error type prefix
           if (signupResult.error.includes('UsernameExistsException')) {
-            errorMessage = 'Este correo ya está registrado';
+            errorMessage = '❌ Este correo electrónico ya está registrado. ¿Deseas iniciar sesión?';
           } else if (signupResult.error.includes('InvalidPasswordException')) {
-            errorMessage = 'La contraseña no cumple los requisitos';
+            errorMessage = '❌ La contraseña no cumple los requisitos de seguridad';
           } else if (signupResult.error.includes('InvalidParameterException')) {
-            errorMessage = 'Formato de datos inválido';
+            errorMessage = '❌ Formato de datos inválido. Verifica los campos';
+          } else if (signupResult.error.includes('TooManyRequestsException')) {
+            errorMessage = '❌ Demasiados intentos. Por favor intenta en unos minutos';
+          } else if (signupResult.error.includes('User already exists')) {
+            errorMessage = '❌ Este correo electrónico ya está registrado. ¿Deseas iniciar sesión?';
+          } else {
+            // Show the actual error message if it's descriptive
+            errorMessage = `❌ ${signupResult.error}`;
           }
         }
         
@@ -381,6 +389,23 @@ export default function RegistrationModal({ open, onClose, welcomeData }: Regist
             icon={<Error />}
             sx={{ mb: 2 }}
             onClose={() => setLocalError('')}
+            action={
+              // Si el error es de usuario existente, mostrar botón para ir al login
+              localError.includes('ya está registrado') ? (
+                <Button 
+                  color="inherit" 
+                  size="small"
+                  onClick={() => {
+                    clearForm();
+                    onClose();
+                    router.push('/auth/login');
+                  }}
+                  sx={{ fontWeight: 'bold' }}
+                >
+                  Iniciar Sesión
+                </Button>
+              ) : undefined
+            }
           >
             {localError}
           </Alert>

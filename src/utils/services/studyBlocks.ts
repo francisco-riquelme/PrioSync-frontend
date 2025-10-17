@@ -45,6 +45,14 @@ export const getUserStudyBlocks = async (
   try {
     const { data, errors } = await client.models.BloqueEstudio.list({
       filter: { usuarioId: { eq: usuarioId } },
+      selectionSet: [
+        "bloqueEstudioId",
+        "dia_semana",
+        "hora_inicio",
+        "hora_fin",
+        "duracion_minutos",
+        "usuarioId",
+      ],
     });
 
     if (errors) {
@@ -52,14 +60,24 @@ export const getUserStudyBlocks = async (
       throw new Error("Failed to fetch study blocks");
     }
 
-    return (data || []).map((block) => ({
-      bloqueEstudioId: block.bloqueEstudioId,
-      dia_semana: block.dia_semana as DiaSemana,
-      hora_inicio: block.hora_inicio,
-      hora_fin: block.hora_fin,
-      duracion_minutos: block.duracion_minutos || undefined,
-      usuarioId: block.usuarioId,
-    }));
+    console.log("📥 Raw data from Amplify:", JSON.stringify(data, null, 2));
+
+    return (data || []).map((block) => {
+      console.log("🔄 Mapping block:", {
+        id: block.bloqueEstudioId,
+        dia_semana_raw: block.dia_semana,
+        dia_semana_type: typeof block.dia_semana,
+      });
+
+      return {
+        bloqueEstudioId: block.bloqueEstudioId,
+        dia_semana: block.dia_semana as DiaSemana,
+        hora_inicio: block.hora_inicio,
+        hora_fin: block.hora_fin,
+        duracion_minutos: block.duracion_minutos || undefined,
+        usuarioId: block.usuarioId,
+      };
+    });
   } catch (error) {
     console.error("Error in getUserStudyBlocks:", error);
     throw error;
@@ -110,7 +128,15 @@ export const convertStudyBlocksToDaySchedule = (
  * Normalize day name to match DiaSemana enum
  */
 const normalizeDayName = (day: string): DiaSemana => {
+  if (!day) {
+    console.error("❌ [normalizeDayName] Received empty day:", day);
+    return "Lunes" as DiaSemana;
+  }
+
+  console.log("🔧 [normalizeDayName] Input:", day);
+
   const normalized = day.charAt(0).toUpperCase() + day.slice(1).toLowerCase();
+  console.log("🔧 [normalizeDayName] Normalized:", normalized);
 
   // Mapping for special cases
   const dayMap: Record<string, DiaSemana> = {
@@ -125,7 +151,10 @@ const normalizeDayName = (day: string): DiaSemana => {
     Domingo: "Domingo",
   };
 
-  return dayMap[normalized] || ("Lunes" as DiaSemana); // Fallback to Monday
+  const result = dayMap[normalized] || ("Lunes" as DiaSemana);
+  console.log("✅ [normalizeDayName] Result:", result);
+
+  return result;
 };
 
 /**
@@ -136,12 +165,31 @@ export const convertDayScheduleToStudyBlocks = (
   schedules: DaySchedule[],
   usuarioId: string
 ): Omit<StudyBlock, "bloqueEstudioId">[] => {
+  console.log(
+    "🔄 [convertDayScheduleToStudyBlocks] Input schedules:",
+    schedules
+  );
+
   const blocks: Omit<StudyBlock, "bloqueEstudioId">[] = [];
 
   schedules.forEach((daySchedule) => {
+    console.log(
+      "📅 [convertDayScheduleToStudyBlocks] Processing day:",
+      daySchedule.day,
+      "slots:",
+      daySchedule.timeSlots.length
+    );
+
     daySchedule.timeSlots.forEach((slot) => {
+      const diaSemana = normalizeDayName(daySchedule.day);
+      console.log("➕ [convertDayScheduleToStudyBlocks] Creating block:", {
+        dia_semana: diaSemana,
+        hora_inicio: slot.start,
+        hora_fin: slot.end,
+      });
+
       blocks.push({
-        dia_semana: normalizeDayName(daySchedule.day),
+        dia_semana: diaSemana,
         hora_inicio: slot.start,
         hora_fin: slot.end,
         duracion_minutos: calculateDuration(slot.start, slot.end),
@@ -150,6 +198,7 @@ export const convertDayScheduleToStudyBlocks = (
     });
   });
 
+  console.log("✅ [convertDayScheduleToStudyBlocks] Created blocks:", blocks);
   return blocks;
 };
 
@@ -161,19 +210,36 @@ export const createStudyBlocks = async (
   schedules: DaySchedule[]
 ): Promise<boolean> => {
   try {
+    console.log(
+      "💾 [createStudyBlocks] Starting creation for user:",
+      usuarioId
+    );
+    console.log("📋 [createStudyBlocks] Input schedules:", schedules);
+
     const blocks = convertDayScheduleToStudyBlocks(schedules, usuarioId);
 
+    console.log(`📦 [createStudyBlocks] Converted to ${blocks.length} blocks`);
+
     // Create all blocks in parallel
-    const createPromises = blocks.map((block) =>
-      client.models.BloqueEstudio.create({
+    const createPromises = blocks.map((block, index) => {
+      console.log(
+        `🔨 [createStudyBlocks] Creating block ${index + 1}/${blocks.length}:`,
+        {
+          dia_semana: block.dia_semana,
+          hora_inicio: block.hora_inicio,
+          hora_fin: block.hora_fin,
+        }
+      );
+
+      return client.models.BloqueEstudio.create({
         bloqueEstudioId: crypto.randomUUID(),
         dia_semana: block.dia_semana as DiaSemana,
         hora_inicio: block.hora_inicio,
         hora_fin: block.hora_fin,
         duracion_minutos: block.duracion_minutos,
         usuarioId: block.usuarioId,
-      })
-    );
+      });
+    });
 
     const results = await Promise.all(createPromises);
 
@@ -182,13 +248,19 @@ export const createStudyBlocks = async (
 
     if (!allSuccess) {
       const errors = results.filter((r) => r.errors).map((r) => r.errors);
-      console.error("Some study blocks failed to create:", errors);
+      console.error(
+        "❌ [createStudyBlocks] Some study blocks failed to create:",
+        errors
+      );
       return false;
     }
 
+    console.log(
+      `✅ [createStudyBlocks] Successfully created ${blocks.length} blocks`
+    );
     return true;
   } catch (error) {
-    console.error("Error creating study blocks:", error);
+    console.error("❌ [createStudyBlocks] Error creating study blocks:", error);
     return false;
   }
 };

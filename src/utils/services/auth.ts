@@ -85,13 +85,42 @@ export const authService = {
     } catch (error) {
       console.error("Sign up error:", error);
 
+      // Extract error message and name
+      let errorMessage = "An unknown error occurred";
+
+      if (error instanceof Error) {
+        errorMessage = error.message;
+
+        // Check for specific AWS Cognito error types
+        const errorName = (error as { name?: string }).name || "";
+
+        if (
+          errorName === "UsernameExistsException" ||
+          errorMessage.includes("User already exists")
+        ) {
+          errorMessage =
+            "UsernameExistsException: Este correo electrónico ya está registrado";
+        } else if (
+          errorName === "InvalidPasswordException" ||
+          errorMessage.includes("Password")
+        ) {
+          errorMessage =
+            "InvalidPasswordException: La contraseña no cumple los requisitos de seguridad";
+        } else if (errorName === "InvalidParameterException") {
+          errorMessage =
+            "InvalidParameterException: Los datos proporcionados son inválidos";
+        } else if (errorName === "TooManyRequestsException") {
+          errorMessage =
+            "TooManyRequestsException: Demasiados intentos. Por favor intenta más tarde";
+        }
+      }
+
       return {
         isSignUpComplete: false,
         userId: undefined,
         nextStep: null,
         success: false,
-        error:
-          error instanceof Error ? error.message : "An unknown error occurred",
+        error: errorMessage,
       };
     }
   },
@@ -163,13 +192,42 @@ export const authService = {
     } catch (error) {
       console.error("Sign up with study preferences error:", error);
 
+      // Extract error message and name
+      let errorMessage = "An unknown error occurred";
+
+      if (error instanceof Error) {
+        errorMessage = error.message;
+
+        // Check for specific AWS Cognito error types
+        const errorName = (error as { name?: string }).name || "";
+
+        if (
+          errorName === "UsernameExistsException" ||
+          errorMessage.includes("User already exists")
+        ) {
+          errorMessage =
+            "UsernameExistsException: Este correo electrónico ya está registrado";
+        } else if (
+          errorName === "InvalidPasswordException" ||
+          errorMessage.includes("Password")
+        ) {
+          errorMessage =
+            "InvalidPasswordException: La contraseña no cumple los requisitos de seguridad";
+        } else if (errorName === "InvalidParameterException") {
+          errorMessage =
+            "InvalidParameterException: Los datos proporcionados son inválidos";
+        } else if (errorName === "TooManyRequestsException") {
+          errorMessage =
+            "TooManyRequestsException: Demasiados intentos. Por favor intenta más tarde";
+        }
+      }
+
       return {
         isSignUpComplete: false,
         userId: undefined,
         nextStep: null,
         success: false,
-        error:
-          error instanceof Error ? error.message : "An unknown error occurred",
+        error: errorMessage,
       };
     }
   },

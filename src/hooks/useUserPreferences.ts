@@ -40,22 +40,48 @@ export const useUserPreferences = (
           const blocks = await studyBlocksService.getUserStudyBlocks(userId);
 
           if (blocks && blocks.length > 0) {
-            // TODO: Backend no almacena día de la semana aún
-            // Por ahora, cargar desde localStorage como fallback
+            // ✅ Convertir bloques del backend al formato DaySchedule
+            console.log(
+              `📊 Loaded ${blocks.length} study blocks from backend for user ${userId}`
+            );
+            console.log("📦 Raw blocks:", blocks);
+            const schedules =
+              studyBlocksService.convertStudyBlocksToDaySchedule(blocks);
+
+            console.log("🔄 Converted schedules:", schedules);
+
+            if (schedules && schedules.length > 0) {
+              setPreferences(schedules);
+              console.log(`✅ Converted to ${schedules.length} day schedules`);
+              console.log(
+                "📋 Day schedules detail:",
+                JSON.stringify(schedules, null, 2)
+              );
+            } else {
+              console.warn(
+                "⚠️ Conversion resulted in empty schedules, falling back to localStorage"
+              );
+              loadFromLocalStorage();
+            }
+
+            // Cargar área de estudio y canal de YouTube desde localStorage
+            // (estos datos no están en BloqueEstudio)
             const savedWelcomeData = localStorage.getItem("welcomeFormData");
             if (savedWelcomeData) {
               const welcomeData = JSON.parse(savedWelcomeData);
-              setPreferences(welcomeData.tiempoDisponible || []);
               setAreaEstudio(welcomeData.estudio || "");
               setCanalYoutube(welcomeData.youtubeUrl || "");
             }
           } else {
             // No hay blocks en backend, cargar de localStorage
+            console.log(
+              "⚠️ No study blocks found in backend, loading from localStorage"
+            );
             loadFromLocalStorage();
           }
         } catch (backendError) {
           console.error(
-            "Error loading from backend, falling back to localStorage:",
+            "❌ Error loading from backend, falling back to localStorage:",
             backendError
           );
           loadFromLocalStorage();
