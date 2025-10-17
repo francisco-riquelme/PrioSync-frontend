@@ -13,6 +13,8 @@ export interface StudySession {
   tags?: string[]; // Tags como ["examen", "proyecto", "repaso"]
   createdAt: Date;
   updatedAt: Date;
+  cursoId?: string; // NEW
+  leccionId?: string; // NEW
 }
 
 // Formulario para crear/editar sesión

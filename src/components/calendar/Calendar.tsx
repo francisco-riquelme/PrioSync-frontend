@@ -1,6 +1,6 @@
 'use client';
 
-import React, { useState, useMemo, useCallback } from 'react';
+import React, { useState, useMemo, useCallback, useEffect } from 'react';
 import type { CSSProperties } from 'react';
 import { Calendar as BigCalendar, momentLocalizer, View, Event, NavigateAction } from 'react-big-calendar';
 import 'react-big-calendar/lib/css/react-big-calendar.css';
@@ -32,9 +32,17 @@ const convertToStudySession = (sesion: SesionEstudio): StudySession => {
   const startTime = new Date(`${sesion.fecha}T${sesion.hora_inicio}`);
   const endTime = new Date(`${sesion.fecha}T${sesion.hora_fin}`);
   
+  // Create contextual title based on associations
+  let title = 'Sesión de estudio';
+  if (sesion.leccionId) {
+    title = '📖 Lección';
+  } else if (sesion.cursoId) {
+    title = '📚 Curso';
+  }
+  
   return {
     id: sesion.sesionEstudioId || '',
-    title: `Sesión de ${sesion.tipo || 'estudio'}`,
+    title,
     subject: sesion.cursoId || 'Estudio Personal',
     startTime,
     endTime,
@@ -48,6 +56,8 @@ const convertToStudySession = (sesion: SesionEstudio): StudySession => {
     tags: [],
     createdAt: sesion.createdAt ? new Date(sesion.createdAt) : new Date(),
     updatedAt: sesion.updatedAt ? new Date(sesion.updatedAt) : new Date(),
+    cursoId: sesion.cursoId || undefined, // NEW
+    leccionId: sesion.leccionId || undefined, // NEW
   };
 };
 
@@ -73,6 +83,31 @@ const Calendar: React.FC = () => {
     rawSessions.map(convertToStudySession), 
     [rawSessions]
   );
+
+  // Optimistic updates state
+  const [optimisticSessions, setOptimisticSessions] = useState<StudySession[]>([]);
+  const [isOptimisticUpdate, setIsOptimisticUpdate] = useState(false);
+
+  // Use optimistic sessions when available, otherwise use real sessions
+  const displaySessions = isOptimisticUpdate ? optimisticSessions : sessions;
+
+  // Update optimistic sessions when real sessions change
+  useEffect(() => {
+    if (!isOptimisticUpdate) {
+      setOptimisticSessions(sessions);
+    } else {
+      // If we're in optimistic mode, check if the real data has caught up
+      // This happens when the backend operation completes and data is refetched
+      const hasNewData = sessions.length !== optimisticSessions.length || 
+        sessions.some(session => !optimisticSessions.find(opt => opt.id === session.id));
+      
+      if (hasNewData) {
+        // Real data has been updated, clear optimistic mode
+        setIsOptimisticUpdate(false);
+        setOptimisticSessions(sessions);
+      }
+    }
+  }, [sessions, isOptimisticUpdate, optimisticSessions]);
 
   const [view, setView] = useState<View>('month');
   const [date, setDate] = useState(new Date());
@@ -280,11 +315,20 @@ const Calendar: React.FC = () => {
   // Confirmar eliminación
   const handleConfirmDelete = async () => {
     if (selectedSession) {
+      // Optimistic update: Remove from UI immediately
+      setOptimisticSessions(prev => prev.filter(s => s.id !== selectedSession.id));
+      setIsOptimisticUpdate(true);
+
       try {
         await deleteSession(selectedSession.id);
+        // Success: Keep optimistic update until real data arrives
+        // Don't clear isOptimisticUpdate - let it persist until next fetch
         setDeleteConfirmOpen(false);
         setSelectedSession(null);
       } catch (error) {
+        // Error: Revert optimistic update
+        setOptimisticSessions(prev => [...prev, selectedSession]);
+        setIsOptimisticUpdate(false);
         console.error('Error al eliminar sesión:', error);
       }
     }
@@ -303,7 +347,7 @@ const Calendar: React.FC = () => {
 
   // Solo mostrar sesiones de estudio creadas por el usuario
   const events = useMemo(() => {
-    const studySessionEvents: CalendarEvent[] = sessions.map(session => ({
+    const studySessionEvents: CalendarEvent[] = displaySessions.map(session => ({
       id: session.id,
       title: session.title,
       start: session.startTime,
@@ -314,7 +358,7 @@ const Calendar: React.FC = () => {
     }));
 
     return studySessionEvents;
-  }, [sessions]);
+  }, [displaySessions]);
 
   return (
     <Box>
@@ -455,36 +499,114 @@ const Calendar: React.FC = () => {
             let success = false;
             
             if (editingSession) {
-              // UPDATE: Pass single object with id
-              const result = await updateSession({
-                sesionEstudioId: editingSession.id,
-                fecha: formData.startDate,
-                hora_inicio: formData.startTime,
-                hora_fin: formData.endTime,
-                duracion_minutos,
-                tipo: 'estudio' as const,
-                estado: 'programada' as const,
-              });
-              success = result !== null;
-            } else {
-              // CREATE: Pass complete data
-              const sessionId = crypto.randomUUID();
-              const sessionData = {
-                sesionEstudioId: sessionId,
-                usuarioId: userData.usuarioId,
-                fecha: formData.startDate,
-                hora_inicio: formData.startTime,
-                hora_fin: formData.endTime,
-                duracion_minutos,
-                tipo: 'estudio' as const,
-                estado: 'programada' as const,
-                cursoId: undefined,
-                google_event_id: undefined,
-                recordatorios: undefined,
+              // UPDATE: Optimistic update
+              const updatedSession: StudySession = {
+                ...editingSession,
+                title: formData.leccionId ? '📖 Lección' : formData.cursoId ? '📚 Curso' : 'Sesión de estudio',
+                subject: formData.cursoId || 'Estudio Personal',
+                startTime: startDateTime,
+                endTime: endDateTime,
+                updatedAt: new Date(),
+                cursoId: formData.cursoId || undefined,
+                leccionId: formData.leccionId || undefined,
               };
-              
-              const result = await createSession(sessionData);
-              success = result !== null;
+
+              // Optimistic update: Update in UI immediately
+              setOptimisticSessions(prev => 
+                prev.map(s => s.id === editingSession.id ? updatedSession : s)
+              );
+              setIsOptimisticUpdate(true);
+
+              try {
+                const result = await updateSession({
+                  sesionEstudioId: editingSession.id,
+                  fecha: formData.startDate,
+                  hora_inicio: formData.startTime,
+                  hora_fin: formData.endTime,
+                  duracion_minutos,
+                  tipo: 'estudio' as const,
+                  estado: 'programada' as const,
+                  cursoId: formData.cursoId || undefined,
+                  leccionId: formData.leccionId || undefined,
+                });
+                success = result !== null;
+                
+                if (success) {
+                  // Success: Keep optimistic update until real data arrives
+                  // Don't clear isOptimisticUpdate - let it persist until next fetch
+                } else {
+                  // Error: Revert optimistic update
+                  setOptimisticSessions(prev => 
+                    prev.map(s => s.id === editingSession.id ? editingSession : s)
+                  );
+                  setIsOptimisticUpdate(false);
+                }
+              } catch (error) {
+                // Error: Revert optimistic update
+                setOptimisticSessions(prev => 
+                  prev.map(s => s.id === editingSession.id ? editingSession : s)
+                );
+                setIsOptimisticUpdate(false);
+                throw error;
+              }
+            } else {
+              // CREATE: Optimistic update
+              const sessionId = crypto.randomUUID();
+              const newSession: StudySession = {
+                id: sessionId,
+                title: formData.leccionId ? '📖 Lección' : formData.cursoId ? '📚 Curso' : 'Sesión de estudio',
+                subject: formData.cursoId || 'Estudio Personal',
+                startTime: startDateTime,
+                endTime: endDateTime,
+                description: '',
+                location: '',
+                priority: 'medium',
+                status: 'planned',
+                reminder: 15,
+                tags: [],
+                createdAt: new Date(),
+                updatedAt: new Date(),
+                cursoId: formData.cursoId || undefined,
+                leccionId: formData.leccionId || undefined,
+              };
+
+              // Optimistic update: Add to UI immediately
+              setOptimisticSessions(prev => [...prev, newSession]);
+              setIsOptimisticUpdate(true);
+
+              try {
+                const sessionData = {
+                  sesionEstudioId: sessionId,
+                  usuarioId: userData.usuarioId,
+                  fecha: formData.startDate,
+                  hora_inicio: formData.startTime,
+                  hora_fin: formData.endTime,
+                  duracion_minutos,
+                  tipo: 'estudio' as const,
+                  estado: 'programada' as const,
+                  cursoId: formData.cursoId || undefined,
+                  leccionId: formData.leccionId || undefined,
+                  google_event_id: undefined,
+                  recordatorios: undefined,
+                };
+                
+                const result = await createSession(sessionData);
+                success = result !== null;
+                
+                if (success) {
+                  // Success: Keep optimistic update until real data arrives
+                  // Don't clear isOptimisticUpdate - let it persist until next fetch
+                } else {
+                  // Error: Revert optimistic update
+                  setOptimisticSessions(prev => prev.filter(s => s.id !== sessionId));
+                  setIsOptimisticUpdate(false);
+                }
+              } catch (error) {
+                // Error: Revert optimistic update
+                setOptimisticSessions(prev => prev.filter(s => s.id !== sessionId));
+                setIsOptimisticUpdate(false);
+                throw error;
+              }
             }
             
             if (success) {

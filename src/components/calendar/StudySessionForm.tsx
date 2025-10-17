@@ -15,16 +15,26 @@ import {
   Chip,
   Stack,
   Divider,
+  FormControl,
+  InputLabel,
+  Select,
+  MenuItem,
+  FormHelperText,
 } from '@mui/material';
 import {
   Close as CloseIcon,
   AccessTime as TimeIcon,
   LightbulbOutlined as SuggestionIcon,
   CheckCircleOutline as CheckIcon,
+  School as SchoolIcon,
+  MenuBook as BookIcon,
 } from '@mui/icons-material';
 import { CalendarStudySessionFormData, StudySessionFormProps } from './componentTypes';
 import { useUserPreferences } from '@/hooks/useUserPreferences';
+import { useUser } from '@/contexts/UserContext';
+import { useCourseLessons } from '@/hooks/useCourseLessons';
 import { getPreferredSlotsForDate, formatTimeSlot, isTimeRangePreferred } from '@/utils/scheduleHelpers';
+import { timeSlots } from '@/components/modals/welcome/types';
 
 // Función auxiliar para formatear fecha en zona horaria local
 const formatLocalDate = (date: Date): string => {
@@ -52,10 +62,24 @@ const StudySessionForm: React.FC<StudySessionFormProps> = ({
   const [formData, setFormData] = useState<CalendarStudySessionFormData>({
     startDate: '',
     startTime: '',
-    endTime: ''
+    endTime: '',
+    cursoId: undefined, // NEW
+    leccionId: undefined, // NEW
   });
   
-  // Obtener preferencias del usuario
+  // Get user's courses from UserContext (lightweight - no relationships)
+  const { userData } = useUser();
+  const userCourses = userData?.Cursos || [];
+  // These courses already have basic info: cursoId, titulo, descripcion
+  // But NO modules or lessons (efficient for dropdown)
+  
+  // Track selected course for lazy-loading lessons
+  const [selectedCourseId, setSelectedCourseId] = useState<string>('');
+  
+  // Fetch lessons ONLY when course is selected (lazy loading)
+  const { lessons, loading: lessonsLoading } = useCourseLessons(selectedCourseId);
+  
+  // Get user preferences (existing)
   const { preferences } = useUserPreferences();
 
   // Obtener slots sugeridos para la fecha seleccionada
@@ -90,8 +114,15 @@ const StudySessionForm: React.FC<StudySessionFormProps> = ({
         setFormData({
           startDate: formatLocalDate(startDate),
           startTime: startDate.toTimeString().slice(0, 5),
-          endTime: endDate.toTimeString().slice(0, 5)
+          endTime: endDate.toTimeString().slice(0, 5),
+          cursoId: editingSession.cursoId, // NEW
+          leccionId: editingSession.leccionId, // NEW
         });
+        
+        // Set selected course for lesson dropdown
+        if (editingSession.cursoId) {
+          setSelectedCourseId(editingSession.cursoId);
+        }
       } else if (selectedSlot) {
         // Nuevo evento con slot seleccionado
         const startDate = new Date(selectedSlot.start);
@@ -100,7 +131,9 @@ const StudySessionForm: React.FC<StudySessionFormProps> = ({
         setFormData({
           startDate: formatLocalDate(startDate),
           startTime: startDate.toTimeString().slice(0, 5),
-          endTime: endDate.toTimeString().slice(0, 5)
+          endTime: endDate.toTimeString().slice(0, 5),
+          cursoId: undefined, // NEW
+          leccionId: undefined, // NEW
         });
       } else {
         // Nuevo evento sin slot
@@ -110,7 +143,9 @@ const StudySessionForm: React.FC<StudySessionFormProps> = ({
         setFormData({
           startDate: formatLocalDate(now),
           startTime: now.toTimeString().slice(0, 5),
-          endTime: oneHourLater.toTimeString().slice(0, 5)
+          endTime: oneHourLater.toTimeString().slice(0, 5),
+          cursoId: undefined, // NEW
+          leccionId: undefined, // NEW
         });
       }
     }
@@ -156,8 +191,11 @@ const StudySessionForm: React.FC<StudySessionFormProps> = ({
       setFormData({
         startDate: '',
         startTime: '',
-        endTime: ''
+        endTime: '',
+        cursoId: undefined,
+        leccionId: undefined,
       });
+      setSelectedCourseId('');
       setError(null);
     }
   };
@@ -222,6 +260,111 @@ const StudySessionForm: React.FC<StudySessionFormProps> = ({
               </Box>
             )}
 
+            {/* Course Selection */}
+            <FormControl fullWidth>
+              <InputLabel id="course-select-label">
+                Curso (opcional)
+              </InputLabel>
+              <Select
+                labelId="course-select-label"
+                value={formData.cursoId || ''}
+                onChange={(e) => {
+                  const courseId = e.target.value;
+                  setFormData(prev => ({ 
+                    ...prev, 
+                    cursoId: courseId || undefined,
+                    leccionId: undefined // Reset lesson when course changes
+                  }));
+                  setSelectedCourseId(courseId);
+                }}
+                label="Curso (opcional)"
+                disabled={loading}
+                MenuProps={{
+                  PaperProps: {
+                    style: {
+                      maxHeight: 200, // Show ~5 items (40px each)
+                      overflow: 'auto',
+                    },
+                  },
+                }}
+              >
+                <MenuItem value="">
+                  <Box sx={{ display: 'flex', alignItems: 'center', gap: 1 }}>
+                    <SchoolIcon fontSize="small" color="action" />
+                    <em>Sesión general (sin curso)</em>
+                  </Box>
+                </MenuItem>
+                {userCourses.map(curso => (
+                  <MenuItem key={curso.cursoId} value={curso.cursoId}>
+                    <Box sx={{ display: 'flex', alignItems: 'center', gap: 1 }}>
+                      <SchoolIcon fontSize="small" color="primary" />
+                      {curso.titulo}
+                    </Box>
+                  </MenuItem>
+                ))}
+              </Select>
+              <FormHelperText>
+                Selecciona un curso para asociar esta sesión de estudio
+              </FormHelperText>
+            </FormControl>
+
+            {/* Lesson Selection - Cascading, only shown if course selected */}
+            {formData.cursoId && (
+              <FormControl fullWidth>
+                <InputLabel id="lesson-select-label">
+                  Lección (opcional)
+                </InputLabel>
+                <Select
+                  labelId="lesson-select-label"
+                  value={formData.leccionId || ''}
+                  onChange={(e) => setFormData(prev => ({ 
+                    ...prev, 
+                    leccionId: e.target.value || undefined 
+                  }))}
+                  label="Lección (opcional)"
+                  disabled={loading || lessonsLoading || lessons.length === 0}
+                  MenuProps={{
+                    PaperProps: {
+                      style: {
+                        maxHeight: 200, // Show ~5 items (40px each)
+                        overflow: 'auto',
+                      },
+                    },
+                  }}
+                >
+                  <MenuItem value="">
+                    <Box sx={{ display: 'flex', alignItems: 'center', gap: 1 }}>
+                      <BookIcon fontSize="small" color="action" />
+                      <em>Toda la materia del curso</em>
+                    </Box>
+                  </MenuItem>
+                  {lessons.map(lesson => (
+                    <MenuItem key={lesson.leccionId} value={lesson.leccionId}>
+                      <Box>
+                        <Box sx={{ display: 'flex', alignItems: 'center', gap: 1, mb: 0.5 }}>
+                          <BookIcon fontSize="small" color="secondary" />
+                          <Typography variant="body2">
+                            {lesson.titulo}
+                          </Typography>
+                        </Box>
+                        <Typography variant="caption" color="text.secondary" sx={{ pl: 3 }}>
+                          Módulo: {lesson.moduloTitulo}
+                          {lesson.duracion_minutos && ` • ${lesson.duracion_minutos} min`}
+                        </Typography>
+                      </Box>
+                    </MenuItem>
+                  ))}
+                </Select>
+                <FormHelperText>
+                  {lessonsLoading 
+                    ? '⏳ Cargando lecciones...'
+                    : lessons.length === 0 
+                    ? '📭 No hay lecciones disponibles en este curso'
+                    : 'Selecciona una lección específica para esta sesión'}
+                </FormHelperText>
+              </FormControl>
+            )}
+
             {/* Horarios sugeridos */}
             {suggestedSlots.length > 0 && (
               <>
@@ -278,31 +421,59 @@ const StudySessionForm: React.FC<StudySessionFormProps> = ({
 
             {/* Horarios */}
             <Box sx={{ display: 'flex', gap: 2 }}>
-              <TextField
-                label="Hora de inicio"
-                type="time"
-                value={formData.startTime}
-                onChange={(e) => setFormData(prev => ({ ...prev, startTime: e.target.value }))}
-                required
-                disabled={loading}
-                InputLabelProps={{
-                  shrink: true,
-                }}
-                sx={{ flex: 1 }}
-              />
+              <FormControl fullWidth>
+                <InputLabel id="start-time-label">Hora de inicio</InputLabel>
+                <Select
+                  labelId="start-time-label"
+                  value={formData.startTime}
+                  onChange={(e) => setFormData(prev => ({ ...prev, startTime: e.target.value }))}
+                  label="Hora de inicio"
+                  required
+                  disabled={loading}
+                  MenuProps={{
+                    PaperProps: {
+                      style: {
+                        maxHeight: 200, // Show ~5 items (40px each)
+                        overflow: 'auto',
+                      },
+                    },
+                  }}
+                >
+                  {timeSlots.map((time) => (
+                    <MenuItem key={time} value={time}>
+                      {time}
+                    </MenuItem>
+                  ))}
+                </Select>
+              </FormControl>
               
-              <TextField
-                label="Hora de fin"
-                type="time"
-                value={formData.endTime}
-                onChange={(e) => setFormData(prev => ({ ...prev, endTime: e.target.value }))}
-                required
-                disabled={loading}
-                InputLabelProps={{
-                  shrink: true,
-                }}
-                sx={{ flex: 1 }}
-              />
+              <FormControl fullWidth>
+                <InputLabel id="end-time-label">Hora de fin</InputLabel>
+                <Select
+                  labelId="end-time-label"
+                  value={formData.endTime}
+                  onChange={(e) => setFormData(prev => ({ ...prev, endTime: e.target.value }))}
+                  label="Hora de fin"
+                  required
+                  disabled={loading}
+                  MenuProps={{
+                    PaperProps: {
+                      style: {
+                        maxHeight: 200, // Show ~5 items (40px each)
+                        overflow: 'auto',
+                      },
+                    },
+                  }}
+                >
+                  {timeSlots
+                    .filter(time => !formData.startTime || time > formData.startTime)
+                    .map((time) => (
+                      <MenuItem key={time} value={time}>
+                        {time}
+                      </MenuItem>
+                    ))}
+                </Select>
+              </FormControl>
             </Box>
           </Box>
         </DialogContent>
