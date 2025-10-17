@@ -4,11 +4,11 @@ import React, { createContext, useContext, useState, useEffect, ReactNode } from
 import { getCurrentUser, fetchAuthSession } from 'aws-amplify/auth';
 import { getQueryFactories } from '@/utils/commons/queries';
 import type { MainTypes } from '@/utils/api/schema';
-import { migrationService } from '@/utils/services/migrateStudyBlocks';
+import type { SelectionSet } from 'aws-amplify/data';
 import { useAmplify } from '@/components/providers/AmplifyProvider';
 
 // Import schema types
-// type UsuarioSchema = MainTypes["Usuario"]["type"];
+type Usuario = MainTypes["Usuario"]["type"];
 
 // Simplified InscripcionCurso for client-side (without lazy loaders)
 export interface InscripcionCurso {
@@ -39,6 +39,7 @@ export interface UserData {
   avatar?: string;
   
   // Relationships (simplified for client-side use)
+  Cursos?: NonNullable<UsuarioWithRelations["Cursos"]>;
   InscripcionesCurso?: InscripcionCurso[];
   activities?: Activity[];
 }
@@ -101,6 +102,12 @@ const userSelectionSet = [
   'BloqueEstudio.updatedAt',
 ] as const;
 
+// Use SelectionSet to infer proper types
+type UsuarioWithRelations = SelectionSet<
+  Usuario,
+  typeof userSelectionSet
+>;
+
 // Function to fetch user data from database
 const fetchUserFromDatabase = async (usuarioId: string): Promise<UserData | null> => {
   try {
@@ -111,10 +118,10 @@ const fetchUserFromDatabase = async (usuarioId: string): Promise<UserData | null
       entities: ["Usuario"],
     });
 
-    const userRes = await Usuario.get({
+    const userRes = (await Usuario.get({
       input: { usuarioId },
       selectionSet: userSelectionSet,
-    });
+    })) as unknown as UsuarioWithRelations;
 
     if (!userRes) {
       return null;
@@ -131,6 +138,9 @@ const fetchUserFromDatabase = async (usuarioId: string): Promise<UserData | null
       createdAt: userRes.createdAt,
       updatedAt: userRes.updatedAt,
       avatar: userRes.nombre ? userRes.nombre.charAt(0).toUpperCase() : 'U',
+      
+      // Map courses from database response
+      Cursos: userRes.Cursos || [],
       
       // TODO: Load courses separately - LazyLoader needs special handling
       InscripcionesCurso: [],
@@ -226,36 +236,6 @@ export const UserProvider = ({ children }: { children: ReactNode }) => {
         
         if (userData) {
           setUserData(userData);
-          
-          // Try to migrate study blocks from Cognito or localStorage if needed
-          // This runs in background, doesn't block the UI
-          console.log('🔄 Starting study blocks migration for user:', usuarioId);
-          migrationService.migrateStudyBlocksFromCognito(usuarioId)
-            .then(result => {
-              if (!result.success) {
-                console.warn('⚠️ Cognito migration failed, trying localStorage:', result.error);
-                return migrationService.migrateStudyBlocksFromLocalStorage(usuarioId);
-              }
-              console.log('✅ Cognito migration successful');
-              return result;
-            })
-            .then(result => {
-              if (result.success) {
-                console.log('✅ Study blocks migration completed successfully');
-                
-                // Clean up localStorage after successful migration
-                if (typeof window !== 'undefined') {
-                  localStorage.removeItem('welcomeFormData');
-                  localStorage.removeItem('registrationFormData');
-                  console.log('🧹 Cleaned up localStorage after successful migration');
-                }
-              } else {
-                console.warn('⚠️ Study blocks migration failed:', result.error);
-              }
-            })
-            .catch(err => {
-              console.error('❌ Error during study blocks migration:', err);
-            });
         } else {
           setError('Usuario no encontrado en la base de datos');
           setUserData(null);

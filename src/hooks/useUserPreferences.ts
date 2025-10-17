@@ -34,35 +34,30 @@ export const useUserPreferences = (
       setLoading(true);
       setError(null);
 
-      // Si hay userId, intentar cargar desde backend primero
+      // Solo cargar desde backend si hay userId
       if (userId) {
-        try {
-          const blocks = await studyBlocksService.getUserStudyBlocks(userId);
+        const blocks = await studyBlocksService.getUserStudyBlocks(userId);
 
-          if (blocks && blocks.length > 0) {
-            // TODO: Backend no almacena día de la semana aún
-            // Por ahora, cargar desde localStorage como fallback
-            const savedWelcomeData = localStorage.getItem("welcomeFormData");
-            if (savedWelcomeData) {
-              const welcomeData = JSON.parse(savedWelcomeData);
-              setPreferences(welcomeData.tiempoDisponible || []);
-              setAreaEstudio(welcomeData.estudio || "");
-              setCanalYoutube(welcomeData.youtubeUrl || "");
-            }
-          } else {
-            // No hay blocks en backend, cargar de localStorage
-            loadFromLocalStorage();
-          }
-        } catch (backendError) {
-          console.error(
-            "Error loading from backend, falling back to localStorage:",
-            backendError
-          );
-          loadFromLocalStorage();
+        if (blocks && blocks.length > 0) {
+          // Convertir bloques del backend al formato DaySchedule
+          const schedules =
+            studyBlocksService.convertStudyBlocksToDaySchedule(blocks);
+          setPreferences(schedules);
+
+          // TODO: Obtener areaEstudio y canalYoutube desde backend cuando estén disponibles
+          setAreaEstudio("");
+          setCanalYoutube("");
+        } else {
+          // No hay blocks en backend
+          setPreferences([]);
+          setAreaEstudio("");
+          setCanalYoutube("");
         }
       } else {
-        // No hay userId, cargar solo de localStorage
-        loadFromLocalStorage();
+        // No hay userId, no cargar nada
+        setPreferences([]);
+        setAreaEstudio("");
+        setCanalYoutube("");
       }
     } catch (err) {
       console.error("Error al cargar preferencias:", err);
@@ -72,21 +67,6 @@ export const useUserPreferences = (
       setCanalYoutube("");
     } finally {
       setLoading(false);
-    }
-  };
-
-  const loadFromLocalStorage = () => {
-    const savedWelcomeData = localStorage.getItem("welcomeFormData");
-
-    if (savedWelcomeData) {
-      const welcomeData = JSON.parse(savedWelcomeData);
-      setPreferences(welcomeData.tiempoDisponible || []);
-      setAreaEstudio(welcomeData.estudio || "");
-      setCanalYoutube(welcomeData.youtubeUrl || "");
-    } else {
-      setPreferences([]);
-      setAreaEstudio("");
-      setCanalYoutube("");
     }
   };
 

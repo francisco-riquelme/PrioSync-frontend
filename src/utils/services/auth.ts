@@ -105,32 +105,39 @@ export const authService = {
     input: SignUpWithStudyPreferencesInput
   ): Promise<SignUpWithStudyPreferencesResult> {
     try {
-      // Map time slots to custom attributes (only include slots that exist)
+      // Map time slots to custom attributes with day information
       // IMPORTANT: Use camelCase attribute names that match backend
-      const flat = input.timeSlots.flatMap((d) => d.timeSlots);
+      const flat = input.timeSlots.flatMap((d) =>
+        d.timeSlots.map((slot) => ({ ...slot, day: d.day }))
+      );
 
       const customAttributes: Record<string, string> = {};
 
-      // Add time slot attributes only for slots that exist (1-5 slots)
+      // Add time slot attributes with day information (1-5 slots)
       if (flat[0]) {
         customAttributes["custom:firstSlotStart"] = flat[0].start;
         customAttributes["custom:firstSlotEnd"] = flat[0].end;
+        customAttributes["custom:firstSlotDay"] = flat[0].day;
       }
       if (flat[1]) {
         customAttributes["custom:secondSlotStart"] = flat[1].start;
         customAttributes["custom:secondSlotEnd"] = flat[1].end;
+        customAttributes["custom:secondSlotDay"] = flat[1].day;
       }
       if (flat[2]) {
         customAttributes["custom:thirdSlotStart"] = flat[2].start;
         customAttributes["custom:thirdSlotEnd"] = flat[2].end;
+        customAttributes["custom:thirdSlotDay"] = flat[2].day;
       }
       if (flat[3]) {
         customAttributes["custom:fourthSlotStart"] = flat[3].start;
         customAttributes["custom:fourthSlotEnd"] = flat[3].end;
+        customAttributes["custom:fourthSlotDay"] = flat[3].day;
       }
       if (flat[4]) {
         customAttributes["custom:fifthSlotStart"] = flat[4].start;
         customAttributes["custom:fifthSlotEnd"] = flat[4].end;
+        customAttributes["custom:fifthSlotDay"] = flat[4].day;
       }
 
       // Add optional attributes

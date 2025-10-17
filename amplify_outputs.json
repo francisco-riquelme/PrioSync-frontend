@@ -1,9 +1,9 @@
 {
   "auth": {
-    "user_pool_id": "us-east-1_31rjZUJsr",
+    "user_pool_id": "us-east-1_vtP9w0RXs",
     "aws_region": "us-east-1",
-    "user_pool_client_id": "19tbgggpt6ndaufq088nt8qmc4",
-    "identity_pool_id": "us-east-1:cd99b4d4-7d70-44f4-8168-a02f10e02166",
+    "user_pool_client_id": "29oefea9j8rkn8o5ge3nks7mg3",
+    "identity_pool_id": "us-east-1:f878ad6a-2443-43e6-8a31-bccc3bf46e99",
     "mfa_methods": [],
     "standard_required_attributes": [
       "email"
@@ -1559,6 +1559,41 @@
               "name": "recordatorios",
               "isArray": false,
               "type": "String",
+              "isRequired": false,
+              "attributes": []
+            },
+            "isPartial": {
+              "name": "isPartial",
+              "isArray": false,
+              "type": "Boolean",
+              "isRequired": false,
+              "attributes": []
+            },
+            "videoStartTime": {
+              "name": "videoStartTime",
+              "isArray": false,
+              "type": "Int",
+              "isRequired": false,
+              "attributes": []
+            },
+            "videoEndTime": {
+              "name": "videoEndTime",
+              "isArray": false,
+              "type": "Int",
+              "isRequired": false,
+              "attributes": []
+            },
+            "sessionPart": {
+              "name": "sessionPart",
+              "isArray": false,
+              "type": "Int",
+              "isRequired": false,
+              "attributes": []
+            },
+            "totalParts": {
+              "name": "totalParts",
+              "isArray": false,
+              "type": "Int",
               "isRequired": false,
               "attributes": []
             },
@@ -3864,6 +3899,12 @@
           "arguments": {
             "cursoId": {
               "name": "cursoId",
+              "isArray": false,
+              "type": "String",
+              "isRequired": true
+            },
+            "usuarioId": {
+              "name": "usuarioId",
               "isArray": false,
               "type": "String",
               "isRequired": true

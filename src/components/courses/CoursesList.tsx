@@ -16,14 +16,14 @@ import {
   Button,
 } from '@mui/material';
 import { Search as SearchIcon, Clear as ClearIcon } from '@mui/icons-material';
-import { useCoursesListData } from '@/components/courses/hooks/useCoursesListData';
+import { useUser } from '@/contexts/UserContext';
 import { CourseCard } from './CourseCard';
 
 export default function CoursesList() {
   const router = useRouter();
   
-  // Use new hook for courses data
-  const { courses, loading, error } = useCoursesListData();
+  // Use UserContext to get user's courses
+  const { userData, loading, error } = useUser();
   
   // Local filter state
   const [searchTerm, setSearchTerm] = useState('');
@@ -32,6 +32,7 @@ export default function CoursesList() {
 
   // Apply filters to courses
   const filteredCourses = useMemo(() => {
+    const courses = userData?.Cursos || [];
     let filtered = [...courses];
 
     // Apply search filter
@@ -39,8 +40,7 @@ export default function CoursesList() {
       const searchLower = searchTerm.toLowerCase();
       filtered = filtered.filter(course => 
         course.titulo.toLowerCase().includes(searchLower) ||
-        course.descripcion?.toLowerCase().includes(searchLower) ||
-        course.playlistTitle?.toLowerCase().includes(searchLower)
+        course.descripcion?.toLowerCase().includes(searchLower)
       );
     }
 
@@ -67,7 +67,7 @@ export default function CoursesList() {
     }
 
     return filtered;
-  }, [courses, searchTerm, levelFilter, durationFilter]);
+  }, [userData?.Cursos, searchTerm, levelFilter, durationFilter]);
 
   const handleCourseClick = (courseId: number | string) => {
     router.push(`/courses/${courseId}`);
