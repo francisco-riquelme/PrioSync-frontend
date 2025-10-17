@@ -31,14 +31,13 @@ import {
   CheckCircle as CheckCircleIcon,
 } from '@mui/icons-material';
 import { useUser } from '@/contexts/UserContext';
-import { useUserPreferences } from '@/hooks/useUserPreferences';
+import { useStudyBlocks } from '@/hooks/useStudyBlocks';
 import { DaySchedule, TimeSlot, daysOfWeek, timeSlots } from '@/components/modals/welcome/types';
-import { studyBlocksService } from '@/utils/services/studyBlocks';
 
 export default function StudyHoursManager() {
   const router = useRouter();
   const { userData } = useUser();
-  const { preferences, loading: preferencesLoading, refreshPreferences } = useUserPreferences(userData?.usuarioId);
+  const { daySchedules, loading: studyBlocksLoading, updateStudyBlocks } = useStudyBlocks({ usuarioId: userData?.usuarioId });
   
   const [schedule, setSchedule] = useState<DaySchedule[]>([]);
   const [selectedDay, setSelectedDay] = useState<string>('');
@@ -49,15 +48,15 @@ export default function StudyHoursManager() {
   const [snackbarOpen, setSnackbarOpen] = useState(false);
   const [snackbarMessage, setSnackbarMessage] = useState('');
 
-  // Cargar preferencias cuando estén disponibles
+  // Cargar horarios cuando estén disponibles
   useEffect(() => {
-    if (preferences.length > 0) {
-      setSchedule(preferences);
+    if (daySchedules.length > 0) {
+      setSchedule(daySchedules);
     } else {
-      // Inicializar con días vacíos si no hay preferencias
+      // Inicializar con días vacíos si no hay horarios
       setSchedule(daysOfWeek.map(day => ({ day: day.value, timeSlots: [] })));
     }
-  }, [preferences]);
+  }, [daySchedules]);
 
   // Obtener horarios de un día específico
   const getDaySchedule = (dayValue: string): DaySchedule | undefined => {
@@ -163,11 +162,8 @@ export default function StudyHoursManager() {
         return;
       }
 
-      // Guardar en backend usando el servicio
-      const success = await studyBlocksService.updateUserStudyBlocks(
-        userData.usuarioId,
-        schedule
-      );
+      // Guardar usando el hook
+      const success = await updateStudyBlocks(schedule);
 
       if (!success) {
         setSnackbarMessage('❌ Error al guardar en el backend');
@@ -185,9 +181,6 @@ export default function StudyHoursManager() {
       };
       
       localStorage.setItem('welcomeFormData', JSON.stringify(updatedData));
-      
-      // Refrescar preferencias
-      refreshPreferences();
       
       setSnackbarMessage('✅ Horarios guardados exitosamente');
       setSnackbarOpen(true);
@@ -212,7 +205,7 @@ export default function StudyHoursManager() {
     return totalMinutes / 60;
   };
 
-  if (preferencesLoading) {
+  if (studyBlocksLoading) {
     return (
       <Box>
         <Skeleton variant="rectangular" height={60} sx={{ mb: 3, borderRadius: 2 }} />

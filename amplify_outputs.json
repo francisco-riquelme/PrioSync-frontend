@@ -328,6 +328,15 @@
               "isRequired": true,
               "attributes": []
             },
+            "dia_semana": {
+              "name": "dia_semana",
+              "isArray": false,
+              "type": {
+                "enum": "BloqueEstudioDia_semana"
+              },
+              "isRequired": false,
+              "attributes": []
+            },
             "hora_inicio": {
               "name": "hora_inicio",
               "isArray": false,
@@ -400,6 +409,17 @@
               "properties": {
                 "fields": [
                   "bloqueEstudioId"
+                ]
+              }
+            },
+            {
+              "type": "key",
+              "properties": {
+                "name": "bloqueEstudiosByUsuarioIdAndDia_semana",
+                "queryField": "BloquesByUsuarioAndDia",
+                "fields": [
+                  "usuarioId",
+                  "dia_semana"
                 ]
               }
             },
@@ -3554,6 +3574,18 @@
         }
       },
       "enums": {
+        "BloqueEstudioDia_semana": {
+          "name": "BloqueEstudioDia_semana",
+          "values": [
+            "Lunes",
+            "Martes",
+            "Miercoles",
+            "Jueves",
+            "Viernes",
+            "Sabado",
+            "Domingo"
+          ]
+        },
         "CursoNivel_dificultad": {
           "name": "CursoNivel_dificultad",
           "values": [
