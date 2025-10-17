@@ -7,6 +7,8 @@ import {
   Button,
   Chip,
 } from '@mui/material';
+import { School as SchoolIcon } from '@mui/icons-material';
+import { useState } from 'react';
 import { CourseListItem } from '@/components/courses/hooks/useCoursesListData';
 import type { MainTypes } from '@/utils/api/schema';
 import type { SelectionSet } from 'aws-amplify/data';
@@ -47,6 +49,18 @@ const getLevelColor = (level: string) => {
 };
 
 export const CourseCard = ({ course, onCourseClick }: CourseCardProps) => {
+  const [imageError, setImageError] = useState(false);
+
+  const handleImageError = () => {
+    setImageError(true);
+  };
+
+  const handleImageLoad = () => {
+    // Image loaded successfully, no action needed
+  };
+
+  const hasImage = course.imagen_portada && !imageError;
+
   return (
     <Card 
       sx={{ 
@@ -59,22 +73,41 @@ export const CourseCard = ({ course, onCourseClick }: CourseCardProps) => {
       }}
       onClick={() => onCourseClick(course.cursoId)}
     >
-      <CardMedia
-        component="img"
-        height="160"
-        image={course.imagen_portada || ''}
-        alt={course.titulo}
-        sx={{ 
-          backgroundColor: 'grey.200',
-          objectFit: 'cover',
-          width: '100%'
-        }}
-        onError={(e) => {
-          // Fallback to a placeholder if image fails to load
-          const target = e.target as HTMLImageElement;
-          target.style.display = 'none';
-        }}
-      />
+      {/* Course Image or Fallback */}
+      {hasImage ? (
+        <CardMedia
+          component="img"
+          height="160"
+          image={course.imagen_portada}
+          alt={course.titulo}
+          onError={handleImageError}
+          onLoad={handleImageLoad}
+          sx={{ 
+            backgroundColor: 'grey.200',
+            objectFit: 'cover',
+            width: '100%'
+          }}
+        />
+      ) : (
+        <Box
+          sx={{
+            height: 160,
+            backgroundColor: 'primary.50',
+            display: 'flex',
+            flexDirection: 'column',
+            alignItems: 'center',
+            justifyContent: 'center',
+            color: 'primary.main',
+            borderBottom: '1px solid',
+            borderColor: 'divider',
+          }}
+        >
+          <SchoolIcon sx={{ fontSize: 48, mb: 1 }} />
+          <Typography variant="body2" color="primary.main" sx={{ fontWeight: 500 }}>
+            {course.titulo}
+          </Typography>
+        </Box>
+      )}
       <CardContent 
         sx={{ 
           flexGrow: 1, 
@@ -124,6 +157,10 @@ export const CourseCard = ({ course, onCourseClick }: CourseCardProps) => {
         <Button
           variant="contained"
           fullWidth
+          onClick={(e) => {
+            e.stopPropagation(); // Prevent card click
+            onCourseClick(course.cursoId);
+          }}
           sx={{
             textTransform: 'none',
             py: 1,

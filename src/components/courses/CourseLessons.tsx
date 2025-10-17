@@ -22,7 +22,6 @@ import {
   IconButton,
   Link,
   LinearProgress,
-  Button,
   Snackbar,
   Alert,
 } from '@mui/material';
@@ -39,7 +38,6 @@ import { useProgresoModulo } from './hooks/useProgresoModulo';
 import { useProgresoLeccion } from './hooks/useProgresoLeccion';
 import { useUser } from '@/contexts/UserContext';
 import type { ModuloWithLecciones, LeccionFromModulo } from './hooks/useCourseDetailData';
-import { usePuedeGenerarQuestionario } from "../quiz/hooks/usePuedeGenerarQuestionario";
 import { useCrearQuestionario } from "../quiz/hooks/useCrearQuestionario";
 
 interface CourseLessonsProps {
@@ -53,9 +51,6 @@ function ModuloProgreso({ modulo, usuarioId }: { modulo: ModuloWithLecciones; us
     modulo,
     usuarioId,
   });
-
-
-
 
   return (
     <Box sx={{ minWidth: 200 }} key={`${modulo.moduloId}-${progreso}-${leccionesCompletadas}`}>
@@ -100,57 +95,41 @@ function LeccionEstadoIndicador({ leccionId, usuarioId }: { leccionId: string; u
   );
 }
 
-// Pequeño componente responsable de verificar y crear el cuestionario mediante endpoints del servidor
-function ModuloGenerateButton({ moduloId, creating, setCreating, onNotify }: { 
-  moduloId: string; creating: Record<string, boolean>; setCreating: React.Dispatch<React.SetStateAction<Record<string, boolean>>>; onNotify?: (msg: string, severity?: 'success' | 'error' | 'info') => void }) {
+function ModuloGenerateButton({ 
+  moduloId, 
+  modulo, 
+  usuarioId, 
+  creating, 
+  setCreating, 
+  onNotify 
+}: { 
+  moduloId: string; 
+  modulo: ModuloWithLecciones;
+  usuarioId: string;
+  creating: Record<string, boolean>; 
+  setCreating: React.Dispatch<React.SetStateAction<Record<string, boolean>>>; 
+  onNotify?: (msg: string, severity?: 'success' | 'error' | 'info') => void 
+}) {
   const [loading, setLoading] = useState(false);
-  const checkHook = usePuedeGenerarQuestionario();
   const crearHook = useCrearQuestionario();
+  const { progreso, leccionesCompletadas, totalLecciones } = useProgresoModulo({ modulo, usuarioId });
 
   const handleGenerate = async () => {
     try {
       setLoading(true);
       setCreating((prev: Record<string, boolean>) => ({ ...prev, [moduloId]: true }));
 
-  let checkJson: unknown = null;
-      try {
-        checkJson = await checkHook.check(moduloId);
-      } catch (err) {
-        const msg = err instanceof Error ? err.message : String(err);
-        // Si el backend no expone la query, aplicar fallback y continuar
-        if (msg.includes('FieldUndefined') && msg.includes('puedeGenerarQuestionario')) {
-          checkJson = { canGenerate: true, reason: 'Backend no tiene resolver `puedeGenerarQuestionario` (fallback client-side).' };
-        } else {
-          throw err;
-        }
-      }
-
-      const checkObj = (checkJson && typeof checkJson === 'object') ? (checkJson as Record<string, unknown>) : {};
-      const maybeCanGenerate = typeof checkObj['canGenerate'] === 'boolean' ? (checkObj['canGenerate'] as boolean) : undefined;
-      const maybeMissing = Array.isArray(checkObj['missing']) ? (checkObj['missing'] as unknown[]) : undefined;
-
-      if (!maybeCanGenerate) {
-        if (Array.isArray(maybeMissing) && maybeMissing.length > 0) {
-          const list = (maybeMissing as string[]).join(', ');
-          if (onNotify) onNotify(`Faltan variables de entorno necesarias en el servidor: ${list}`, 'error');
-          return;
-        }
-        const maybeReason = typeof checkObj['reason'] === 'string' ? (checkObj['reason'] as string) : undefined;
-        if (onNotify) onNotify(maybeReason || 'No es posible generar el cuestionario para este módulo', 'info');
+      // Check if user has completed more than 70% of lessons
+      if (progreso < 70) {
+        const message = `Debes completar al menos el 70% de las lecciones del módulo para generar el cuestionario. Progreso actual: ${progreso}% (${leccionesCompletadas}/${totalLecciones} lecciones)`;
+        if (onNotify) onNotify(message, 'info');
         return;
       }
 
-      const createJson = await crearHook.crear(moduloId);
+      await crearHook.crear(moduloId);
 
-      if (Array.isArray(createJson?.missing) && createJson.missing.length > 0) {
-        const list = createJson.missing.join(', ');
-        if (onNotify) onNotify(`Faltan variables de entorno necesarias en el servidor: ${list}`, 'error');
-        return;
-      }
-
-  if (onNotify) onNotify('Cuestionario generado correctamente', 'success');
+      if (onNotify) onNotify('Cuestionario generado correctamente', 'success');
     } catch (err) {
-      // Normalizar mensaje de error para la UI
       const message = err instanceof Error ? err.message : String(err);
       console.error('Error generando cuestionario:', message, err);
       if (onNotify) onNotify(message, 'error');
@@ -160,17 +139,60 @@ function ModuloGenerateButton({ moduloId, creating, setCreating, onNotify }: {
     }
   };
 
+  const isDisabled = loading || !!creating[moduloId] || progreso < 70;
+
+  const handleClick = (event: React.MouseEvent) => {
+    event.stopPropagation();
+    handleGenerate();
+  };
+
+  const handleKeyDown = (event: React.KeyboardEvent) => {
+    if (event.key === 'Enter' || event.key === ' ') {
+      event.preventDefault();
+      event.stopPropagation();
+      handleGenerate();
+    }
+  };
+
   return (
-    <Button
-      variant="contained"
-      size="small"
-      color="secondary"
-      onClick={handleGenerate}
-      disabled={loading || !!creating[moduloId]}
-      sx={{ textTransform: 'none' }}
+    <Box
+      component="span"
+      role="button"
+      tabIndex={isDisabled ? -1 : 0}
+      onClick={handleClick}
+      onKeyDown={handleKeyDown}
+      title={progreso < 70 ? `Completa al menos el 70% de las lecciones (${progreso}% actual)` : 'Generar cuestionario'}
+      sx={{
+        display: 'inline-flex',
+        alignItems: 'center',
+        justifyContent: 'center',
+        padding: '6px 16px',
+        fontSize: '0.875rem',
+        fontWeight: 500,
+        lineHeight: 1.75,
+        borderRadius: '4px',
+        textTransform: 'none',
+        cursor: isDisabled ? 'not-allowed' : 'pointer',
+        backgroundColor: isDisabled ? 'rgba(0, 0, 0, 0.12)' : 'rgb(25, 118, 210)',
+        color: isDisabled ? 'rgba(0, 0, 0, 0.26)' : 'rgb(255, 255, 255)',
+        boxShadow: isDisabled ? 'none' : '0px 3px 1px -2px rgba(0,0,0,0.2), 0px 2px 2px 0px rgba(0,0,0,0.14), 0px 1px 5px 0px rgba(0,0,0,0.12)',
+        transition: 'background-color 250ms cubic-bezier(0.4, 0, 0.2, 1) 0ms, box-shadow 250ms cubic-bezier(0.4, 0, 0.2, 1) 0ms, border-color 250ms cubic-bezier(0.4, 0, 0.2, 1) 0ms',
+        '&:hover': {
+          backgroundColor: isDisabled ? 'rgba(0, 0, 0, 0.12)' : 'rgb(21, 101, 192)',
+          boxShadow: isDisabled ? 'none' : '0px 2px 4px -1px rgba(0,0,0,0.2), 0px 4px 5px 0px rgba(0,0,0,0.14), 0px 1px 10px 0px rgba(0,0,0,0.12)',
+        },
+        '&:focus': {
+          outline: 'none',
+          boxShadow: isDisabled ? 'none' : '0px 0px 0px 2px rgba(25, 118, 210, 0.3)',
+        },
+        '&:active': {
+          backgroundColor: isDisabled ? 'rgba(0, 0, 0, 0.12)' : 'rgb(19, 88, 175)',
+          boxShadow: isDisabled ? 'none' : '0px 5px 5px -3px rgba(0,0,0,0.2), 0px 8px 10px 1px rgba(0,0,0,0.14), 0px 3px 14px 2px rgba(0,0,0,0.12)',
+        },
+      }}
     >
-      {loading ? 'Generando...' : 'Generar cuestionario'}
-    </Button>
+      {loading ? 'Generando...' : progreso < 70 ? `Progreso: ${progreso}%` : 'Generar cuestionario'}
+    </Box>
   );
 }
 
@@ -192,8 +214,6 @@ function ModuleBlock({
   setCreating: React.Dispatch<React.SetStateAction<Record<string, boolean>>>;
   onNotify?: (msg: string, severity?: 'success' | 'error' | 'info') => void;
 }) {
-  const { progreso } = useProgresoModulo({ modulo, usuarioId: userId || '' });
-
   return (
     <Accordion
       expanded={expanded}
@@ -260,13 +280,18 @@ function ModuleBlock({
           </Box>
         </Box>
 
-        {/* Mostrar botón de generar sólo si el progreso es 100% */}
-        {true && (
-        userId && progreso === 100 && (
-            <Box sx={{ ml: 2 }}>
-              <ModuloGenerateButton moduloId={modulo.moduloId} creating={creating} setCreating={setCreating} onNotify={onNotify} />
-            </Box>
-          )
+        {/* Mostrar botón de generar si el usuario está logueado */}
+        {userId && (
+          <Box sx={{ ml: 2 }} onClick={(e) => e.stopPropagation()}>
+            <ModuloGenerateButton 
+              moduloId={modulo.moduloId} 
+              modulo={modulo}
+              usuarioId={userId}
+              creating={creating} 
+              setCreating={setCreating} 
+              onNotify={onNotify} 
+            />
+          </Box>
         )}
 
         {/* Barra de progreso del módulo */}
@@ -389,41 +414,45 @@ export default function CourseLessons({ modulos, loading }: CourseLessonsProps) 
 
 
   return (
-    <><Box>
-      <Typography variant="h5" sx={{ fontWeight: 600, mb: 3, color: 'text.primary' }}>
-        Módulos y Lecciones del Curso
-      </Typography>
+    <>
+      <Box>
+        <Typography variant="h5" sx={{ fontWeight: 600, mb: 3, color: 'text.primary' }}>
+          Módulos y Lecciones del Curso
+        </Typography>
 
-      {modulos.length > 0 ? (
-        <Box sx={{ mb: 4 }}>
-          {modulos
-            .slice()
-            .sort((a, b) => (a.orden || 0) - (b.orden || 0))
-            .map((modulo) => (
-            <ModuleBlock
-              key={modulo.moduloId}
-              modulo={modulo}
-              expanded={expandedModule === modulo.moduloId}
-              onChange={handleModuleChange(modulo.moduloId)}
-              userId={userData?.usuarioId}
-              creating={creating}
-              setCreating={setCreating}
-              onNotify={onNotify} />
-          ))}
-        </Box>
-      ) : (
-        <Card sx={{ mb: 4 }}>
-          <CardContent>
-            <Typography variant="body1" color="text.secondary" sx={{ textAlign: 'center', py: 4 }}>
-              No hay módulos disponibles para este curso.
-            </Typography>
-          </CardContent>
-        </Card>
-      )}
-    </Box><Snackbar open={snackbar.open} autoHideDuration={4000} onClose={handleCloseSnackbar}>
+        {modulos.length > 0 ? (
+          <Box sx={{ mb: 4 }}>
+            {modulos
+              .slice()
+              .sort((a, b) => (a.orden || 0) - (b.orden || 0))
+              .map((modulo) => (
+                <ModuleBlock
+                  key={modulo.moduloId}
+                  modulo={modulo}
+                  expanded={expandedModule === modulo.moduloId}
+                  onChange={handleModuleChange(modulo.moduloId)}
+                  userId={userData?.usuarioId}
+                  creating={creating}
+                  setCreating={setCreating}
+                  onNotify={onNotify}
+                />
+              ))}
+          </Box>
+        ) : (
+          <Card sx={{ mb: 4 }}>
+            <CardContent>
+              <Typography variant="body1" color="text.secondary" sx={{ textAlign: 'center', py: 4 }}>
+                No hay módulos disponibles para este curso.
+              </Typography>
+            </CardContent>
+          </Card>
+        )}
+      </Box>
+      <Snackbar open={snackbar.open} autoHideDuration={4000} onClose={handleCloseSnackbar}>
         <Alert onClose={handleCloseSnackbar} severity={snackbar.severity} sx={{ width: '100%' }}>
           {snackbar.message}
         </Alert>
-      </Snackbar></>
+      </Snackbar>
+    </>
   );
 }

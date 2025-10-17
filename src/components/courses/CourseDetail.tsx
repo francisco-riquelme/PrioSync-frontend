@@ -19,6 +19,7 @@ import {
 } from '@mui/icons-material';
 import { useCourseDetailData } from '@/components/courses/hooks/useCourseDetailData';
 import { useProgresoCurso } from '@/components/courses/hooks/useProgresoCurso';
+import { useCourseStudySessions } from '@/components/courses/hooks/useCourseStudySessions';
 import { useUser } from '@/contexts/UserContext';
 import StudySessionsTable from './StudySessionsTable';
 import CourseContent from './CourseContent';
@@ -33,6 +34,15 @@ export default function CourseDetail({ courseId }: CourseDetailProps) {
 
   // Fetch all course data with the new unified hook
   const { course, modulos, materiales, quizzes, loading, error } = useCourseDetailData({ cursoId: courseId });
+
+  // Fetch study sessions for this course
+  const { 
+    sessions: courseSessions, 
+    loading: sessionsLoading
+  } = useCourseStudySessions({ 
+    cursoId: courseId, 
+    usuarioId: userData?.usuarioId 
+  });
 
   // Calcular progreso del curso
   const {
@@ -214,7 +224,7 @@ export default function CourseDetail({ courseId }: CourseDetailProps) {
       />
 
       {/* Sesiones de Estudio */}
-      <StudySessionsTable sessions={[]} loading={false} />
+      <StudySessionsTable sessions={courseSessions} loading={sessionsLoading} />
 
     </Box>
   );
