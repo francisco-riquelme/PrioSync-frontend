@@ -43,6 +43,7 @@ import { useCrearQuestionario } from "../quiz/hooks/useCrearQuestionario";
 interface CourseLessonsProps {
   modulos: ModuloWithLecciones[];
   loading: boolean;
+  onQuizCreated?: () => void;
 }
 
 // Componente para mostrar progreso de un módulo
@@ -101,17 +102,19 @@ function ModuloGenerateButton({
   usuarioId, 
   creating, 
   setCreating, 
-  onNotify 
+  onNotify,
+  onQuizCreated
 }: { 
   moduloId: string; 
   modulo: ModuloWithLecciones;
   usuarioId: string;
   creating: Record<string, boolean>; 
   setCreating: React.Dispatch<React.SetStateAction<Record<string, boolean>>>; 
-  onNotify?: (msg: string, severity?: 'success' | 'error' | 'info') => void 
+  onNotify?: (msg: string, severity?: 'success' | 'error' | 'info') => void;
+  onQuizCreated?: () => void;
 }) {
   const [loading, setLoading] = useState(false);
-  const crearHook = useCrearQuestionario();
+  const crearHook = useCrearQuestionario({ onSuccess: onQuizCreated });
   const { progreso, leccionesCompletadas, totalLecciones } = useProgresoModulo({ modulo, usuarioId });
 
   const handleGenerate = async () => {
@@ -205,6 +208,7 @@ function ModuleBlock({
   creating,
   setCreating,
   onNotify,
+  onQuizCreated,
 }: {
   modulo: ModuloWithLecciones;
   expanded: boolean;
@@ -213,6 +217,7 @@ function ModuleBlock({
   creating: Record<string, boolean>;
   setCreating: React.Dispatch<React.SetStateAction<Record<string, boolean>>>;
   onNotify?: (msg: string, severity?: 'success' | 'error' | 'info') => void;
+  onQuizCreated?: () => void;
 }) {
   return (
     <Accordion
@@ -289,7 +294,8 @@ function ModuleBlock({
               usuarioId={userId}
               creating={creating} 
               setCreating={setCreating} 
-              onNotify={onNotify} 
+              onNotify={onNotify}
+              onQuizCreated={onQuizCreated}
             />
           </Box>
         )}
@@ -382,7 +388,7 @@ function ModuleBlock({
   );
 }
 
-export default function CourseLessons({ modulos, loading }: CourseLessonsProps) {
+export default function CourseLessons({ modulos, loading, onQuizCreated }: CourseLessonsProps) {
   const [expandedModule, setExpandedModule] = useState<string | false>(false);
   const { userData } = useUser();
   const [creating, setCreating] = useState<Record<string, boolean>>({});
@@ -435,6 +441,7 @@ export default function CourseLessons({ modulos, loading }: CourseLessonsProps) 
                   creating={creating}
                   setCreating={setCreating}
                   onNotify={onNotify}
+                  onQuizCreated={onQuizCreated}
                 />
               ))}
           </Box>

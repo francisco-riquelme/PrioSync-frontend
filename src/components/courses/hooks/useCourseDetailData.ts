@@ -104,6 +104,7 @@ export interface UseCourseDetailDataReturn {
   quizzes: CuestionarioFromCourse[];
   loading: boolean;
   error: string | null;
+  refreshCourseData: () => Promise<void>;
 }
 
 /**
@@ -129,6 +130,7 @@ export const useCourseDetailData = (
     try {
       setLoading(true);
       setError(null);
+      console.log("🔄 Refreshing course data...", cursoId);
 
       const { Curso } = await getQueryFactories<
         Pick<MainTypes, "Curso">,
@@ -160,9 +162,9 @@ export const useCourseDetailData = (
 
             if (moduloWithLecciones.Lecciones) {
               // Ordenar lecciones por orden dentro del módulo
-              const leccionesOrdenadas = [...moduloWithLecciones.Lecciones].sort(
-                (a, b) => (a.orden || 0) - (b.orden || 0)
-              );
+              const leccionesOrdenadas = [
+                ...moduloWithLecciones.Lecciones,
+              ].sort((a, b) => (a.orden || 0) - (b.orden || 0));
               allLecciones.push(
                 ...(leccionesOrdenadas as unknown as LeccionFromModulo[])
               );
@@ -194,6 +196,15 @@ export const useCourseDetailData = (
           }
         }
 
+        console.log(
+          "📋 useCourseDetailData - Raw Cuestionarios from API:",
+          courseRes.Cuestionarios
+        );
+        console.log(
+          "📋 useCourseDetailData - Processed allQuizzes:",
+          allQuizzes
+        );
+
         // Ordenar quizzes por el orden del módulo al que pertenecen (ascendente).
         // Si el módulo no está presente, se coloca al final (orden 0).
         const moduloOrdenMap = new Map<string, number>();
@@ -202,10 +213,15 @@ export const useCourseDetailData = (
         }
 
         const quizzesOrdenados = allQuizzes.sort((a, b) => {
-          const aModuloOrden = moduloOrdenMap.get(a.moduloId || '') ?? 0;
-          const bModuloOrden = moduloOrdenMap.get(b.moduloId || '') ?? 0;
+          const aModuloOrden = moduloOrdenMap.get(a.moduloId || "") ?? 0;
+          const bModuloOrden = moduloOrdenMap.get(b.moduloId || "") ?? 0;
           return aModuloOrden - bModuloOrden;
         });
+
+        console.log(
+          "📋 useCourseDetailData - Final sorted quizzes:",
+          quizzesOrdenados
+        );
 
         setMateriales(allMateriales);
         setQuizzes(quizzesOrdenados);
@@ -233,6 +249,7 @@ export const useCourseDetailData = (
     quizzes,
     loading,
     error,
+    refreshCourseData: loadCourseDetail,
   };
 };
 
