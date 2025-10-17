@@ -3,20 +3,30 @@
  * Uses AWS Amplify Data API to interact with BloqueEstudio model
  */
 
-import { generateClient } from "aws-amplify/data";
+import { getQueryFactories } from "@/utils/commons/queries";
 import type { MainTypes } from "@/utils/api/schema";
 import { DaySchedule } from "@/components/modals/welcome/types";
+import type { SelectionSet } from "aws-amplify/data";
 
-const client = generateClient<MainTypes>();
+// Define selection set for BloqueEstudio queries
+const studyBlockSelectionSet = [
+  "bloqueEstudioId",
+  "dia_semana",
+  "hora_inicio",
+  "hora_fin",
+  "duracion_minutos",
+  "usuarioId",
+  "createdAt",
+  "updatedAt",
+] as const;
 
-export type DiaSemana =
-  | "Lunes"
-  | "Martes"
-  | "Miércoles"
-  | "Jueves"
-  | "Viernes"
-  | "Sábado"
-  | "Domingo";
+// Infer DiaSemana type from schema using SelectionSet
+type BloqueEstudioData = SelectionSet<
+  MainTypes["BloqueEstudio"]["type"],
+  typeof studyBlockSelectionSet
+>;
+
+export type DiaSemana = NonNullable<BloqueEstudioData["dia_semana"]>;
 
 export interface StudyBlock {
   bloqueEstudioId: string;
@@ -43,16 +53,19 @@ export const getUserStudyBlocks = async (
   usuarioId: string
 ): Promise<StudyBlock[]> => {
   try {
-    const { data, errors } = await client.models.BloqueEstudio.list({
-      filter: { usuarioId: { eq: usuarioId } },
+    const { BloqueEstudio } = await getQueryFactories<
+      Pick<MainTypes, "BloqueEstudio">,
+      "BloqueEstudio"
+    >({
+      entities: ["BloqueEstudio"],
     });
 
-    if (errors) {
-      console.error("Error fetching study blocks:", errors);
-      throw new Error("Failed to fetch study blocks");
-    }
+    const result = await BloqueEstudio.list({
+      filter: { usuarioId: { eq: usuarioId } },
+      selectionSet: studyBlockSelectionSet,
+    });
 
-    return (data || []).map((block) => ({
+    return (result.items || []).map((block) => ({
       bloqueEstudioId: block.bloqueEstudioId,
       dia_semana: block.dia_semana as DiaSemana,
       hora_inicio: block.hora_inicio,
@@ -112,20 +125,35 @@ export const convertStudyBlocksToDaySchedule = (
 const normalizeDayName = (day: string): DiaSemana => {
   const normalized = day.charAt(0).toUpperCase() + day.slice(1).toLowerCase();
 
-  // Mapping for special cases
-  const dayMap: Record<string, DiaSemana> = {
+  const dayMap: Record<string, string> = {
     Lunes: "Lunes",
     Martes: "Martes",
-    Miercoles: "Miércoles",
-    Miércoles: "Miércoles",
+    Miercoles: "Miercoles",
     Jueves: "Jueves",
     Viernes: "Viernes",
-    Sabado: "Sábado",
-    Sábado: "Sábado",
+    Sabado: "Sabado",
     Domingo: "Domingo",
   };
 
-  return dayMap[normalized] || ("Lunes" as DiaSemana); // Fallback to Monday
+  return (dayMap[normalized] as DiaSemana) || ("Lunes" as DiaSemana);
+};
+
+/**
+ * Convert database day name (without tilde) to display name (with tilde)
+ * Backend: "Miercoles", "Sabado" -> Frontend: "Miércoles", "Sábado"
+ */
+export const getDisplayDayName = (diaSemana: DiaSemana): string => {
+  const displayMap: Record<string, string> = {
+    Lunes: "Lunes",
+    Martes: "Martes",
+    Miercoles: "Miércoles",
+    Jueves: "Jueves",
+    Viernes: "Viernes",
+    Sabado: "Sábado",
+    Domingo: "Domingo",
+  };
+
+  return displayMap[diaSemana] || diaSemana;
 };
 
 /**
@@ -161,28 +189,37 @@ export const createStudyBlocks = async (
   schedules: DaySchedule[]
 ): Promise<boolean> => {
   try {
+    const { BloqueEstudio } = await getQueryFactories<
+      Pick<MainTypes, "BloqueEstudio">,
+      "BloqueEstudio"
+    >({
+      entities: ["BloqueEstudio"],
+    });
+
     const blocks = convertDayScheduleToStudyBlocks(schedules, usuarioId);
 
     // Create all blocks in parallel
     const createPromises = blocks.map((block) =>
-      client.models.BloqueEstudio.create({
-        bloqueEstudioId: crypto.randomUUID(),
-        dia_semana: block.dia_semana as DiaSemana,
-        hora_inicio: block.hora_inicio,
-        hora_fin: block.hora_fin,
-        duracion_minutos: block.duracion_minutos,
-        usuarioId: block.usuarioId,
+      BloqueEstudio.create({
+        input: {
+          bloqueEstudioId: crypto.randomUUID(),
+          dia_semana: block.dia_semana as DiaSemana,
+          hora_inicio: block.hora_inicio,
+          hora_fin: block.hora_fin,
+          duracion_minutos: block.duracion_minutos,
+          usuarioId: block.usuarioId,
+        },
+        selectionSet: studyBlockSelectionSet,
       })
     );
 
     const results = await Promise.all(createPromises);
 
     // Check if all creations were successful
-    const allSuccess = results.every((result) => !result.errors);
+    const allSuccess = results.every((result) => result);
 
     if (!allSuccess) {
-      const errors = results.filter((r) => r.errors).map((r) => r.errors);
-      console.error("Some study blocks failed to create:", errors);
+      console.error("Some study blocks failed to create");
       return false;
     }
 
@@ -200,6 +237,13 @@ export const deleteAllUserStudyBlocks = async (
   usuarioId: string
 ): Promise<boolean> => {
   try {
+    const { BloqueEstudio } = await getQueryFactories<
+      Pick<MainTypes, "BloqueEstudio">,
+      "BloqueEstudio"
+    >({
+      entities: ["BloqueEstudio"],
+    });
+
     // First, get all existing blocks
     const blocks = await getUserStudyBlocks(usuarioId);
 
@@ -209,19 +253,21 @@ export const deleteAllUserStudyBlocks = async (
 
     // Delete all blocks in parallel
     const deletePromises = blocks.map((block) =>
-      client.models.BloqueEstudio.delete({
-        bloqueEstudioId: block.bloqueEstudioId,
+      BloqueEstudio.delete({
+        input: {
+          bloqueEstudioId: block.bloqueEstudioId,
+        },
+        selectionSet: studyBlockSelectionSet,
       })
     );
 
     const results = await Promise.all(deletePromises);
 
     // Check if all deletions were successful
-    const allSuccess = results.every((result) => !result.errors);
+    const allSuccess = results.every((result) => result);
 
     if (!allSuccess) {
-      const errors = results.filter((r) => r.errors).map((r) => r.errors);
-      console.error("Some study blocks failed to delete:", errors);
+      console.error("Some study blocks failed to delete");
       return false;
     }
 
@@ -233,7 +279,7 @@ export const deleteAllUserStudyBlocks = async (
 };
 
 /**
- * Update user study blocks (delete all and create new ones)
+ * Update user study blocks with smart diffing (only touch changed blocks)
  * This is the main function used by StudyHoursManager
  */
 export const updateUserStudyBlocks = async (
@@ -241,20 +287,77 @@ export const updateUserStudyBlocks = async (
   schedules: DaySchedule[]
 ): Promise<boolean> => {
   try {
-    // Step 1: Delete all existing blocks
-    const deleteSuccess = await deleteAllUserStudyBlocks(usuarioId);
-    if (!deleteSuccess) {
-      console.error("Failed to delete existing study blocks");
-      return false;
+    const { BloqueEstudio } = await getQueryFactories<
+      Pick<MainTypes, "BloqueEstudio">,
+      "BloqueEstudio"
+    >({
+      entities: ["BloqueEstudio"],
+    });
+
+    // Get existing blocks
+    const existingBlocks = await getUserStudyBlocks(usuarioId);
+    const newBlocks = convertDayScheduleToStudyBlocks(schedules, usuarioId);
+
+    // Find blocks to delete (exist in DB but not in new data)
+    const toDelete = existingBlocks.filter(
+      (existing) =>
+        !newBlocks.some(
+          (newBlock) =>
+            newBlock.dia_semana === existing.dia_semana &&
+            newBlock.hora_inicio === existing.hora_inicio &&
+            newBlock.hora_fin === existing.hora_fin
+        )
+    );
+
+    // Find blocks to create (exist in new data but not in DB)
+    const toCreate = newBlocks.filter(
+      (newBlock) =>
+        !existingBlocks.some(
+          (existing) =>
+            existing.dia_semana === newBlock.dia_semana &&
+            existing.hora_inicio === newBlock.hora_inicio &&
+            existing.hora_fin === newBlock.hora_fin
+        )
+    );
+
+    console.log(
+      `🔄 Updating study blocks: ${toDelete.length} to delete, ${toCreate.length} to create`
+    );
+
+    // Execute operations in parallel
+    const operations = [
+      ...toDelete.map((block) =>
+        BloqueEstudio.delete({
+          input: { bloqueEstudioId: block.bloqueEstudioId },
+          selectionSet: studyBlockSelectionSet,
+        })
+      ),
+      ...toCreate.map((block) =>
+        BloqueEstudio.create({
+          input: {
+            bloqueEstudioId: crypto.randomUUID(),
+            dia_semana: block.dia_semana as DiaSemana,
+            hora_inicio: block.hora_inicio,
+            hora_fin: block.hora_fin,
+            duracion_minutos: block.duracion_minutos,
+            usuarioId: block.usuarioId,
+          },
+          selectionSet: studyBlockSelectionSet,
+        })
+      ),
+    ];
+
+    if (operations.length > 0) {
+      const results = await Promise.all(operations);
+      const allSuccess = results.every((result) => result);
+
+      if (!allSuccess) {
+        console.error("Some study block operations failed");
+        return false;
+      }
     }
 
-    // Step 2: Create new blocks
-    const createSuccess = await createStudyBlocks(usuarioId, schedules);
-    if (!createSuccess) {
-      console.error("Failed to create new study blocks");
-      return false;
-    }
-
+    console.log("✅ Study blocks updated successfully");
     return true;
   } catch (error) {
     console.error("Error updating study blocks:", error);
@@ -269,4 +372,5 @@ export const studyBlocksService = {
   createStudyBlocks,
   deleteAllUserStudyBlocks,
   updateUserStudyBlocks,
+  getDisplayDayName,
 };

@@ -8,9 +8,27 @@ import {
   Chip,
 } from '@mui/material';
 import { CourseListItem } from '@/components/courses/hooks/useCoursesListData';
+import type { MainTypes } from '@/utils/api/schema';
+import type { SelectionSet } from 'aws-amplify/data';
+
+// Type for courses from UserContext using SelectionSet
+type Usuario = MainTypes["Usuario"]["type"];
+const userCoursesSelectionSet = [
+  'Cursos.cursoId',
+  'Cursos.titulo',
+  'Cursos.descripcion',
+  'Cursos.imagen_portada',
+  'Cursos.duracion_estimada',
+  'Cursos.nivel_dificultad',
+  'Cursos.estado',
+  'Cursos.createdAt',
+  'Cursos.updatedAt',
+] as const;
+
+type UserCourse = NonNullable<SelectionSet<Usuario, typeof userCoursesSelectionSet>["Cursos"]>[0];
 
 interface CourseCardProps {
-  course: CourseListItem;
+  course: CourseListItem | UserCourse;
   onCourseClick: (courseId: number | string) => void;
 }
 
@@ -44,7 +62,7 @@ export const CourseCard = ({ course, onCourseClick }: CourseCardProps) => {
       <CardMedia
         component="img"
         height="160"
-        image={course.imagen_portada || course.playlistThumbnail || ''}
+        image={course.imagen_portada || ''}
         alt={course.titulo}
         sx={{ 
           backgroundColor: 'grey.200',

@@ -25,20 +25,11 @@ interface WelcomeModalProps {
 
 export default function WelcomeModal({ open, onClose, onComplete }: WelcomeModalProps) {
   const [activeStep, setActiveStep] = useState(0);
-  const [formData, setFormData] = useState<WelcomeFormData>(() => {
-    // Cargar datos persistentes del localStorage si existen
-    if (typeof window !== 'undefined') {
-      const savedData = localStorage.getItem('welcomeFormData');
-      if (savedData) {
-        return JSON.parse(savedData);
-      }
-    }
-    return {
-      nombre: '',
-      estudio: '',
-      youtubeUrl: '',
-      tiempoDisponible: []
-    };
+  const [formData, setFormData] = useState<WelcomeFormData>({
+    nombre: '',
+    estudio: '',
+    youtubeUrl: '',
+    tiempoDisponible: []
   });
   const [errors, setErrors] = useState({
     nombre: false,
@@ -47,38 +38,23 @@ export default function WelcomeModal({ open, onClose, onComplete }: WelcomeModal
     tiempoDisponible: false
   });
 
-  // Persistencia: guardar datos en localStorage cada vez que cambien
-  useEffect(() => {
-    if (typeof window !== 'undefined') {
-      localStorage.setItem('welcomeFormData', JSON.stringify(formData));
-    }
-  }, [formData]);
 
-  // Resetear formulario cuando se abre el modal y no hay datos en localStorage (indica cancelación)
+  // Resetear formulario cuando se abre el modal
   useEffect(() => {
-    if (open && typeof window !== 'undefined') {
-      const savedData = localStorage.getItem('welcomeFormData');
-      
-      // Si no hay datos guardados, resetear el formulario (usuario canceló anteriormente)
-      if (!savedData) {
-        setFormData({
-          nombre: '',
-          estudio: '',
-          youtubeUrl: '',
-          tiempoDisponible: []
-        });
-        setErrors({
-          nombre: false,
-          estudio: false,
-          youtubeUrl: false,
-          tiempoDisponible: false
-        });
-        setActiveStep(0);
-      } else {
-        // Si hay datos guardados, cargarlos (restaurar después de cierre accidental)
-        setFormData(JSON.parse(savedData));
-        setActiveStep(0);
-      }
+    if (open) {
+      setFormData({
+        nombre: '',
+        estudio: '',
+        youtubeUrl: '',
+        tiempoDisponible: []
+      });
+      setErrors({
+        nombre: false,
+        estudio: false,
+        youtubeUrl: false,
+        tiempoDisponible: false
+      });
+      setActiveStep(0);
     }
   }, [open]);
 
@@ -98,7 +74,6 @@ export default function WelcomeModal({ open, onClose, onComplete }: WelcomeModal
       youtubeUrl: false,
       tiempoDisponible: false
     });
-    // localStorage se limpia en el padre (LandingPage) antes de cerrar el modal
   };
 
   // Manejar cancelar: cerrar modal y limpiar formulario
@@ -110,10 +85,6 @@ export default function WelcomeModal({ open, onClose, onComplete }: WelcomeModal
   const handleNext = () => {
     if (validateCurrentStep()) {
       if (activeStep === steps.length - 1) {
-        // Limpiar localStorage al completar exitosamente
-        if (typeof window !== 'undefined') {
-          localStorage.removeItem('welcomeFormData');
-        }
         onComplete(formData);
       } else {
         setActiveStep((prev) => prev + 1);

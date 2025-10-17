@@ -18,13 +18,12 @@ const EstadoInscripcion = a.enum([
 const DiaSemana = a.enum([
   "Lunes",
   "Martes",
-  "Miércoles",
+  "Miercoles",
   "Jueves",
   "Viernes",
-  "Sábado",
+  "Sabado",
   "Domingo",
 ]);
-
 export const MainSchema = a.schema({
   Usuario: a
     .model({
@@ -32,6 +31,7 @@ export const MainSchema = a.schema({
       email: a.email().required(), //email del usuario
       nombre: a.string(),
       apellido: a.string(),
+      area_interes: a.string().default(""),
       ultimo_login: a.datetime(),
       isValid: a.boolean().default(false),
       createdAt: a.datetime(),
@@ -371,4 +371,4 @@ export const MainSchema = a.schema({
     .identifier(["usuarioId", "cursoId"]),
 });
 
-export type MainTypes = Exclude<ClientSchema<typeof MainSchema>, "Video">;
+export type MainTypes = ClientSchema<typeof MainSchema>;

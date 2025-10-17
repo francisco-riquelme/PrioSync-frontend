@@ -50,10 +50,6 @@ export default function LandingPage() {
   };
 
   const handleWelcomeClose = () => {
-    // Limpiar localStorage ANTES de cerrar el modal
-    if (typeof window !== 'undefined') {
-      localStorage.removeItem('welcomeFormData');
-    }
     setWelcomeModalOpen(false);
   };
 

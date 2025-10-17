@@ -1,8 +1,8 @@
 // Test adicional para probar la transcripción completa simulada
 // Para ejecutar: node test-transcription-complete.js
 
-const http = require('http');
-const { Buffer } = require('buffer');
+import http from 'http';
+import { Buffer } from 'buffer';
 
 const BASE_URL = 'http://localhost:3000';
 
@@ -43,11 +43,11 @@ function makeRequest(method, path, formData = null) {
         res.on('data', chunk => responseData += chunk);
         res.on('end', () => {
           try {
-            const jsonResponse = JSON.parse(responseData);
-            resolve({ status: res.statusCode, data: jsonResponse });
-          } catch (e) {
-            resolve({ status: res.statusCode, data: responseData });
-          }
+              const jsonResponse = JSON.parse(responseData);
+              resolve({ status: res.statusCode, data: jsonResponse });
+            } catch {
+              resolve({ status: res.statusCode, data: responseData });
+            }
         });
       });
       
@@ -60,11 +60,11 @@ function makeRequest(method, path, formData = null) {
         res.on('data', chunk => responseData += chunk);
         res.on('end', () => {
           try {
-            const jsonResponse = JSON.parse(responseData);
-            resolve({ status: res.statusCode, data: jsonResponse });
-          } catch (e) {
-            resolve({ status: res.statusCode, data: responseData });
-          }
+              const jsonResponse = JSON.parse(responseData);
+              resolve({ status: res.statusCode, data: jsonResponse });
+            } catch {
+              resolve({ status: res.statusCode, data: responseData });
+            }
         });
       });
       
@@ -153,7 +153,7 @@ async function testCompleteTranscriptionFlow() {
 }
 
 // Ejecutar test automáticamente
-if (require.main === module) {
+if (typeof process !== 'undefined' && process.argv && process.argv[1] && process.argv[1].endsWith('test-transcription-complete.js')) {
   testCompleteTranscriptionFlow().then(() => {
     process.exit(0);
   }).catch((error) => {
@@ -162,4 +162,4 @@ if (require.main === module) {
   });
 }
 
-module.exports = { testCompleteTranscriptionFlow };
+export { testCompleteTranscriptionFlow };

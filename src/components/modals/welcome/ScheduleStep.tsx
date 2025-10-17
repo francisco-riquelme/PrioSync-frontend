@@ -26,8 +26,6 @@ interface ScheduleStepProps {
   error: boolean;
 }
 
-const MAX_SIGNUP_TIMESLOTS = 5;
-
 export default function ScheduleStep({ schedule, onChange, error }: ScheduleStepProps) {
   const [selectedDay, setSelectedDay] = useState<string>('');
   const [startTime, setStartTime] = useState('');
@@ -101,9 +99,7 @@ export default function ScheduleStep({ schedule, onChange, error }: ScheduleStep
     });
   };
 
-  // Count total time slots across all days
-  const totalTimeSlots = schedule.reduce((total, day) => total + day.timeSlots.length, 0);
-  const canAddMoreSlots = totalTimeSlots < MAX_SIGNUP_TIMESLOTS;
+  // (antes) Contador de franjas horarias — eliminado porque no se usa
 
   const handleDayClick = (day: string) => {
     setSelectedDay(day);
