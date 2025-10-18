@@ -1,36 +1,71 @@
-This is a [Next.js](https://nextjs.org) project bootstrapped with [`create-next-app`](https://nextjs.org/docs/app/api-reference/cli/create-next-app).
+# PrioSync-frontend
 
-## Getting Started
+PrioSync es una aplicación web de gestión del aprendizaje que permite organizar sesiones de estudio y, especialmente, generar cursos a partir de contenidos educativos de YouTube. La generación de cursos está potenciada por modelos LLM para extraer, estructurar y enriquecer transcripciones y videos en lecciones, cuestionarios y recursos de reforzamiento. Incluye sincronización con calendario, transcripción de sesiones y autenticación mediante AWS Amplify (Cognito).
 
-First, run the development server:
+Características principales
 
-```bash
+- Generación de cursos desde YouTube potenciada por LLM: extrae vídeos y transcripciones, genera lecciones y materiales de refuerzo.
+- Gestión de sesiones de estudio: creación y programación de bloques de estudio, seguimiento de progreso.
+- Transcripción y enriquecimiento: guardado y procesamiento de transcripciones para generar contenidos de curso.
+- Cuestionarios y evaluación: generación de tests y actividades de reforzamiento basadas en el contenido.
+- Calendario integrado de la app y recordatorios: gestionar sesiones desde el calendario interno de la aplicación, programar y recibir notificaciones.
+- Autenticación y perfiles: integración con AWS Cognito y paneles de usuario.
+
+Resumen rápido
+
+- Stack: Next.js (App Router), TypeScript, Tailwind CSS y Material UI (MUI), AWS Amplify.
+- Carpeta principal de la app: `src/app/` (rutas y API routes).
+
+Requisitos
+
+- Node 18+ (recomendado).
+- npm, pnpm o yarn.
+- Credenciales AWS si vas a usar Amplify localmente.
+- Variables de entorno para APIs/LLM y Amplify (configurar antes de producción).
+
+Cómo ejecutar
+
+Desarrollo (hot-reload):
+```powershell
 npm run dev
-# or
-yarn dev
-# or
-pnpm dev
-# or
-bun dev
 ```
 
-Open [http://localhost:3000](http://localhost:3000) with your browser to see the result.
+Build de producción:
+```powershell
+npm run build
+```
 
-You can start editing the page by modifying `app/page.tsx`. The page auto-updates as you edit the file.
+Iniciar servidor de producción local (después de build):
+```powershell
+npm run start
+```
 
-This project uses [`next/font`](https://nextjs.org/docs/app/building-your-application/optimizing/fonts) to automatically optimize and load [Geist](https://vercel.com/font), a new font family for Vercel.
+Lint:
+```powershell
+npm run lint
+```
 
-## Learn More
+Tests (si existen):
+```powershell
+npm test
+```
 
-To learn more about Next.js, take a look at the following resources: 
+Entornos y notas operativas
 
-- [Next.js Documentation](https://nextjs.org/docs) - learn about Next.js features and API.
-- [Learn Next.js](https://nextjs.org/learn) - an interactive Next.js tutorial.
+- Desarrollo: usa `npm run dev`. Asegúrate de tener las variables de entorno locales (Amplify/LLM/YouTube API) configuradas.
+- Producción: configurar variables de entorno en el host (Vercel / AWS). Verifica la configuración de Amplify/Cognito y permisos de los servicios de IA.
+- Styling: el proyecto usa Tailwind CSS para utilidades/maquetación y Material UI (MUI) para componentes complejos; evita mezclar estilos dentro de un mismo componente para mantener coherencia.
 
-You can check out [the Next.js GitHub repository](https://github.com/vercel/next.js) - your feedback and contributions are welcome!
+Dónde mirar
 
-## Deploy on Vercel
+- Componentes: `src/components/`
+- Contextos y hooks: `src/contexts/`, `src/hooks/`
+- Páginas y rutas API: `src/app/` (p. ej. `dashboard`, `courses`, `calendar`, `study-hours`, `src/app/api/`)
 
-The easiest way to deploy your Next.js app is to use the [Vercel Platform](https://vercel.com/new?utm_medium=default-template&filter=next.js&utm_source=create-next-app&utm_campaign=create-next-app-readme) from the creators of Next.js.
+Despliegue
 
-Check out our [Next.js deployment documentation](https://nextjs.org/docs/app/building-your-application/deploying) for more details.
+- Recomendado: Vercel (configuración estándar Next.js). Si usas Amplify, asegura variables de entorno y configuración de Cognito/API.
+
+Documentación adicional
+
+- Repo: documentación adicional en `docs/`.
