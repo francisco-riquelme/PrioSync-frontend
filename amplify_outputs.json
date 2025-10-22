@@ -1211,6 +1211,22 @@
                 ]
               }
             },
+            "MaterialEstudio": {
+              "name": "MaterialEstudio",
+              "isArray": true,
+              "type": {
+                "model": "MaterialEstudio"
+              },
+              "isRequired": false,
+              "attributes": [],
+              "isArrayNullable": true,
+              "association": {
+                "connectionType": "HAS_MANY",
+                "associatedWith": [
+                  "moduloId"
+                ]
+              }
+            },
             "createdAt": {
               "name": "createdAt",
               "isArray": false,
@@ -1768,7 +1784,7 @@
               "name": "url_contenido",
               "isArray": false,
               "type": "AWSURL",
-              "isRequired": true,
+              "isRequired": false,
               "attributes": []
             },
             "orden": {
@@ -1780,6 +1796,74 @@
             },
             "descripcion": {
               "name": "descripcion",
+              "isArray": false,
+              "type": "String",
+              "isRequired": false,
+              "attributes": []
+            },
+            "moduloId": {
+              "name": "moduloId",
+              "isArray": false,
+              "type": "ID",
+              "isRequired": false,
+              "attributes": []
+            },
+            "Modulo": {
+              "name": "Modulo",
+              "isArray": false,
+              "type": {
+                "model": "Modulo"
+              },
+              "isRequired": false,
+              "attributes": [],
+              "association": {
+                "connectionType": "BELONGS_TO",
+                "targetNames": [
+                  "moduloId"
+                ]
+              }
+            },
+            "contenido_generado": {
+              "name": "contenido_generado",
+              "isArray": false,
+              "type": "String",
+              "isRequired": false,
+              "attributes": []
+            },
+            "modo_generacion": {
+              "name": "modo_generacion",
+              "isArray": false,
+              "type": {
+                "enum": "MaterialEstudioModo_generacion"
+              },
+              "isRequired": false,
+              "attributes": []
+            },
+            "is_generado": {
+              "name": "is_generado",
+              "isArray": false,
+              "type": "Boolean",
+              "isRequired": false,
+              "attributes": []
+            },
+            "llm_model": {
+              "name": "llm_model",
+              "isArray": false,
+              "type": "String",
+              "isRequired": false,
+              "attributes": []
+            },
+            "generation_status": {
+              "name": "generation_status",
+              "isArray": false,
+              "type": {
+                "enum": "MaterialEstudioGeneration_status"
+              },
+              "isRequired": false,
+              "attributes": []
+            },
+            "generation_warnings": {
+              "name": "generation_warnings",
               "isArray": false,
               "type": "String",
               "isRequired": false,
@@ -3675,6 +3759,23 @@
             "video",
             "audio",
             "archivo"
+          ]
+        },
+        "MaterialEstudioModo_generacion": {
+          "name": "MaterialEstudioModo_generacion",
+          "values": [
+            "torpedo",
+            "rapido",
+            "normal",
+            "extendido"
+          ]
+        },
+        "MaterialEstudioGeneration_status": {
+          "name": "MaterialEstudioGeneration_status",
+          "values": [
+            "pendiente",
+            "completado",
+            "fallido"
           ]
         },
         "CuestionarioTipo": {
