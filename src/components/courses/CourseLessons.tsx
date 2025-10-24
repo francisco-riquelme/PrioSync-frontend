@@ -37,13 +37,16 @@ import { getLessonTypeIcon, getMaterialTypeColor, formatDuration } from './cours
 import { useProgresoModulo } from './hooks/useProgresoModulo';
 import { useProgresoLeccion } from './hooks/useProgresoLeccion';
 import { useUser } from '@/contexts/UserContext';
-import type { ModuloWithLecciones, LeccionFromModulo } from './hooks/useCourseDetailData';
+import type { ModuloWithLecciones, LeccionFromModulo, MaterialFromCourse } from './hooks/useCourseDetailData';
+import GenerateMaterialButton from './GenerateMaterialButton';
 import { useCrearQuestionario } from "../quiz/hooks/useCrearQuestionario";
 
 interface CourseLessonsProps {
   modulos: ModuloWithLecciones[];
   loading: boolean;
   onQuizCreated?: () => void;
+  materiales?: MaterialFromCourse[];
+  onMaterialCreated?: () => void;
 }
 
 // Componente para mostrar progreso de un módulo
@@ -209,6 +212,8 @@ function ModuleBlock({
   setCreating,
   onNotify,
   onQuizCreated,
+  materiales,
+  onMaterialCreated,
 }: {
   modulo: ModuloWithLecciones;
   expanded: boolean;
@@ -218,7 +223,14 @@ function ModuleBlock({
   setCreating: React.Dispatch<React.SetStateAction<Record<string, boolean>>>;
   onNotify?: (msg: string, severity?: 'success' | 'error' | 'info') => void;
   onQuizCreated?: () => void;
+  materiales?: MaterialFromCourse[];
+  onMaterialCreated?: () => void;
 }) {
+  // Determina si hay material asociado a este módulo.
+  const hasMaterial = materiales?.some((m) =>
+    modulo.Lecciones ? modulo.Lecciones.some((l) => l.leccionId === m.leccionId) : false
+  );
+
   return (
     <Accordion
       expanded={expanded}
@@ -288,14 +300,29 @@ function ModuleBlock({
         {/* Mostrar botón de generar si el usuario está logueado */}
         {userId && (
           <Box sx={{ ml: 2 }} onClick={(e) => e.stopPropagation()}>
-            <ModuloGenerateButton 
-              moduloId={modulo.moduloId} 
+            <ModuloGenerateButton
+              moduloId={modulo.moduloId}
               modulo={modulo}
               usuarioId={userId}
-              creating={creating} 
-              setCreating={setCreating} 
+              creating={creating}
+              setCreating={setCreating}
               onNotify={onNotify}
               onQuizCreated={onQuizCreated}
+            />
+          </Box>
+        )}
+
+        {/* Botón para generar material - siempre habilitado si no existe material para el módulo */}
+        {userId && (
+          <Box sx={{ ml: 1 }} onClick={(e) => e.stopPropagation()}>
+            <GenerateMaterialButton
+              moduloId={modulo.moduloId}
+              label={hasMaterial ? 'Material existente' : 'Generar Material'}
+              disabled={!!hasMaterial}
+              onSuccess={() => {
+                if (onNotify) onNotify('Material generado correctamente', 'success');
+                if (onMaterialCreated) onMaterialCreated();
+              }}
             />
           </Box>
         )}
@@ -388,7 +415,7 @@ function ModuleBlock({
   );
 }
 
-export default function CourseLessons({ modulos, loading, onQuizCreated }: CourseLessonsProps) {
+export default function CourseLessons({ modulos, loading, onQuizCreated, materiales, onMaterialCreated }: CourseLessonsProps) {
   const [expandedModule, setExpandedModule] = useState<string | false>(false);
   const { userData } = useUser();
   const [creating, setCreating] = useState<Record<string, boolean>>({});
@@ -442,6 +469,8 @@ export default function CourseLessons({ modulos, loading, onQuizCreated }: Cours
                   setCreating={setCreating}
                   onNotify={onNotify}
                   onQuizCreated={onQuizCreated}
+                  materiales={materiales}
+                  onMaterialCreated={onMaterialCreated}
                 />
               ))}
           </Box>

@@ -232,6 +232,7 @@ export default function CourseDetail({ courseId }: CourseDetailProps) {
         cuestionarios={quizzes}
         quizzesLoading={false}
         onQuizCreated={handleQuizCreated}
+        onMaterialCreated={refreshCourseData}
       />
 
       {/* Sesiones de Estudio */}
