@@ -273,8 +273,8 @@ export const UserProvider = ({ children }: { children: ReactNode }) => {
         entities: ["Usuario"],
       });
 
-      // Preparar los datos para actualizar en la BD
-      const updateData: any = {};
+          // Preparar los datos para actualizar en la BD
+          const updateData: Partial<Pick<UserData, 'nombre' | 'apellido'>> = {};
       
       if (updates.nombre !== undefined) updateData.nombre = updates.nombre;
       if (updates.apellido !== undefined) updateData.apellido = updates.apellido;

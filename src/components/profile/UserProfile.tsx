@@ -12,7 +12,6 @@ import {
   Tab,
   List,
   ListItem,
-  ListItemText,
   Divider,
   TextField,
   Dialog,
@@ -20,9 +19,7 @@ import {
   DialogContent,
   DialogActions,
   CircularProgress,
-  Grid,
   Chip,
-  Paper,
   IconButton,
   Alert,
 } from '@mui/material';
@@ -44,10 +41,7 @@ import { updatePassword } from 'aws-amplify/auth';
 import { 
   savePhotoToLocalStorage, 
   loadPhotoFromLocalStorage, 
-  removePhotoFromLocalStorage,
-  getDetailedValidationErrorMessage,
-  VALID_IMAGE_TYPES,
-  MAX_FILE_SIZE
+  getDetailedValidationErrorMessage
 } from '@/utils/profilePhotoUtils';
 
 interface TabPanelProps {
@@ -73,7 +67,7 @@ function TabPanel(props: TabPanelProps) {
 }
 
 export default function UserProfile() {
-  const { userData, loading, updateUser, refreshUser } = useUser();
+  const { userData, loading, updateUser } = useUser();
   const [tabValue, setTabValue] = useState(0);
   const [openPasswordDialog, setOpenPasswordDialog] = useState(false);
   const [profileImage, setProfileImage] = useState<string | null>(null);
@@ -88,7 +82,6 @@ export default function UserProfile() {
     confirmPassword: '',
   });
   const [isSaving, setIsSaving] = useState(false);
-  const [isRefreshing, setIsRefreshing] = useState(false);
   const [isEditing, setIsEditing] = useState(false);
   const [validationErrors, setValidationErrors] = useState<{
     nombre?: string;
@@ -167,7 +160,7 @@ export default function UserProfile() {
         console.log('✅ Foto cargada desde userData');
       }
     }
-  }, [userData?.usuarioId, userData?.nombre, userData?.apellido, userData?.email]);
+  }, [userData?.usuarioId, userData?.nombre, userData?.apellido, userData?.email, editFormData.nombre, editFormData.apellido, editFormData.email, profileImage]);
 
   const handleImageUpload = (event: React.ChangeEvent<HTMLInputElement>) => {
     const file = event.target.files?.[0];
