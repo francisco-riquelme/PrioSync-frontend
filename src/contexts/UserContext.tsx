@@ -253,12 +253,45 @@ export const UserProvider = ({ children }: { children: ReactNode }) => {
 
   // Update user (for profile updates)
   const updateUser = async (updates: Partial<UserData>): Promise<void> => {
+    if (!userData) {
+      throw new Error('No hay datos de usuario para actualizar');
+    }
+
     setLoading(true);
     setError(null);
     
     try {
-      // TODO: Implement actual API call to update user in database
-      // For now, just update local state
+      console.log('🔄 Contexto: Iniciando actualización de usuario...', {
+        usuarioId: userData.usuarioId,
+        updates
+      });
+
+      const { Usuario } = await getQueryFactories<
+        Pick<MainTypes, "Usuario">,
+        "Usuario"
+      >({
+        entities: ["Usuario"],
+      });
+
+      // Preparar los datos para actualizar en la BD
+      const updateData: any = {};
+      
+      if (updates.nombre !== undefined) updateData.nombre = updates.nombre;
+      if (updates.apellido !== undefined) updateData.apellido = updates.apellido;
+      
+      console.log('🔄 Contexto: Datos a actualizar en BD:', updateData);
+      
+      // Actualizar en la base de datos
+      const result = await Usuario.update({
+        input: {
+          usuarioId: userData.usuarioId,
+          ...updateData
+        }
+      });
+
+      console.log('🔄 Contexto: Resultado de la actualización:', result);
+
+      // Actualizar el estado local inmediatamente después de la actualización exitosa
       setUserData(prev => {
         if (!prev) return null;
         
@@ -268,11 +301,15 @@ export const UserProvider = ({ children }: { children: ReactNode }) => {
           updatedAt: new Date().toISOString()
         };
         
+        console.log('🔄 Contexto: Estado local actualizado inmediatamente:', updatedData);
         return updatedData;
       });
+
+      console.log('✅ Usuario actualizado exitosamente en la base de datos');
     } catch (err) {
-      console.error('Error updating user:', err);
-      setError('Error al actualizar usuario');
+      console.error('❌ Contexto: Error updating user:', err);
+      setError('Error al actualizar usuario en la base de datos');
+      throw err; // Re-throw para que el componente pueda manejar el error
     } finally {
       setLoading(false);
     }
