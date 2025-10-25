@@ -37,10 +37,21 @@ const Leccion = z.object({
 export const generatedMaterialSchema = z.object({
   titulo: z.string().optional(),
   descripcion: z.string().optional(),
+  modoGeneracion: z.string().optional(),
+  generation_status: z.string().optional(),
+  createdAt: z.string().optional(),
+  updatedAt: z.string().optional(),
   resumen: z.string().optional(),
   duracionEstimadaMinutos: z.number().optional(),
   recursos: z.array(Recurso).optional(),
+  secciones: z.array(z.object({ titulo: z.string().optional(), contenido: z.string().optional() })).optional(),
   lecciones: z.array(Leccion).optional(),
+  apendice: z.object({
+    cuestionario_sugerido: z.array(Pregunta).optional(),
+  }).optional(),
+  warnings: z.array(z.string()).optional(),
+  incluirCuestionario: z.boolean().optional(),
+  tocEnabled: z.boolean().optional(),
 });
 
 export type GeneratedMaterial = z.infer<typeof generatedMaterialSchema>;
