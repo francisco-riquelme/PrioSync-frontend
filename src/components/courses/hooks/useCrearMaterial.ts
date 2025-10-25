@@ -34,7 +34,7 @@ export const useCrearMaterial = (params?: UseCrearMaterialParams) => {
         if (!client.mutations || typeof client.mutations.crearMaterialResolver !== 'function') {
           // Log available mutation keys to help debugging in the browser console
           // (useful when dev server needs restart or schema wasn't picked up).
-          // eslint-disable-next-line no-console
+           
           console.error('crearMaterialResolver no está disponible en client.mutations. Claves disponibles:',
             client.mutations ? Object.keys(client.mutations) : client.mutations);
           throw new Error('La mutación crearMaterialResolver no está disponible en el cliente GraphQL. Reinicia el servidor de desarrollo para recargar el esquema.');

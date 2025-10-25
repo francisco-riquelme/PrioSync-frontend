@@ -226,10 +226,10 @@ function ModuleBlock({
   materiales?: MaterialFromCourse[];
   onMaterialCreated?: () => void;
 }) {
-  // Determina si hay material asociado a este módulo.
-  const hasMaterial = materiales?.some((m) =>
+  const moduleMaterial = materiales?.find((m) =>
     modulo.Lecciones ? modulo.Lecciones.some((l) => l.leccionId === m.leccionId) : false
   );
+  const hasMaterial = !!moduleMaterial;
 
   return (
     <Accordion
@@ -324,6 +324,23 @@ function ModuleBlock({
                 if (onMaterialCreated) onMaterialCreated();
               }}
             />
+          </Box>
+        )}
+
+        {/* Si existe material asociado, mostrar acceso rápido al detalle del material */}
+        {userId && hasMaterial && moduleMaterial && (
+          <Box sx={{ ml: 1 }} onClick={(e) => e.stopPropagation()}>
+            <IconButton
+              component={NextLink}
+              href={`/courses/material/${moduleMaterial.materialEstudioId}`}
+              size="small"
+              color="primary"
+              title="Ver material del módulo"
+              aria-label="Ver material del módulo"
+              onClick={(e) => e.stopPropagation()}
+            >
+              <ArrowForwardIcon />
+            </IconButton>
           </Box>
         )}
 
