@@ -1,6 +1,6 @@
 "use client";
 
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { useRouter } from 'next/navigation';
 import { useUser } from '@/contexts/UserContext';
 import { 
@@ -35,6 +35,15 @@ export default function LandingPage() {
   const [registrationModalOpen, setRegistrationModalOpen] = useState(false);
   const [welcomeData, setWelcomeData] = useState<WelcomeFormData | null>(null);
   const [isCreatingSessions, setIsCreatingSessions] = useState(false);
+
+  // Redirect automático si el usuario está autenticado
+  useEffect(() => {
+    if (!loading && userData) {
+      // Usuario autenticado, redirigir a dashboard
+      console.log('✅ Usuario autenticado detectado, redirigiendo a dashboard...');
+      router.push('/dashboard');
+    }
+  }, [loading, userData, router]);
   const [messageDialog, setMessageDialog] = useState({
     open: false,
     type: 'success' as 'success' | 'error' | 'info' | 'warning',
@@ -181,19 +190,10 @@ export default function LandingPage() {
             {!loading && !userData && (
               <Button 
                 variant="outlined" 
-                sx={{ color: 'white', borderColor: 'white', mr: 1 }}
+                sx={{ color: 'white', borderColor: 'white' }}
                 onClick={() => router.push('/auth/login')}
               >
                 Iniciar Sesión
-              </Button>
-            )}
-            {!loading && userData && (
-              <Button 
-                variant="contained" 
-                sx={{ backgroundColor: 'white', color: '#1976d2' }}
-                onClick={() => router.push('/dashboard')}
-              >
-                Dashboard
               </Button>
             )}
           </Toolbar>
