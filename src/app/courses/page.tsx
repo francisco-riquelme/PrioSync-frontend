@@ -12,7 +12,7 @@ export default function CoursesPage() {
 
   useEffect(() => {
     if (!loading && !userData) {
-      router.push('/auth/login');
+      router.push('/');
     }
   }, [userData, loading, router]);
 
