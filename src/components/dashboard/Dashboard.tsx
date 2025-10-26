@@ -3,6 +3,7 @@
 import React, { useState, useCallback } from 'react';
 import { useRouter } from 'next/navigation';
 import { useUser } from '@/contexts/UserContext';
+import { useCursosConProgreso } from '@/hooks/useCursosConProgreso';
 import {
   Box,
   Card,
@@ -13,12 +14,14 @@ import {
   Avatar,
   Chip,
   CircularProgress,
+  Alert,
 } from '@mui/material';
 import { Person as PersonIcon } from '@mui/icons-material';
 
 export default function Dashboard() {
   const router = useRouter();
   const { userData, loading } = useUser();
+  const { cursos, loading: cursosLoading, error: cursosError } = useCursosConProgreso();
   
   const [aiAdvice, setAiAdvice] = useState<string>('**Evalúa tu conocimiento activamente sin consultar tus apuntes para identificar lagunas y reforzar el aprendizaje.**');
   const [loadingAdvice, setLoadingAdvice] = useState(false);
@@ -54,13 +57,6 @@ export default function Dashboard() {
   }
 
   const displayName = userData?.nombre || 'Usuario';
-
-  const cursos = [
-    { cursoId: '1', titulo: 'Curso de Ejemplo 1', progreso_estimado: 45 },
-    { cursoId: '2', titulo: 'Curso de Ejemplo 2', progreso_estimado: 70 },
-    { cursoId: '3', titulo: 'Curso de Ejemplo 3', progreso_estimado: 20 },
-  ];
-
 
   const handleGenerateAdvice = async () => {
     setLoadingAdvice(true);
@@ -153,15 +149,20 @@ export default function Dashboard() {
               Progreso de Cursos
             </Typography>
             <Box sx={{ mt: 2 }}>
-              {cursos.length === 0 ? (
+              {cursosLoading ? (
+                <Box sx={{ display: 'flex', justifyContent: 'center', py: 2 }}>
+                  <CircularProgress size={24} />
+                </Box>
+              ) : cursosError ? (
+                <Alert severity="error" sx={{ mb: 2 }}>
+                  {cursosError}
+                </Alert>
+              ) : cursos.length === 0 ? (
                 <Typography variant="body2" color="text.secondary">
-                  No tienes cursos creados aún.
+                  No tienes cursos inscritos aún.
                 </Typography>
               ) : (
                 cursos.map((curso) => {
-                  // Use progreso_estimado from curso or default to 0
-                  const progress = curso.progreso_estimado || 0;
-                  
                   return (
                     <Box key={curso.cursoId} sx={{ mb: 2 }}>
                       <Box sx={{ display: 'flex', justifyContent: 'space-between', mb: 0.5 }}>
@@ -169,19 +170,19 @@ export default function Dashboard() {
                           {curso.titulo}
                         </Typography>
                         <Typography variant="body2" color="text.secondary">
-                          {progress}%
+                          {curso.progreso}%
                         </Typography>
                       </Box>
                       <LinearProgress
                         variant="determinate"
-                        value={progress}
+                        value={curso.progreso}
                         sx={{
-                          height: 6,
+                          height: 8,
                           borderRadius: 3,
                           backgroundColor: 'grey.200',
                           '& .MuiLinearProgress-bar': {
                             borderRadius: 3,
-                            backgroundColor: 'primary.main',
+                            backgroundColor: 'success.main',
                           },
                         }}
                       />

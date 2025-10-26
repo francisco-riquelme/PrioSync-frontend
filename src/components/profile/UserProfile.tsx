@@ -20,12 +20,25 @@ import {
   DialogContent,
   DialogActions,
   CircularProgress,
+  Chip,
+  Accordion,
+  AccordionSummary,
+  AccordionDetails,
+  LinearProgress,
 } from '@mui/material';
 import {
   Edit as EditIcon,
   Security as SecurityIcon,
+  CheckCircle as CheckCircleIcon,
+  Quiz as QuizIcon,
+  Book as BookIcon,
+  School as SchoolIcon,
+  ExpandMore as ExpandMoreIcon,
 } from '@mui/icons-material';
 import { useUser } from '@/contexts/UserContext';
+import { useActividadUsuario } from '@/hooks/useActividadUsuario';
+import { useCursosConProgreso } from '@/hooks/useCursosConProgreso';
+import { formatearFechaAbsoluta } from '@/utils/dateHelpers';
 
 interface TabPanelProps {
   children?: React.ReactNode;
@@ -51,6 +64,8 @@ function TabPanel(props: TabPanelProps) {
 
 export default function UserProfile() {
   const { userData, loading } = useUser();
+  const { actividadesPorCurso, actividadesSinCurso, loading: loadingActividades, error: errorActividades } = useActividadUsuario();
+  const { cursos: cursosConProgreso } = useCursosConProgreso();
   const [tabValue, setTabValue] = useState(0);
   const [openPasswordDialog, setOpenPasswordDialog] = useState(false);
 
@@ -79,28 +94,27 @@ export default function UserProfile() {
     return apellido ? `${nombre} ${apellido}` : nombre;
   };
 
-  const activityHistory = [
-    {
-      title: 'Completado: Gestión de Proyectos',
-      subtitle: 'Curso Completo - Proyecto',
-      date: '01/09/2025'
-    },
-    {
-      title: 'HTML y CSS',
-      subtitle: 'Desarrollo de Software - Módulo',
-      date: '28/08/2025'
-    },
-    {
-      title: 'Evaluación Módulo 1',
-      subtitle: 'Cálculo Avanzado - Evaluación (100%)',
-      date: '25/08/2025'
-    },
-    {
-      title: 'Introducción a Derivadas',
-      subtitle: 'Cálculo Avanzado - Módulo',
-      date: '23/08/2025'
+  // Función para obtener el icono según el tipo de actividad
+  const getActividadIcon = (tipo: string) => {
+    switch (tipo) {
+      case 'leccion':
+        return <CheckCircleIcon sx={{ color: 'success.main', fontSize: 20 }} />;
+      case 'quiz':
+        return <QuizIcon sx={{ color: 'primary.main', fontSize: 20 }} />;
+      case 'sesion':
+        return <BookIcon sx={{ color: 'secondary.main', fontSize: 20 }} />;
+      case 'curso-completado':
+        return <SchoolIcon sx={{ color: 'warning.main', fontSize: 20 }} />;
+      default:
+        return <CheckCircleIcon sx={{ color: 'text.secondary', fontSize: 20 }} />;
     }
-  ];
+  };
+
+  // Función para obtener el progreso de un curso específico
+  const getProgresoCurso = (cursoId: string): number => {
+    const curso = cursosConProgreso.find(c => c.cursoId === cursoId);
+    return curso?.progreso || 0;
+  };
 
   return (
     <Box>
@@ -203,56 +217,156 @@ export default function UserProfile() {
       <TabPanel value={tabValue} index={1}>
         <Card>
           <CardContent>
-            <Box sx={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', mb: 2 }}>
-              <Typography variant="h6" sx={{ fontWeight: 600 }}>
-                Cambiar Contraseña
-              </Typography>
-              <Button
-                variant="contained"
-                sx={{
-                  backgroundColor: 'primary.main',
-                  '&:hover': {
-                    backgroundColor: 'primary.dark',
-                  },
-                }}
-              >
-                Actualizar Contraseña
-              </Button>
-            </Box>
-
-            <Typography variant="h6" gutterBottom sx={{ fontWeight: 600, mt: 4 }}>
+            <Typography variant="h6" gutterBottom sx={{ fontWeight: 600, mb: 3 }}>
               Historial de Actividad
             </Typography>
 
-            <Box sx={{ display: 'flex', gap: 2, mb: 3 }}>
-              <Button variant="outlined" size="small">
-                Todas
-              </Button>
-              <Button variant="text" size="small">
-                Tareas
-              </Button>
-            </Box>
+            {loadingActividades ? (
+              <Box sx={{ display: 'flex', justifyContent: 'center', p: 4 }}>
+                <CircularProgress />
+              </Box>
+            ) : errorActividades ? (
+              <Typography color="error" align="center" sx={{ p: 4 }}>
+                {errorActividades}
+              </Typography>
+            ) : actividadesPorCurso.length === 0 && actividadesSinCurso.length === 0 ? (
+              <Typography color="text.secondary" align="center" sx={{ p: 4 }}>
+                No hay actividades registradas todavía
+              </Typography>
+            ) : (
+              <Box sx={{ mt: 2 }}>
+                {/* Acordeones por curso */}
+                {actividadesPorCurso.map((curso) => {
+                  const progreso = getProgresoCurso(curso.cursoId);
+                  
+                  return (
+                    <Accordion key={curso.cursoId} defaultExpanded={false} sx={{ mb: 1 }}>
+                      <AccordionSummary
+                        expandIcon={<ExpandMoreIcon />}
+                        sx={{
+                          '&:hover': { bgcolor: 'action.hover' },
+                        }}
+                      >
+                        <Box sx={{ display: 'flex', alignItems: 'center', gap: 2, width: '100%', pr: 2 }}>
+                          <SchoolIcon sx={{ color: 'primary.main', fontSize: 28 }} />
+                          <Box sx={{ flex: 1 }}>
+                            <Typography variant="subtitle1" sx={{ fontWeight: 600 }}>
+                              {curso.cursoNombre}
+                            </Typography>
+                            <Box sx={{ display: 'flex', alignItems: 'center', gap: 1, mt: 0.5 }}>
+                              <Chip 
+                                label={`${curso.actividades.length} ${curso.actividades.length === 1 ? 'actividad' : 'actividades'}`}
+                                size="small"
+                                color="primary"
+                                variant="outlined"
+                              />
+                              {progreso > 0 && (
+                                <Box sx={{ display: 'flex', alignItems: 'center', gap: 0.5, minWidth: 100 }}>
+                                  <LinearProgress
+                                    variant="determinate"
+                                    value={progreso}
+                                    sx={{
+                                      width: 60,
+                                      height: 6,
+                                      borderRadius: 3,
+                                      bgcolor: 'success.light',
+                                      '& .MuiLinearProgress-bar': {
+                                        bgcolor: 'success.main',
+                                      },
+                                    }}
+                                  />
+                                  <Typography variant="caption" sx={{ fontWeight: 500, color: 'success.main' }}>
+                                    {progreso}%
+                                  </Typography>
+                                </Box>
+                              )}
+                            </Box>
+                          </Box>
+                        </Box>
+                      </AccordionSummary>
+                      
+                      <AccordionDetails sx={{ pt: 0 }}>
+                        <List sx={{ pt: 0 }}>
+                          {curso.actividades.map((actividad, index) => (
+                            <React.Fragment key={actividad.id}>
+                              <ListItem sx={{ px: 0, gap: 2 }}>
+                                <Box sx={{ display: 'flex', alignItems: 'center' }}>
+                                  {getActividadIcon(actividad.tipo)}
+                                </Box>
+                                <ListItemText
+                                  primary={
+                                    <Typography variant="body2" sx={{ fontWeight: 500 }}>
+                                      {actividad.titulo}
+                                    </Typography>
+                                  }
+                                  secondary={actividad.subtitulo}
+                                />
+                                <Typography variant="caption" color="text.secondary" sx={{ minWidth: 120, textAlign: 'right' }}>
+                                  {formatearFechaAbsoluta(actividad.fecha)}
+                                </Typography>
+                              </ListItem>
+                              {index < curso.actividades.length - 1 && <Divider />}
+                            </React.Fragment>
+                          ))}
+                        </List>
+                      </AccordionDetails>
+                    </Accordion>
+                  );
+                })}
 
-            <List>
-              {activityHistory.map((activity, index) => (
-                <React.Fragment key={index}>
-                  <ListItem sx={{ px: 0 }}>
-                    <ListItemText
-                      primary={
-                        <Typography variant="body1" sx={{ fontWeight: 500 }}>
-                          {activity.title}
-                        </Typography>
-                      }
-                      secondary={activity.subtitle}
-                    />
-                    <Typography variant="body2" color="text.secondary">
-                      {activity.date}
-                    </Typography>
-                  </ListItem>
-                  {index < activityHistory.length - 1 && <Divider />}
-                </React.Fragment>
-              ))}
-            </List>
+                {/* Acordeón para actividades sin curso (solo si existen) */}
+                {actividadesSinCurso.length > 0 && (
+                  <Accordion defaultExpanded={false} sx={{ mb: 1 }}>
+                    <AccordionSummary
+                      expandIcon={<ExpandMoreIcon />}
+                      sx={{
+                        '&:hover': { bgcolor: 'action.hover' },
+                      }}
+                    >
+                      <Box sx={{ display: 'flex', alignItems: 'center', gap: 2, width: '100%', pr: 2 }}>
+                        <BookIcon sx={{ color: 'text.secondary', fontSize: 28 }} />
+                        <Box sx={{ flex: 1 }}>
+                          <Typography variant="subtitle1" sx={{ fontWeight: 600 }}>
+                            Otras Actividades
+                          </Typography>
+                          <Chip 
+                            label={`${actividadesSinCurso.length} ${actividadesSinCurso.length === 1 ? 'actividad' : 'actividades'}`}
+                            size="small"
+                            variant="outlined"
+                          />
+                        </Box>
+                      </Box>
+                    </AccordionSummary>
+                    
+                    <AccordionDetails sx={{ pt: 0 }}>
+                      <List sx={{ pt: 0 }}>
+                        {actividadesSinCurso.map((actividad, index) => (
+                          <React.Fragment key={actividad.id}>
+                            <ListItem sx={{ px: 0, gap: 2 }}>
+                              <Box sx={{ display: 'flex', alignItems: 'center' }}>
+                                {getActividadIcon(actividad.tipo)}
+                              </Box>
+                              <ListItemText
+                                primary={
+                                  <Typography variant="body2" sx={{ fontWeight: 500 }}>
+                                    {actividad.titulo}
+                                  </Typography>
+                                }
+                                secondary={actividad.subtitulo}
+                              />
+                              <Typography variant="caption" color="text.secondary" sx={{ minWidth: 120, textAlign: 'right' }}>
+                                {formatearFechaAbsoluta(actividad.fecha)}
+                              </Typography>
+                            </ListItem>
+                            {index < actividadesSinCurso.length - 1 && <Divider />}
+                          </React.Fragment>
+                        ))}
+                      </List>
+                    </AccordionDetails>
+                  </Accordion>
+                )}
+              </Box>
+            )}
           </CardContent>
         </Card>
       </TabPanel>

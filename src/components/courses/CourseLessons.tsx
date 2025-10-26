@@ -194,7 +194,7 @@ function ModuloGenerateButton({
         },
       }}
     >
-      {loading ? 'Generando...' : progreso < 70 ? `Progreso: ${progreso}%` : 'Generar cuestionario'}
+      {loading ? 'Generando...' : progreso < 70 ? `Progreso: ${progreso}%` : 'Generar Quiz del Módulo'}
     </Box>
   );
 }
