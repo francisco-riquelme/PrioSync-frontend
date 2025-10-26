@@ -3890,6 +3890,25 @@
             }
           }
         },
+        "CrearMaterialResolverReturnType": {
+          "name": "CrearMaterialResolverReturnType",
+          "fields": {
+            "materialId": {
+              "name": "materialId",
+              "isArray": false,
+              "type": "String",
+              "isRequired": true,
+              "attributes": []
+            },
+            "message": {
+              "name": "message",
+              "isArray": false,
+              "type": "String",
+              "isRequired": false,
+              "attributes": []
+            }
+          }
+        },
         "GenerarCitasResolverReturnType": {
           "name": "GenerarCitasResolverReturnType",
           "fields": {
@@ -4037,6 +4056,22 @@
           "arguments": {
             "cursoId": {
               "name": "cursoId",
+              "isArray": false,
+              "type": "String",
+              "isRequired": true
+            }
+          }
+        },
+        "crearMaterialResolver": {
+          "name": "crearMaterialResolver",
+          "isArray": false,
+          "type": {
+            "nonModel": "CrearMaterialResolverReturnType"
+          },
+          "isRequired": false,
+          "arguments": {
+            "moduloId": {
+              "name": "moduloId",
               "isArray": false,
               "type": "String",
               "isRequired": true

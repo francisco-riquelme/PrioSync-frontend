@@ -56,9 +56,9 @@ export default function VerificationPage() {
     });
 
     if (result.success) {
-      // Redirigir al dashboard (página principal) después de 2 segundos
+      // Redirigir al login después de verificación exitosa
       setTimeout(() => {
-        router.push('/dashboard');
+        router.push('/auth/login?verified=true');
       }, 2000);
     }
   };
@@ -209,7 +209,7 @@ export default function VerificationPage() {
                 icon={<CheckCircle />}
                 sx={{ mb: 2 }}
               >
-                ¡Código verificado correctamente! Redirigiendo al dashboard...
+                ¡Cuenta verificada exitosamente! Redirigiendo al inicio de sesión...
               </Alert>
             )}
 

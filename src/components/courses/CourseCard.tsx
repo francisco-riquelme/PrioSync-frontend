@@ -6,6 +6,7 @@ import {
   CardContent,
   Button,
   Chip,
+  LinearProgress,
 } from '@mui/material';
 import { School as SchoolIcon } from '@mui/icons-material';
 import { useState } from 'react';
@@ -32,6 +33,7 @@ type UserCourse = NonNullable<SelectionSet<Usuario, UserCoursesSelectionSet>["Cu
 interface CourseCardProps {
   course: CourseListItem | UserCourse;
   onCourseClick: (courseId: number | string) => void;
+  progreso?: number; // 0-100, opcional
 }
 
 const formatDuration = (minutes: number) => {
@@ -48,7 +50,7 @@ const getLevelColor = (level: string) => {
   }
 };
 
-export const CourseCard = ({ course, onCourseClick }: CourseCardProps) => {
+export const CourseCard = ({ course, onCourseClick, progreso }: CourseCardProps) => {
   const [imageError, setImageError] = useState(false);
 
   const handleImageError = () => {
@@ -112,7 +114,7 @@ export const CourseCard = ({ course, onCourseClick }: CourseCardProps) => {
         sx={{ 
           flexGrow: 1, 
           display: 'grid',
-          gridTemplateRows: 'auto auto 1fr auto',
+          gridTemplateRows: progreso !== undefined ? 'auto auto 1fr auto auto' : 'auto auto 1fr auto',
           gap: 1,
           alignContent: 'start',
         }}
@@ -152,6 +154,33 @@ export const CourseCard = ({ course, onCourseClick }: CourseCardProps) => {
         >
           {course.descripcion}
         </Typography>
+
+        {/* Barra de progreso (solo si existe) */}
+        {progreso !== undefined && progreso >= 0 && (
+          <Box>
+            <Box sx={{ display: 'flex', justifyContent: 'space-between', mb: 0.5 }}>
+              <Typography variant="caption" color="text.secondary">
+                Progreso
+              </Typography>
+              <Typography variant="caption" color="text.secondary" sx={{ fontWeight: 600 }}>
+                {progreso}%
+              </Typography>
+            </Box>
+            <LinearProgress
+              variant="determinate"
+              value={progreso}
+              sx={{
+                height: 6,
+                borderRadius: 2,
+                backgroundColor: 'grey.200',
+                '& .MuiLinearProgress-bar': {
+                  borderRadius: 2,
+                  backgroundColor: 'success.main',
+                },
+              }}
+            />
+          </Box>
+        )}
 
         {/* Botón de acción */}
         <Button

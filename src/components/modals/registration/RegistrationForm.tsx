@@ -149,7 +149,7 @@ export default function RegistrationForm({
           error={errors.password}
           required
           autoComplete="new-password"
-          helperText="Mínimo 8 caracteres, con mayúscula, minúscula y número"
+          helperText="La contraseña debe contener al menos una letra mayúscula, una minúscula, un número y un símbolo (!@#$%^&*)"
           InputProps={{
             startAdornment: (
               <InputAdornment position="start">
