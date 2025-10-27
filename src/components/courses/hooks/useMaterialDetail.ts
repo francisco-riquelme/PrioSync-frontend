@@ -1,7 +1,6 @@
 import { useState, useEffect, useCallback } from "react";
 import { getQueryFactories } from "@/utils/commons/queries";
 import { MainTypes } from "@/utils/api/schema";
-import type { SelectionSet } from "aws-amplify/data";
 
 type MaterialEstudio = MainTypes["MaterialEstudio"]["type"];
 type Curso = MainTypes["Curso"]["type"];
@@ -35,13 +34,14 @@ const materialDetailSelectionSet = [
   "Leccion.completada",
   "Leccion.orden",
   "Leccion.moduloId",
+  "contenido_generado",
 ] as const;
 
-// Use SelectionSet to infer proper types
-type MaterialWithRelations = SelectionSet<
-  MaterialEstudio,
-  typeof materialDetailSelectionSet
->;
+type MaterialWithRelations = MaterialEstudio & {
+  Curso?: Record<string, unknown> | null;
+  Leccion?: Record<string, unknown> | null;
+  contenido_generado?: string | null;
+};
 
 // Extract nested types for easier access
 type CursoFromMaterial = NonNullable<MaterialWithRelations["Curso"]>;

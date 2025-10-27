@@ -11,28 +11,38 @@ function getClient() {
   return _client;
 }
 
-export interface CrearQuestionarioResponse {
+export interface CrearMaterialResponse {
+  materialId?: string;
   message?: string;
 }
 
-export interface UseCrearQuestionarioParams {
-  onSuccess?: () => void;
+export interface UseCrearMaterialParams {
+  onSuccess?: (materialId?: string) => void;
 }
 
-export const useCrearQuestionario = (params?: UseCrearQuestionarioParams) => {
+export const useCrearMaterial = (params?: UseCrearMaterialParams) => {
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
 
   const crear = useCallback(
-    async (moduloId: string): Promise<CrearQuestionarioResponse> => {
+    async (moduloId: string): Promise<CrearMaterialResponse> => {
       setLoading(true);
       setError(null);
       try {
         const client = getClient();
-        const { data, errors } =
-          await client.mutations.crearQuestionarioResolver({
-            moduloId: moduloId,
-          });
+        // Defensive check: ensure the generated client exposes the resolver method.
+        if (!client.mutations || typeof client.mutations.crearMaterialResolver !== 'function') {
+          // Log available mutation keys to help debugging in the browser console
+          // (useful when dev server needs restart or schema wasn't picked up).
+           
+          console.error('crearMaterialResolver no está disponible en client.mutations. Claves disponibles:',
+            client.mutations ? Object.keys(client.mutations) : client.mutations);
+          throw new Error('La mutación crearMaterialResolver no está disponible en el cliente GraphQL. Reinicia el servidor de desarrollo para recargar el esquema.');
+        }
+
+        const { data, errors } = await client.mutations.crearMaterialResolver({
+          moduloId: moduloId,
+        });
 
         if (errors && errors.length > 0) {
           const errorMessage = errors
@@ -48,29 +58,22 @@ export const useCrearQuestionario = (params?: UseCrearQuestionarioParams) => {
         }
 
         if (!data) {
-          const message = "No se pudo crear el cuestionario";
+          const message = "No se pudo crear el material";
           setError(message);
           throw new Error(message);
         }
 
-        // Call success callback if provided
+        const materialId = (data as unknown as CrearMaterialResponse).materialId;
+
         if (params?.onSuccess) {
-          console.log(
-            "✅ Quiz created successfully, calling onSuccess callback"
-          );
-          params.onSuccess();
-        } else {
-          console.log(
-            "✅ Quiz created successfully, but no onSuccess callback provided"
-          );
+          params.onSuccess(materialId);
         }
 
-        // Invalidate cache for Curso model since it now has a new quiz
+        // Invalidate Curso cache so UI refreshes
         const cache = getGlobalCache();
         cache.invalidatePattern("Curso:");
-        console.log("🗑️ Cache invalidated for Curso model");
 
-        return data as CrearQuestionarioResponse;
+        return data as CrearMaterialResponse;
       } catch (err) {
         const message = err instanceof Error ? err.message : String(err);
         setError(message);
@@ -84,3 +87,5 @@ export const useCrearQuestionario = (params?: UseCrearQuestionarioParams) => {
 
   return { loading, error, crear } as const;
 };
+
+export default useCrearMaterial;
