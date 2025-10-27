@@ -25,7 +25,7 @@ export const useCrearMaterial = (params?: UseCrearMaterialParams) => {
   const [error, setError] = useState<string | null>(null);
 
   const crear = useCallback(
-    async (moduloId: string): Promise<CrearMaterialResponse> => {
+    async (moduloId: string, modoGeneracion?: string): Promise<CrearMaterialResponse> => {
       setLoading(true);
       setError(null);
       try {
@@ -40,9 +40,10 @@ export const useCrearMaterial = (params?: UseCrearMaterialParams) => {
           throw new Error('La mutación crearMaterialResolver no está disponible en el cliente GraphQL. Reinicia el servidor de desarrollo para recargar el esquema.');
         }
 
-        const { data, errors } = await client.mutations.crearMaterialResolver({
-          moduloId: moduloId,
-        });
+        const variables: Record<string, unknown> = { moduloId: moduloId };
+        if (modoGeneracion) variables.modoGeneracion = modoGeneracion;
+
+  const { data, errors } = await client.mutations.crearMaterialResolver(variables as { moduloId: string; modoGeneracion?: string });
 
         if (errors && errors.length > 0) {
           const errorMessage = errors

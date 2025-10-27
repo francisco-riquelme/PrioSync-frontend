@@ -43,6 +43,7 @@ export const ResolverSchema = a
       .mutation()
       .arguments({
         moduloId: a.string().required(),
+        modoGeneracion: a.string(),
       })
       .returns(
         a.customType({
