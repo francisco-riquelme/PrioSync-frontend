@@ -91,8 +91,8 @@ export const useAuth = () => {
         localStorage.removeItem("priosync_user_data");
       }
 
-      // Redirect to login page
-      router.push("/auth/login");
+      // Redirect to landing page
+      router.push("/");
     } catch (error) {
       console.error("Logout error:", error);
     } finally {

@@ -16,7 +16,7 @@ export default function QuizPage() {
 
   useEffect(() => {
     if (!loading && !userData) {
-      router.push('/auth/login');
+      router.push('/');
     }
   }, [userData, loading, router]);
 
