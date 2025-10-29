@@ -4,11 +4,35 @@ import React, { createContext, useContext, useState, useEffect, ReactNode } from
 import { getCurrentUser, fetchAuthSession } from 'aws-amplify/auth';
 import { getQueryFactories } from '@/utils/commons/queries';
 import type { MainTypes } from '@/utils/api/schema';
-import type { SelectionSet } from 'aws-amplify/data';
 import { useAmplify } from '@/components/providers/AmplifyProvider';
 
 // Import schema types
 type Usuario = MainTypes["Usuario"]["type"];
+
+// Define types for curso with relations (matching SelectionSet return types exactly)
+interface CursoFromUsuario {
+  readonly cursoId: string;
+  readonly titulo: string;
+  readonly descripcion: string | null;
+  readonly imagen_portada: string | null;
+  readonly duracion_estimada: number | null;
+  readonly nivel_dificultad: "basico" | "intermedio" | "avanzado" | null;
+  readonly estado: "activo" | "inactivo" | null;
+  readonly createdAt: string;
+  readonly updatedAt: string;
+}
+
+interface UsuarioWithRelations {
+  usuarioId: string;
+  email: string;
+  nombre?: string | null;
+  apellido?: string | null;
+  ultimo_login?: string | null;
+  isValid?: boolean | null;
+  createdAt?: string | null;
+  updatedAt?: string | null;
+  Cursos?: CursoFromUsuario[];
+}
 
 // Simplified InscripcionCurso for client-side (without lazy loaders)
 export interface InscripcionCurso {
@@ -39,7 +63,7 @@ export interface UserData {
   avatar?: string;
   
   // Relationships (simplified for client-side use)
-  Cursos?: NonNullable<UsuarioWithRelations["Cursos"]>;
+  Cursos?: CursoFromUsuario[];
   InscripcionesCurso?: InscripcionCurso[];
   activities?: Activity[];
 }
@@ -95,11 +119,7 @@ const userSelectionSet = [
   'Cursos.updatedAt',
 ] as const;
 
-// Use SelectionSet to infer proper types
-type UsuarioWithRelations = SelectionSet<
-  Usuario,
-  typeof userSelectionSet
->;
+// UsuarioWithRelations type is defined above
 
 // Function to fetch user data from database
 const fetchUserFromDatabase = async (usuarioId: string): Promise<UserData | null> => {

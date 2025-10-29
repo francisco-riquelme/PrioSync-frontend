@@ -37,15 +37,44 @@ const materialDetailSelectionSet = [
   "contenido_generado",
 ] as const;
 
-type MaterialWithRelations = MaterialEstudio & {
-  Curso?: Record<string, unknown> | null;
-  Leccion?: Record<string, unknown> | null;
-  contenido_generado?: string | null;
-};
+// Define types for response data (doesn't extend complex Amplify types)
+interface CursoFromMaterial {
+  cursoId: string;
+  titulo: string;
+  descripcion?: string | null;
+  imagen_portada?: string | null;
+  duracion_estimada?: number | null;
+  nivel_dificultad?: string | null;
+  estado?: string | null;
+  progreso_estimado?: number | null;
+}
 
-// Extract nested types for easier access
-type CursoFromMaterial = NonNullable<MaterialWithRelations["Curso"]>;
-type LeccionFromMaterial = NonNullable<MaterialWithRelations["Leccion"]>;
+interface LeccionFromMaterial {
+  leccionId: string;
+  titulo: string;
+  descripcion?: string | null;
+  duracion_minutos?: number | null;
+  tipo?: string | null;
+  url_contenido: string;
+  completada?: boolean | null;
+  orden?: number | null;
+  moduloId: string;
+}
+
+interface MaterialWithRelations {
+  materialEstudioId: string;
+  titulo: string;
+  tipo?: string | null;
+  url_contenido: string;
+  orden?: number | null;
+  descripcion?: string | null;
+  cuestionarioId?: string | null;
+  cursoId: string;
+  leccionId?: string | null;
+  Curso?: CursoFromMaterial;
+  Leccion?: LeccionFromMaterial;
+  contenido_generado?: string | null;
+}
 
 export interface UseMaterialDetailParams {
   materialId: string;

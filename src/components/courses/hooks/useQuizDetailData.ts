@@ -1,7 +1,6 @@
 import { useState, useEffect, useCallback } from "react";
 import { getQueryFactories } from "@/utils/commons/queries";
 import { MainTypes } from "@/utils/api/schema";
-import type { SelectionSet } from "aws-amplify/data";
 
 type Cuestionario = MainTypes["Cuestionario"]["type"];
 type Pregunta = MainTypes["Pregunta"]["type"];
@@ -92,31 +91,80 @@ const quizAnswersSelectionSet = [
   "Opcion.es_correcta",
 ] as const;
 
-// Use SelectionSet to infer proper types
-type CuestionarioWithQuestions = SelectionSet<
-  Cuestionario,
-  typeof quizDetailSelectionSet
->;
-type ProgresoCuestionarioWithRelations = SelectionSet<
-  ProgresoCuestionario,
-  typeof quizAttemptsSelectionSet
->;
-type RespuestaWithRelations = SelectionSet<
-  Respuesta,
-  typeof quizAnswersSelectionSet
->;
+// Define types for response data (doesn't extend complex Amplify types)
+export interface OpcionPreguntaDetail {
+  opcionId: string;
+  texto: string;
+  orden?: number | null;
+  imagen?: string | null;
+  audio?: string | null;
+  video?: string | null;
+  archivo?: string | null;
+  es_correcta: boolean;
+}
 
-// Extract nested types for easier access
-export type PreguntaFromCuestionario = NonNullable<
-  CuestionarioWithQuestions["Preguntas"]
->[0];
-export type OpcionFromPregunta = NonNullable<
-  PreguntaFromCuestionario["Opciones"]
->[0];
+export type PreguntaFromCuestionario = {
+  preguntaId: string;
+  texto_pregunta: string;
+  tipo?: string | null;
+  peso_puntos?: number | null;
+  orden?: number | null;
+  explicacion?: string | null;
+  Opciones?: OpcionPreguntaDetail[];
+};
+
+export interface CuestionarioWithQuestions {
+  cuestionarioId: string;
+  titulo: string;
+  descripcion?: string | null;
+  tipo?: string | null;
+  puntos_maximos?: number | null;
+  duracion_minutos?: number | null;
+  intentos_permitidos?: number | null;
+  preguntas_aleatorias?: boolean | null;
+  porcentaje_aprobacion?: number | null;
+  cursoId: string;
+  tensionId?: string | null;
+  materialEstudioId?: string | null;
+  Preguntas?: PreguntaFromCuestionario[];
+}
+
+interface ProgresoCuestionarioWithRelations {
+  progresoCuestionarioId: string;
+  estado?: string | null;
+  puntaje_obtenido?: number | null;
+  aprobado?: boolean | null;
+  fecha_completado?: string | null;
+  intento_numero: number;
+  ultima_pregunta_respondida?: number | null;
+  recomendaciones?: string | null;
+  usuarioId: string;
+  cuestionarioId: string;
+}
+
+interface RespuestaWithRelations {
+  respuestaId: string;
+  respuesta_texto?: string | null;
+  es_correcta?: boolean | null;
+  fecha_respuesta?: string | null;
+  usuarioId: string;
+  preguntaId: string;
+  opcionId?: string | null;
+  progresoCuestionarioId?: string | null;
+}
 
 // Quiz attempt with extended info
-export interface QuizAttemptWithAnswers
-  extends ProgresoCuestionarioWithRelations {
+export interface QuizAttemptWithAnswers {
+  progresoCuestionarioId: string;
+  estado?: string | null;
+  puntaje_obtenido?: number | null;
+  aprobado?: boolean | null;
+  fecha_completado?: string | null;
+  intento_numero: number;
+  ultima_pregunta_respondida?: number | null;
+  recomendaciones?: string | null;
+  usuarioId: string;
+  cuestionarioId: string;
   respuestas?: RespuestaWithRelations[];
 }
 
@@ -174,7 +222,7 @@ export const useQuizDetailData = (
       })) as unknown as CuestionarioWithQuestions;
 
       if (!quizRes) {
-        throw new Error("Cuestionario no encontrado");
+        throw new Error("Cuestionario no encontiach");
       }
 
       setQuiz(quizRes);
