@@ -23,7 +23,6 @@ import {
   OpenInNew as OpenInNewIcon,
   ArrowForward as ArrowForwardIcon,
 } from '@mui/icons-material';
-import { getMaterialTypeIcon, getMaterialTypeColor, getMaterialTypeLabel } from './courseUtils';
 import type { MaterialFromCourse } from './hooks/useCourseDetailData';
 
 interface CourseMaterialsProps {

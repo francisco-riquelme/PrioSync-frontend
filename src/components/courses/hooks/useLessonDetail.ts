@@ -1,7 +1,6 @@
 import { useState, useEffect, useCallback } from "react";
 import { getQueryFactories } from "@/utils/commons/queries";
 import { MainTypes } from "@/utils/api/schema";
-import type { SelectionSet } from "aws-amplify/data";
 
 type Leccion = MainTypes["Leccion"]["type"];
 type Modulo = MainTypes["Modulo"]["type"];
