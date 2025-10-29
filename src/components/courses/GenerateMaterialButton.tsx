@@ -10,9 +10,10 @@ interface GenerateMaterialButtonProps {
   onSuccess?: (materialId?: string) => void;
   label?: string;
   disabled?: boolean;
+  allowExtended?: boolean;
 }
 
-export const GenerateMaterialButton: React.FC<GenerateMaterialButtonProps> = ({ moduloId, onSuccess, label = 'Generar Material de Estudio', disabled = false }) => {
+export const GenerateMaterialButton: React.FC<GenerateMaterialButtonProps> = ({ moduloId, onSuccess, label = 'Generar Material de Estudio', disabled = false, allowExtended = true }) => {
   const [localLoading, setLocalLoading] = useState(false);
   type Mode = 'torpedo' | 'rapido' | 'normal' | 'extendido';
   const crearHook = useCrearMaterial({ onSuccess });
@@ -33,7 +34,9 @@ export const GenerateMaterialButton: React.FC<GenerateMaterialButtonProps> = ({ 
     if (disabled || crearHook.loading || localLoading) return;
     try {
       setLocalLoading(true);
-      await crearHook.crear(moduloId, selectedModo);
+      console.info('[GenerateMaterialButton] solicitando creación', { moduloId, modo: selectedModo });
+      const res = await crearHook.crear(moduloId, selectedModo);
+      console.info('[GenerateMaterialButton] respuesta creación:', res);
     } catch (err) {
       console.error('Error creando material:', err);
     } finally {
@@ -82,10 +85,13 @@ export const GenerateMaterialButton: React.FC<GenerateMaterialButtonProps> = ({ 
           </MenuItem>
         </Tooltip>
 
-        <Tooltip title="700–1500 palabras" placement="right">
-          <MenuItem onClick={() => handleCreate('extendido')}>
-            <ListItemText primary="Extendido" secondary="detallado" />
-          </MenuItem>
+        <Tooltip title={allowExtended ? '700–1500 palabras' : 'Requiere 100% del progreso del módulo'} placement="right">
+          {/* Tooltip children must be a single element; wrap disabled MenuItem in span so tooltip works */}
+          <span>
+            <MenuItem disabled={!allowExtended} onClick={() => handleCreate('extendido')}>
+              <ListItemText primary="Extendido" secondary="detallado" />
+            </MenuItem>
+          </span>
         </Tooltip>
       </Menu>
     </Box>

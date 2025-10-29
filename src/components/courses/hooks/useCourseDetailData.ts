@@ -1,7 +1,6 @@
 import { useState, useEffect, useCallback } from "react";
 import { getQueryFactories } from "@/utils/commons/queries";
 import { MainTypes } from "@/utils/api/schema";
-import type { SelectionSet } from "aws-amplify/data";
 
 type Course = MainTypes["Curso"]["type"];
 type Modulo = MainTypes["Modulo"]["type"];
@@ -52,6 +51,7 @@ const courseDetailSelectionSet = [
   "MaterialEstudio.titulo",
   "MaterialEstudio.tipo",
   "MaterialEstudio.url_contenido",
+  "MaterialEstudio.modo_generacion",
   "MaterialEstudio.orden",
   "MaterialEstudio.descripcion",
   "MaterialEstudio.cuestionarioId",
@@ -73,10 +73,12 @@ const courseDetailSelectionSet = [
 ] as const;
 
 // Use SelectionSet to infer proper types
-type CourseWithRelations = SelectionSet<
-  Course,
-  typeof courseDetailSelectionSet
->;
+// Fallback to an explicit shape for relations to avoid strict SelectionSet validation errors
+type CourseWithRelations = Course & {
+  Modulos?: (Modulo & { Lecciones?: Leccion[] })[];
+  MaterialEstudio?: MaterialEstudio[];
+  Cuestionarios?: Cuestionario[];
+};
 
 // Extract nested types for easier access
 export type ModuloWithLecciones = NonNullable<

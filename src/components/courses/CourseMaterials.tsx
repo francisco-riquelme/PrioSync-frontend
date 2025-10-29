@@ -60,7 +60,8 @@ export default function CourseMaterials({ materiales, loading }: CourseMaterials
                 <TableCell>Orden</TableCell>
                 <TableCell>Título</TableCell>
                 <TableCell>Descripción</TableCell>
-                <TableCell>Tipo</TableCell>
+                  <TableCell>Tipo</TableCell>
+                  <TableCell>Modo</TableCell>
                 <TableCell align="center">Acciones</TableCell>
               </TableRow>
             </TableHead>
@@ -114,6 +115,15 @@ export default function CourseMaterials({ materiales, loading }: CourseMaterials
                         variant="outlined"
                       />
                     </Box>
+                  </TableCell>
+                  <TableCell>
+                    {(() => {
+                      // Avoid using `any` to satisfy eslint rule. The backend may return either
+                      // `modoGeneracion` or `modo_generacion` depending on mapping, so cast via unknown.
+                      const m = material as unknown as { modoGeneracion?: string; modo_generacion?: string };
+                      const modo = m.modoGeneracion ?? m.modo_generacion;
+                      return modo ? <Chip label={String(modo)} size="small" variant="outlined" /> : '-';
+                    })()}
                   </TableCell>
                   <TableCell align="center">
                     <Box sx={{ display: 'flex', gap: 1, justifyContent: 'center' }}>

@@ -230,6 +230,8 @@ function ModuleBlock({
     modulo.Lecciones ? modulo.Lecciones.some((l) => l.leccionId === m.leccionId) : false
   );
   const hasMaterial = !!moduleMaterial;
+  const { progreso, loading: progresoLoading } = useProgresoModulo({ modulo, usuarioId: userId || '' });
+  const allowExtended = !progresoLoading && progreso === 100;
 
   return (
     <Accordion
@@ -319,6 +321,7 @@ function ModuleBlock({
               moduloId={modulo.moduloId}
               label={hasMaterial ? 'Material existente' : 'Generar Material'}
               disabled={!!hasMaterial}
+              allowExtended={allowExtended}
               onSuccess={() => {
                 if (onNotify) onNotify('Material generado correctamente', 'success');
                 if (onMaterialCreated) onMaterialCreated();
