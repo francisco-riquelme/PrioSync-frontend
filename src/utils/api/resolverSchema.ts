@@ -41,19 +41,6 @@ export const ResolverSchema = a
       })
       .returns(a.customType({ message: a.string().required() })),
 
-    crearMaterialResolver: a
-      .mutation()
-      .arguments({
-        moduloId: a.string().required(),
-        modoGeneneracion: a.string(),
-      })
-      .returns(
-        a.customType({
-          materialId: a.string().required(),
-          message: a.string(),
-        })
-      ),
-
     generarCitasResolver: a
       .mutation()
       .arguments({
