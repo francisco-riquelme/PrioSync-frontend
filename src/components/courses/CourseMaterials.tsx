@@ -57,11 +57,9 @@ export default function CourseMaterials({ materiales, loading }: CourseMaterials
           <Table>
             <TableHead>
               <TableRow>
-                <TableCell>Orden</TableCell>
                 <TableCell>Título</TableCell>
                 <TableCell>Descripción</TableCell>
                   <TableCell>Tipo</TableCell>
-                  <TableCell>Modo</TableCell>
                 <TableCell align="center">Acciones</TableCell>
               </TableRow>
             </TableHead>
@@ -76,14 +74,6 @@ export default function CourseMaterials({ materiales, loading }: CourseMaterials
                     } 
                   }}
                 >
-                  <TableCell>
-                    <Chip
-                      label={material.orden || '-'}
-                      size="small"
-                      color="primary"
-                      variant="outlined"
-                    />
-                  </TableCell>
                   <TableCell>
                     <Link
                       component={NextLink}
@@ -106,20 +96,7 @@ export default function CourseMaterials({ materiales, loading }: CourseMaterials
                     </Typography>
                   </TableCell>
                   <TableCell>
-                    <Box sx={{ display: 'flex', alignItems: 'center', gap: 1 }}>
-                      {getMaterialTypeIcon(material.tipo)}
-                      <Chip
-                        label={getMaterialTypeLabel(material.tipo)}
-                        size="small"
-                        color={getMaterialTypeColor(material.tipo)}
-                        variant="outlined"
-                      />
-                    </Box>
-                  </TableCell>
-                  <TableCell>
                     {(() => {
-                      // Avoid using `any` to satisfy eslint rule. The backend may return either
-                      // `modoGeneracion` or `modo_generacion` depending on mapping, so cast via unknown.
                       const m = material as unknown as { modoGeneracion?: string; modo_generacion?: string };
                       const modo = m.modoGeneracion ?? m.modo_generacion;
                       return modo ? <Chip label={String(modo)} size="small" variant="outlined" /> : '-';
