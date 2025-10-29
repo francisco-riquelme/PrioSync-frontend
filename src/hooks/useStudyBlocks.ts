@@ -2,7 +2,6 @@ import { useState, useEffect, useCallback } from "react";
 import { getQueryFactories } from "@/utils/commons/queries";
 import { MainTypes } from "@/utils/api/schema";
 import { DaySchedule, TimeSlot } from "@/components/modals/welcome/types";
-import type { SelectionSet } from "aws-amplify/data";
 import {
   StudyBlock,
   DiaSemana,
@@ -21,11 +20,20 @@ const usuarioWithBloqueEstudioSelectionSet = [
   "BloqueEstudio.usuarioId",
 ] as const;
 
-// Use SelectionSet to infer proper types
-type UsuarioWithBloqueEstudio = SelectionSet<
-  MainTypes["Usuario"]["type"],
-  typeof usuarioWithBloqueEstudioSelectionSet
->;
+// Lightweight interfaces to avoid complex SelectionSet unions
+type UsuarioBloqueEstudioLite = {
+  readonly bloqueEstudioId: string;
+  readonly dia_semana: string;
+  readonly hora_inicio: string;
+  readonly hora_fin: string;
+  readonly duracion_minutos: number | null;
+  readonly usuarioId: string;
+};
+
+type UsuarioWithBloqueEstudioLite = {
+  readonly usuarioId: string;
+  readonly BloqueEstudio: readonly UsuarioBloqueEstudioLite[] | null;
+};
 
 export interface UseStudyBlocksParams {
   usuarioId?: string;
@@ -90,7 +98,7 @@ export const useStudyBlocks = (
       const userRes = (await Usuario.get({
         input: { usuarioId },
         selectionSet: usuarioWithBloqueEstudioSelectionSet,
-      })) as unknown as UsuarioWithBloqueEstudio;
+      })) as unknown as UsuarioWithBloqueEstudioLite;
 
       // Access the BloqueEstudio relationship data
       const blocks: StudyBlock[] = (userRes?.BloqueEstudio || []).map(

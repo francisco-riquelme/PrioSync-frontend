@@ -12,26 +12,22 @@ import { School as SchoolIcon } from '@mui/icons-material';
 import { useState } from 'react';
 import { CourseListItem } from '@/components/courses/hooks/useCoursesListData';
 import type { MainTypes } from '@/utils/api/schema';
-import type { SelectionSet } from 'aws-amplify/data';
 
-// Type for courses from UserContext using SelectionSet
-type Usuario = MainTypes["Usuario"]["type"];
-type UserCoursesSelectionSet = [
-  'Cursos.cursoId',
-  'Cursos.titulo',
-  'Cursos.descripcion',
-  'Cursos.imagen_portada',
-  'Cursos.duracion_estimada',
-  'Cursos.nivel_dificultad',
-  'Cursos.estado',
-  'Cursos.createdAt',
-  'Cursos.updatedAt'
-];
-
-type UserCourse = NonNullable<SelectionSet<Usuario, UserCoursesSelectionSet>["Cursos"]>[0];
+// Type for courses from UserContext
+interface CursoFromUsuario {
+  readonly cursoId: string;
+  readonly titulo: string;
+  readonly descripcion: string | null;
+  readonly imagen_portada: string | null;
+  readonly duracion_estimada: number | null;
+  readonly nivel_dificultad: "basico" | "intermedio" | "avanzado" | null;
+  readonly estado: "activo" | "inactivo" | null;
+  readonly createdAt: string | null;
+  readonly updatedAt: string | null;
+}
 
 interface CourseCardProps {
-  course: CourseListItem | UserCourse;
+  course: CourseListItem | CursoFromUsuario;
   onCourseClick: (courseId: number | string) => void;
   progreso?: number; // 0-100, opcional
 }

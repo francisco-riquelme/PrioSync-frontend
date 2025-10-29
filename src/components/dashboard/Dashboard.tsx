@@ -16,15 +16,17 @@ import {
   CircularProgress,
   Alert,
 } from '@mui/material';
-import { Person as PersonIcon } from '@mui/icons-material';
+import { Person as PersonIcon, CloudUpload as CloudUploadIcon } from '@mui/icons-material';
+import ImportCourseModal from './ImportCourseModal';
 
 export default function Dashboard() {
   const router = useRouter();
-  const { userData, loading } = useUser();
-  const { cursos, loading: cursosLoading, error: cursosError } = useCursosConProgreso();
+  const { userData, loading, refreshUser } = useUser();
+  const { cursos, loading: cursosLoading, error: cursosError, recargar } = useCursosConProgreso();
   
   const [aiAdvice, setAiAdvice] = useState<string>('**Evalúa tu conocimiento activamente sin consultar tus apuntes para identificar lagunas y reforzar el aprendizaje.**');
   const [loadingAdvice, setLoadingAdvice] = useState(false);
+  const [importModalOpen, setImportModalOpen] = useState(false);
   
   // Generate AI advice function
   const generateAIAdvice = useCallback(async () => {
@@ -74,12 +76,27 @@ export default function Dashboard() {
     router.push('/profile');
   };
 
+  const handleImportSuccess = async () => {
+    // Refresh user data to get the new course
+    await refreshUser();
+    // Refresh course progress
+    await recargar();
+  };
+
 
   // Prepare user data
   const greeting = `¡Hola, ${displayName}!`;
 
   return (
     <Box>
+      {/* Import Modal */}
+      <ImportCourseModal
+        open={importModalOpen}
+        onClose={() => setImportModalOpen(false)}
+        userId={userData?.usuarioId || ''}
+        onSuccess={handleImportSuccess}
+      />
+
       {/* Primera fila */}
       <Box
         sx={{
@@ -145,9 +162,19 @@ export default function Dashboard() {
         {/* Progreso de cursos */}
         <Card>
           <CardContent>
-            <Typography variant="h6" gutterBottom sx={{ fontWeight: 600 }}>
-              Progreso de Cursos
-            </Typography>
+            <Box sx={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', mb: 2 }}>
+              <Typography variant="h6" sx={{ fontWeight: 600 }}>
+                Progreso de Cursos
+              </Typography>
+              <Button
+                variant="outlined"
+                size="small"
+                startIcon={<CloudUploadIcon />}
+                onClick={() => setImportModalOpen(true)}
+              >
+                Importar Curso
+              </Button>
+            </Box>
             <Box sx={{ mt: 2 }}>
               {cursosLoading ? (
                 <Box sx={{ display: 'flex', justifyContent: 'center', py: 2 }}>

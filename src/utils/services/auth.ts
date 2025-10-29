@@ -1,4 +1,4 @@
-import { signUp, confirmSignUp, signIn } from "aws-amplify/auth";
+import { signUp, confirmSignUp, signIn, updatePassword } from "aws-amplify/auth";
 import { DaySchedule } from "@/components/modals/welcome/types";
 
 export interface SignUpInput {
@@ -53,6 +53,16 @@ export interface SignUpWithStudyPreferencesResult {
   isSignUpComplete: boolean;
   userId?: string;
   nextStep?: unknown;
+  success: boolean;
+  error?: string;
+}
+
+export interface UpdatePasswordInput {
+  oldPassword: string;
+  newPassword: string;
+}
+
+export interface UpdatePasswordResult {
   success: boolean;
   error?: string;
 }
@@ -296,6 +306,38 @@ export const authService = {
    */
   validateConfirmationCode(code: string): boolean {
     return /^\d{6}$/.test(code);
+  },
+
+  /**
+   * Updates user's password while authenticated
+   * @param input - Current and new password
+   * @returns Promise with update result
+   */
+  async updatePassword(input: UpdatePasswordInput): Promise<UpdatePasswordResult> {
+    try {
+      // Validate new password strength
+      const passwordValidation = this.validatePassword(input.newPassword);
+      if (!passwordValidation.isValid) {
+        return {
+          success: false,
+          error: passwordValidation.message || 'Contraseña inválida',
+        };
+      }
+
+      await updatePassword({
+        oldPassword: input.oldPassword,
+        newPassword: input.newPassword,
+      });
+
+      return { success: true };
+    } catch (error) {
+      console.error('Update password error:', error);
+
+      return {
+        success: false,
+        error: error instanceof Error ? error.message : 'Error al actualizar contraseña',
+      };
+    }
   },
 };
 

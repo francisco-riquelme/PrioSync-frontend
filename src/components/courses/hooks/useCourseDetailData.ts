@@ -1,7 +1,6 @@
 import { useState, useEffect, useCallback } from "react";
 import { getQueryFactories } from "@/utils/commons/queries";
 import { MainTypes } from "@/utils/api/schema";
-import type { SelectionSet } from "aws-amplify/data";
 
 type Course = MainTypes["Curso"]["type"];
 type Modulo = MainTypes["Modulo"]["type"];
@@ -72,36 +71,97 @@ const courseDetailSelectionSet = [
   "Cuestionarios.materialEstudioId",
 ] as const;
 
-// Use SelectionSet to infer proper types
-type CourseWithRelations = SelectionSet<
-  Course,
-  typeof courseDetailSelectionSet
->;
+// Lightweight explicit interfaces matching the selection set
+type LeccionLite = {
+  readonly leccionId: string;
+  readonly titulo: string;
+  readonly descripcion: string | null;
+  readonly duracion_minutos: number | null;
+  readonly tipo: string | null;
+  readonly url_contenido: string | null;
+  readonly completada: boolean | null;
+  readonly orden: number | null;
+  readonly moduloId: string | null;
+};
 
-// Extract nested types for easier access
-export type ModuloWithLecciones = NonNullable<
-  CourseWithRelations["Modulos"]
->[0];
-export type LeccionFromModulo = NonNullable<
-  ModuloWithLecciones["Lecciones"]
->[0];
-export type MaterialFromCourse = NonNullable<
-  CourseWithRelations["MaterialEstudio"]
->[0];
-export type CuestionarioFromCourse = NonNullable<
-  CourseWithRelations["Cuestionarios"]
->[0];
+type ModuloWithLeccionesLite = {
+  readonly moduloId: string;
+  readonly titulo: string;
+  readonly descripcion: string | null;
+  readonly duracion_estimada: number | null;
+  readonly orden: number | null;
+  readonly imagen_portada: string | null;
+  readonly progreso_estimado: number | null;
+  readonly cursoId: string;
+  readonly Lecciones: readonly LeccionLite[] | null;
+};
+
+type MaterialFromCourseLite = {
+  readonly materialEstudioId: string;
+  readonly titulo: string;
+  readonly tipo: string | null;
+  readonly url_contenido: string | null;
+  readonly orden: number | null;
+  readonly descripcion: string | null;
+  readonly cuestionarioId: string | null;
+  readonly cursoId: string | null;
+  readonly leccionId: string | null;
+};
+
+type CuestionarioFromCourseLite = {
+  readonly cuestionarioId: string;
+  readonly titulo: string;
+  readonly descripcion: string | null;
+  readonly tipo: string | null;
+  readonly puntos_maximos: number | null;
+  readonly duracion_minutos: number | null;
+  readonly intentos_permitidos: number | null;
+  readonly preguntas_aleatorias: boolean | null;
+  readonly porcentaje_aprobacion: number | null;
+  readonly cursoId: string | null;
+  readonly moduloId: string | null;
+  readonly materialEstudioId: string | null;
+};
+
+type CourseWithRelationsLite = {
+  readonly cursoId: string;
+  readonly titulo: string;
+  readonly descripcion: string | null;
+  readonly imagen_portada: string | null;
+  readonly duracion_estimada: number | null;
+  readonly nivel_dificultad: "basico" | "intermedio" | "avanzado" | null;
+  readonly estado: "activo" | "inactivo" | null;
+  readonly progreso_estimado: number | null;
+  readonly playlistId: string | null;
+  readonly playlistTitle: string | null;
+  readonly playlistDescription: string | null;
+  readonly playlistThumbnail: string | null;
+  readonly playlistChannelTitle: string | null;
+  readonly playlistChannelId: string | null;
+  readonly playlistPublishedAt: string | null;
+  readonly playlistItemCount: number | null;
+  readonly usuarioId: string;
+  readonly Modulos: readonly ModuloWithLeccionesLite[] | null;
+  readonly MaterialEstudio: readonly MaterialFromCourseLite[] | null;
+  readonly Cuestionarios: readonly CuestionarioFromCourseLite[] | null;
+};
+
+// Extract nested types for easier access (alias to lite types)
+export type ModuloWithLecciones = ModuloWithLeccionesLite;
+export type LeccionFromModulo = LeccionLite;
+export type MaterialFromCourse = MaterialFromCourseLite;
+export type CuestionarioFromCourse = CuestionarioFromCourseLite;
 
 export interface UseCourseDetailDataParams {
   cursoId: string | number;
 }
 
 export interface UseCourseDetailDataReturn {
-  course: CourseWithRelations | null;
-  modulos: ModuloWithLecciones[];
-  lecciones: LeccionFromModulo[];
-  materiales: MaterialFromCourse[];
-  quizzes: CuestionarioFromCourse[];
+  course: CourseWithRelationsLite | null;
+  modulos: ModuloWithLeccionesLite[];
+  lecciones: LeccionLite[];
+  materiales: MaterialFromCourseLite[];
+  quizzes: CuestionarioFromCourseLite[];
   loading: boolean;
   error: string | null;
   refreshCourseData: () => Promise<void>;
@@ -118,11 +178,11 @@ export const useCourseDetailData = (
 ): UseCourseDetailDataReturn => {
   const { cursoId } = params;
 
-  const [course, setCourse] = useState<CourseWithRelations | null>(null);
-  const [modulos, setModulos] = useState<ModuloWithLecciones[]>([]);
-  const [lecciones, setLecciones] = useState<LeccionFromModulo[]>([]);
-  const [materiales, setMateriales] = useState<MaterialFromCourse[]>([]);
-  const [quizzes, setQuizzes] = useState<CuestionarioFromCourse[]>([]);
+  const [course, setCourse] = useState<CourseWithRelationsLite | null>(null);
+  const [modulos, setModulos] = useState<ModuloWithLeccionesLite[]>([]);
+  const [lecciones, setLecciones] = useState<LeccionLite[]>([]);
+  const [materiales, setMateriales] = useState<MaterialFromCourseLite[]>([]);
+  const [quizzes, setQuizzes] = useState<CuestionarioFromCourseLite[]>([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
 
@@ -145,19 +205,19 @@ export const useCourseDetailData = (
           cursoId: cursoId.toString(),
         },
         selectionSet: courseDetailSelectionSet,
-      })) as unknown as CourseWithRelations;
+      })) as unknown as CourseWithRelationsLite;
 
       if (courseRes) {
         setCourse(courseRes);
 
         // Extract and sort modules
-        const allModulos: ModuloWithLecciones[] = [];
-        const allLecciones: LeccionFromModulo[] = [];
+        const allModulos: ModuloWithLeccionesLite[] = [];
+        const allLecciones: LeccionLite[] = [];
 
         if (courseRes.Modulos) {
           for (const modulo of courseRes.Modulos) {
             const moduloWithLecciones =
-              modulo as unknown as ModuloWithLecciones;
+              modulo as unknown as ModuloWithLeccionesLite;
             allModulos.push(moduloWithLecciones);
 
             if (moduloWithLecciones.Lecciones) {
@@ -166,7 +226,7 @@ export const useCourseDetailData = (
                 ...moduloWithLecciones.Lecciones,
               ].sort((a, b) => (a.orden || 0) - (b.orden || 0));
               allLecciones.push(
-                ...(leccionesOrdenadas as unknown as LeccionFromModulo[])
+                ...(leccionesOrdenadas as unknown as LeccionLite[])
               );
             }
           }
@@ -181,18 +241,18 @@ export const useCourseDetailData = (
         setLecciones(allLecciones);
 
         // Extract materials and quizzes
-        const allMateriales: MaterialFromCourse[] = [];
-        const allQuizzes: CuestionarioFromCourse[] = [];
+        const allMateriales: MaterialFromCourseLite[] = [];
+        const allQuizzes: CuestionarioFromCourseLite[] = [];
 
         if (courseRes.MaterialEstudio) {
           for (const material of courseRes.MaterialEstudio) {
-            allMateriales.push(material as unknown as MaterialFromCourse);
+            allMateriales.push(material as unknown as MaterialFromCourseLite);
           }
         }
 
         if (courseRes.Cuestionarios) {
           for (const quiz of courseRes.Cuestionarios) {
-            allQuizzes.push(quiz as unknown as CuestionarioFromCourse);
+            allQuizzes.push(quiz as unknown as CuestionarioFromCourseLite);
           }
         }
 

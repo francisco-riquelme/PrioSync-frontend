@@ -367,7 +367,7 @@ function ModuleBlock({
                 </TableRow>
               </TableHead>
               <TableBody>
-                {modulo.Lecciones
+                {[...(modulo.Lecciones || [])]
                   .sort((a: LeccionFromModulo, b: LeccionFromModulo) => (a.orden || 0) - (b.orden || 0))
                   .map((leccion: LeccionFromModulo) => (
                     <TableRow
