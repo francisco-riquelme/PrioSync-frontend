@@ -43,7 +43,22 @@ export const useCrearMaterial = (params?: UseCrearMaterialParams) => {
         const variables: Record<string, unknown> = { moduloId: moduloId };
         if (modoGeneracion) variables.modoGeneracion = modoGeneracion;
 
-  const { data, errors } = await client.mutations.crearMaterialResolver(variables as { moduloId: string; modoGeneracion?: string });
+        // Log variables being sent to the resolver to help debug generation issues
+        // (visible in browser console when using the app)
+        try {
+          console.info('[useCrearMaterial] Enviando variables a crearMaterialResolver:', variables);
+        } catch {
+          /* ignore logging errors */
+        }
+
+        const { data, errors } = await client.mutations.crearMaterialResolver(variables as { moduloId: string; modoGeneracion?: string });
+
+        // Debug log of the resolver response
+        try {
+          console.info('[useCrearMaterial] respuesta crearMaterialResolver:', { data, errors });
+        } catch {
+          /* ignore logging errors */
+        }
 
         if (errors && errors.length > 0) {
           const errorMessage = errors
