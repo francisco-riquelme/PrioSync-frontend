@@ -240,6 +240,22 @@
                 ]
               }
             },
+            "Actividades": {
+              "name": "Actividades",
+              "isArray": true,
+              "type": {
+                "model": "Actividad"
+              },
+              "isRequired": false,
+              "attributes": [],
+              "isArrayNullable": true,
+              "association": {
+                "connectionType": "HAS_MANY",
+                "associatedWith": [
+                  "usuarioId"
+                ]
+              }
+            },
             "updatedAt": {
               "name": "updatedAt",
               "isArray": false,
@@ -708,6 +724,22 @@
               "isArray": true,
               "type": {
                 "model": "Transcripcion"
+              },
+              "isRequired": false,
+              "attributes": [],
+              "isArrayNullable": true,
+              "association": {
+                "connectionType": "HAS_MANY",
+                "associatedWith": [
+                  "cursoId"
+                ]
+              }
+            },
+            "Actividades": {
+              "name": "Actividades",
+              "isArray": true,
+              "type": {
+                "model": "Actividad"
               },
               "isRequired": false,
               "attributes": [],
@@ -1227,6 +1259,22 @@
                 ]
               }
             },
+            "Actividades": {
+              "name": "Actividades",
+              "isArray": true,
+              "type": {
+                "model": "Actividad"
+              },
+              "isRequired": false,
+              "attributes": [],
+              "isArrayNullable": true,
+              "association": {
+                "connectionType": "HAS_MANY",
+                "associatedWith": [
+                  "moduloId"
+                ]
+              }
+            },
             "createdAt": {
               "name": "createdAt",
               "isArray": false,
@@ -1422,6 +1470,22 @@
               "isArray": true,
               "type": {
                 "model": "ProgresoLeccion"
+              },
+              "isRequired": false,
+              "attributes": [],
+              "isArrayNullable": true,
+              "association": {
+                "connectionType": "HAS_MANY",
+                "associatedWith": [
+                  "leccionId"
+                ]
+              }
+            },
+            "Actividades": {
+              "name": "Actividades",
+              "isArray": true,
+              "type": {
+                "model": "Actividad"
               },
               "isRequired": false,
               "attributes": [],
@@ -1952,6 +2016,22 @@
                 ]
               }
             },
+            "Actividades": {
+              "name": "Actividades",
+              "isArray": true,
+              "type": {
+                "model": "Actividad"
+              },
+              "isRequired": false,
+              "attributes": [],
+              "isArrayNullable": true,
+              "association": {
+                "connectionType": "HAS_MANY",
+                "associatedWith": [
+                  "materialEstudioId"
+                ]
+              }
+            },
             "createdAt": {
               "name": "createdAt",
               "isArray": false,
@@ -2182,6 +2262,22 @@
               "isArray": true,
               "type": {
                 "model": "ProgresoCuestionario"
+              },
+              "isRequired": false,
+              "attributes": [],
+              "isArrayNullable": true,
+              "association": {
+                "connectionType": "HAS_MANY",
+                "associatedWith": [
+                  "cuestionarioId"
+                ]
+              }
+            },
+            "Actividades": {
+              "name": "Actividades",
+              "isArray": true,
+              "type": {
+                "model": "Actividad"
               },
               "isRequired": false,
               "attributes": [],
@@ -3455,6 +3551,230 @@
             ]
           }
         },
+        "Actividad": {
+          "name": "Actividad",
+          "fields": {
+            "actividadId": {
+              "name": "actividadId",
+              "isArray": false,
+              "type": "ID",
+              "isRequired": true,
+              "attributes": []
+            },
+            "mensaje": {
+              "name": "mensaje",
+              "isArray": false,
+              "type": "String",
+              "isRequired": true,
+              "attributes": []
+            },
+            "cursoId": {
+              "name": "cursoId",
+              "isArray": false,
+              "type": "ID",
+              "isRequired": false,
+              "attributes": []
+            },
+            "Curso": {
+              "name": "Curso",
+              "isArray": false,
+              "type": {
+                "model": "Curso"
+              },
+              "isRequired": false,
+              "attributes": [],
+              "association": {
+                "connectionType": "BELONGS_TO",
+                "targetNames": [
+                  "cursoId"
+                ]
+              }
+            },
+            "usuarioId": {
+              "name": "usuarioId",
+              "isArray": false,
+              "type": "ID",
+              "isRequired": true,
+              "attributes": []
+            },
+            "Usuario": {
+              "name": "Usuario",
+              "isArray": false,
+              "type": {
+                "model": "Usuario"
+              },
+              "isRequired": false,
+              "attributes": [],
+              "association": {
+                "connectionType": "BELONGS_TO",
+                "targetNames": [
+                  "usuarioId"
+                ]
+              }
+            },
+            "leccionId": {
+              "name": "leccionId",
+              "isArray": false,
+              "type": "ID",
+              "isRequired": false,
+              "attributes": []
+            },
+            "Leccion": {
+              "name": "Leccion",
+              "isArray": false,
+              "type": {
+                "model": "Leccion"
+              },
+              "isRequired": false,
+              "attributes": [],
+              "association": {
+                "connectionType": "BELONGS_TO",
+                "targetNames": [
+                  "leccionId"
+                ]
+              }
+            },
+            "moduloId": {
+              "name": "moduloId",
+              "isArray": false,
+              "type": "ID",
+              "isRequired": false,
+              "attributes": []
+            },
+            "Modulo": {
+              "name": "Modulo",
+              "isArray": false,
+              "type": {
+                "model": "Modulo"
+              },
+              "isRequired": false,
+              "attributes": [],
+              "association": {
+                "connectionType": "BELONGS_TO",
+                "targetNames": [
+                  "moduloId"
+                ]
+              }
+            },
+            "materialEstudioId": {
+              "name": "materialEstudioId",
+              "isArray": false,
+              "type": "ID",
+              "isRequired": false,
+              "attributes": []
+            },
+            "Material": {
+              "name": "Material",
+              "isArray": false,
+              "type": {
+                "model": "MaterialEstudio"
+              },
+              "isRequired": false,
+              "attributes": [],
+              "association": {
+                "connectionType": "BELONGS_TO",
+                "targetNames": [
+                  "materialEstudioId"
+                ]
+              }
+            },
+            "cuestionarioId": {
+              "name": "cuestionarioId",
+              "isArray": false,
+              "type": "ID",
+              "isRequired": false,
+              "attributes": []
+            },
+            "Cuestionario": {
+              "name": "Cuestionario",
+              "isArray": false,
+              "type": {
+                "model": "Cuestionario"
+              },
+              "isRequired": false,
+              "attributes": [],
+              "association": {
+                "connectionType": "BELONGS_TO",
+                "targetNames": [
+                  "cuestionarioId"
+                ]
+              }
+            },
+            "createdAt": {
+              "name": "createdAt",
+              "isArray": false,
+              "type": "AWSDateTime",
+              "isRequired": false,
+              "attributes": [],
+              "isReadOnly": true
+            },
+            "updatedAt": {
+              "name": "updatedAt",
+              "isArray": false,
+              "type": "AWSDateTime",
+              "isRequired": false,
+              "attributes": [],
+              "isReadOnly": true
+            }
+          },
+          "syncable": true,
+          "pluralName": "Actividads",
+          "attributes": [
+            {
+              "type": "model",
+              "properties": {}
+            },
+            {
+              "type": "key",
+              "properties": {
+                "fields": [
+                  "actividadId"
+                ]
+              }
+            },
+            {
+              "type": "auth",
+              "properties": {
+                "rules": [
+                  {
+                    "allow": "public",
+                    "provider": "apiKey",
+                    "operations": [
+                      "create",
+                      "update",
+                      "delete",
+                      "read"
+                    ]
+                  },
+                  {
+                    "allow": "private",
+                    "operations": [
+                      "create",
+                      "update",
+                      "delete",
+                      "read"
+                    ]
+                  },
+                  {
+                    "allow": "public",
+                    "provider": "iam",
+                    "operations": [
+                      "create",
+                      "update",
+                      "delete",
+                      "read"
+                    ]
+                  }
+                ]
+              }
+            }
+          ],
+          "primaryKeyInfo": {
+            "isCustomPrimaryKey": true,
+            "primaryKeyFieldName": "actividadId",
+            "sortKeyFieldNames": []
+          }
+        },
         "Metadata": {
           "name": "Metadata",
           "fields": {
@@ -3842,30 +4162,6 @@
             }
           }
         },
-        "LoadYoutubeDataResolverReturnType": {
-          "name": "LoadYoutubeDataResolverReturnType",
-          "fields": {
-            "message": {
-              "name": "message",
-              "isArray": false,
-              "type": "String",
-              "isRequired": true,
-              "attributes": []
-            }
-          }
-        },
-        "CrearModulosResolverReturnType": {
-          "name": "CrearModulosResolverReturnType",
-          "fields": {
-            "message": {
-              "name": "message",
-              "isArray": false,
-              "type": "String",
-              "isRequired": true,
-              "attributes": []
-            }
-          }
-        },
         "CrearQuestionarioResolverReturnType": {
           "name": "CrearQuestionarioResolverReturnType",
           "fields": {
@@ -3992,44 +4288,6 @@
             }
           }
         },
-        "loadYoutubeDataResolver": {
-          "name": "loadYoutubeDataResolver",
-          "isArray": false,
-          "type": {
-            "nonModel": "LoadYoutubeDataResolverReturnType"
-          },
-          "isRequired": false,
-          "arguments": {
-            "playlistId": {
-              "name": "playlistId",
-              "isArray": false,
-              "type": "String",
-              "isRequired": true
-            },
-            "usuarioId": {
-              "name": "usuarioId",
-              "isArray": false,
-              "type": "String",
-              "isRequired": true
-            }
-          }
-        },
-        "crearModulosResolver": {
-          "name": "crearModulosResolver",
-          "isArray": false,
-          "type": {
-            "nonModel": "CrearModulosResolverReturnType"
-          },
-          "isRequired": false,
-          "arguments": {
-            "cursoId": {
-              "name": "cursoId",
-              "isArray": false,
-              "type": "String",
-              "isRequired": true
-            }
-          }
-        },
         "crearQuestionarioResolver": {
           "name": "crearQuestionarioResolver",
           "isArray": false,
@@ -4075,6 +4333,12 @@
               "isArray": false,
               "type": "String",
               "isRequired": true
+            },
+            "modoGeneneracion": {
+              "name": "modoGeneneracion",
+              "isArray": false,
+              "type": "String",
+              "isRequired": false
             }
           }
         },
