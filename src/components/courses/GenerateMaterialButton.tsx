@@ -49,6 +49,9 @@ export const GenerateMaterialButton: React.FC<GenerateMaterialButtonProps> = ({ 
   return (
     <Box sx={{ display: 'flex', alignItems: 'center', gap: 1 }}>
       <Button
+        component="span"
+        role="button"
+        tabIndex={0}
         variant="contained"
         size="small"
         onClick={openMenu}
