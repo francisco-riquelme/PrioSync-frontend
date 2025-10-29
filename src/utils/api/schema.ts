@@ -6,6 +6,12 @@ const EstadoCurso = a.enum(["activo", "inactivo"]);
 const TipoSesion = a.enum(["estudio", "repaso", "examen"]);
 const EstadoSesion = a.enum(["programada", "completada", "cancelada"]);
 const TipoMaterial = a.enum(["video", "audio", "archivo"]);
+// Modo de generación para ajustar el foco/alcance del material enviado al LLM
+// - torpedo: resúmenes muy concentrados para preparación de pruebas
+// - rapido: resúmenes breves y dirigidos
+// - normal: material equilibrado (títulos, descripciones, recursos)
+// - extendido: material detallado, explicaciones y ejercicios
+const ModoGeneracion = a.enum(["torpedo", "rapido", "normal", "extendido"]);
 const TipoCuestionario = a.enum(["autoevaluacion", "prueba_final"]);
 const TipoPregunta = a.enum(["multiple", "verdadero_falso", "abierta"]);
 const EstadoProgreso = a.enum(["pendiente", "en_proceso", "completado"]);
@@ -46,6 +52,7 @@ export const MainSchema = a.schema({
       Evaluaciones: a.hasMany("EvaluacionCurso", "usuarioId"),
       CursoCompartido: a.hasMany("CursoCompartido", "usuarioId"),
       BloqueEstudio: a.hasMany("BloqueEstudio", "usuarioId"),
+      Actividades: a.hasMany("Actividad", "usuarioId"),
     })
     .identifier(["usuarioId"])
     .secondaryIndexes((index) => [
@@ -106,6 +113,7 @@ export const MainSchema = a.schema({
       Modulos: a.hasMany("Modulo", "cursoId"),
       CursoCompartido: a.hasMany("CursoCompartido", "cursoId"),
       Transcripcion: a.hasMany("Transcripcion", "cursoId"),
+      Actividades: a.hasMany("Actividad", "cursoId"),
     })
     .identifier(["cursoId"]),
 
@@ -156,6 +164,8 @@ export const MainSchema = a.schema({
       Curso: a.belongsTo("Curso", "cursoId"),
       Lecciones: a.hasMany("Leccion", "moduloId"),
       Cuestionarios: a.hasMany("Cuestionario", "moduloId"),
+      MaterialEstudio: a.hasMany("MaterialEstudio", "moduloId"),
+      Actividades: a.hasMany("Actividad", "moduloId"),
     })
     .identifier(["moduloId"]),
 
@@ -176,6 +186,7 @@ export const MainSchema = a.schema({
       MaterialesEstudio: a.hasMany("MaterialEstudio", "leccionId"),
       SesionesEstudio: a.hasMany("SesionEstudio", "leccionId"),
       ProgresoLecciones: a.hasMany("ProgresoLeccion", "leccionId"),
+      Actividades: a.hasMany("Actividad", "leccionId"),
     })
     .identifier(["leccionId"]),
 
@@ -213,9 +224,22 @@ export const MainSchema = a.schema({
       materialEstudioId: a.id().required(),
       titulo: a.string().required(),
       tipo: TipoMaterial,
-      url_contenido: a.url().required(),
+      url_contenido: a.url(), // No requerido si es generado por LLM
       orden: a.integer(),
       descripcion: a.string(),
+
+      // Enlaces a módulo (opcional): útil para material generado por módulo
+      moduloId: a.id(),
+      Modulo: a.belongsTo("Modulo", "moduloId"),
+
+      // Campos para material generado por LLM
+      // Contenido generado (JSON o texto serializado)
+      contenido_generado: a.string(), // Si es muy grande, optar por almacenar en S3 y guardar solo la URL aquí.
+      modo_generacion: ModoGeneracion, // torpedo/rapido/normal/extendido
+      is_generado: a.boolean().default(false),
+      llm_model: a.string(),
+      generation_status: a.enum(["pendiente", "completado", "fallido"]),
+      generation_warnings: a.string(),
 
       // Relationships
       cuestionarioId: a.id(),
@@ -225,6 +249,7 @@ export const MainSchema = a.schema({
       leccionId: a.id(),
       Leccion: a.belongsTo("Leccion", "leccionId"),
       ProgresoMateriales: a.hasMany("ProgresoMaterial", "materialEstudioId"),
+      Actividades: a.hasMany("Actividad", "materialEstudioId"),
     })
     .identifier(["materialEstudioId"]),
 
@@ -249,6 +274,7 @@ export const MainSchema = a.schema({
       materialEstudioId: a.id(),
       MaterialesEstudio: a.belongsTo("MaterialEstudio", "cuestionarioId"),
       ProgresoCuestionario: a.hasMany("ProgresoCuestionario", "cuestionarioId"),
+      Actividades: a.hasMany("Actividad", "cuestionarioId"),
     })
     .identifier(["cuestionarioId"]),
 
@@ -376,6 +402,25 @@ export const MainSchema = a.schema({
       Usuario: a.belongsTo("Usuario", "usuarioId"),
     })
     .identifier(["usuarioId", "cursoId"]),
+
+  Actividad: a
+    .model({
+      actividadId: a.id().required(),
+      mensaje: a.string().required(),
+      cursoId: a.id(),
+      Curso: a.belongsTo("Curso", "cursoId"),
+      usuarioId: a.id().required(),
+      Usuario: a.belongsTo("Usuario", "usuarioId"),
+      leccionId: a.id(),
+      Leccion: a.belongsTo("Leccion", "leccionId"),
+      moduloId: a.id(),
+      Modulo: a.belongsTo("Modulo", "moduloId"),
+      materialEstudioId: a.id(),
+      Material: a.belongsTo("MaterialEstudio", "materialEstudioId"),
+      cuestionarioId: a.id(),
+      Cuestionario: a.belongsTo("Cuestionario", "cuestionarioId"),
+    })
+    .identifier(["actividadId"]),
 });
 
 export type MainTypes = ClientSchema<typeof MainSchema>;

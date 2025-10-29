@@ -4,11 +4,35 @@ import React, { createContext, useContext, useState, useEffect, ReactNode } from
 import { getCurrentUser, fetchAuthSession } from 'aws-amplify/auth';
 import { getQueryFactories } from '@/utils/commons/queries';
 import type { MainTypes } from '@/utils/api/schema';
-import type { SelectionSet } from 'aws-amplify/data';
 import { useAmplify } from '@/components/providers/AmplifyProvider';
 
 // Import schema types
 type Usuario = MainTypes["Usuario"]["type"];
+
+// Define types for curso with relations (matching SelectionSet return types exactly)
+interface CursoFromUsuario {
+  readonly cursoId: string;
+  readonly titulo: string;
+  readonly descripcion: string | null;
+  readonly imagen_portada: string | null;
+  readonly duracion_estimada: number | null;
+  readonly nivel_dificultad: "basico" | "intermedio" | "avanzado" | null;
+  readonly estado: "activo" | "inactivo" | null;
+  readonly createdAt: string;
+  readonly updatedAt: string;
+}
+
+interface UsuarioWithRelations {
+  usuarioId: string;
+  email: string;
+  nombre?: string | null;
+  apellido?: string | null;
+  ultimo_login?: string | null;
+  isValid?: boolean | null;
+  createdAt?: string | null;
+  updatedAt?: string | null;
+  Cursos?: CursoFromUsuario[];
+}
 
 // Simplified InscripcionCurso for client-side (without lazy loaders)
 export interface InscripcionCurso {
@@ -39,7 +63,7 @@ export interface UserData {
   avatar?: string;
   
   // Relationships (simplified for client-side use)
-  Cursos?: NonNullable<UsuarioWithRelations["Cursos"]>;
+  Cursos?: CursoFromUsuario[];
   InscripcionesCurso?: InscripcionCurso[];
   activities?: Activity[];
 }
@@ -95,11 +119,7 @@ const userSelectionSet = [
   'Cursos.updatedAt',
 ] as const;
 
-// Use SelectionSet to infer proper types
-type UsuarioWithRelations = SelectionSet<
-  Usuario,
-  typeof userSelectionSet
->;
+// UsuarioWithRelations type is defined above
 
 // Function to fetch user data from database
 const fetchUserFromDatabase = async (usuarioId: string): Promise<UserData | null> => {
@@ -253,12 +273,45 @@ export const UserProvider = ({ children }: { children: ReactNode }) => {
 
   // Update user (for profile updates)
   const updateUser = async (updates: Partial<UserData>): Promise<void> => {
+    if (!userData) {
+      throw new Error('No hay datos de usuario para actualizar');
+    }
+
     setLoading(true);
     setError(null);
     
     try {
-      // TODO: Implement actual API call to update user in database
-      // For now, just update local state
+      console.log('🔄 Contexto: Iniciando actualización de usuario...', {
+        usuarioId: userData.usuarioId,
+        updates
+      });
+
+      const { Usuario } = await getQueryFactories<
+        Pick<MainTypes, "Usuario">,
+        "Usuario"
+      >({
+        entities: ["Usuario"],
+      });
+
+          // Preparar los datos para actualizar en la BD
+          const updateData: Partial<Pick<UserData, 'nombre' | 'apellido'>> = {};
+      
+      if (updates.nombre !== undefined) updateData.nombre = updates.nombre;
+      if (updates.apellido !== undefined) updateData.apellido = updates.apellido;
+      
+      console.log('🔄 Contexto: Datos a actualizar en BD:', updateData);
+      
+      // Actualizar en la base de datos
+      const result = await Usuario.update({
+        input: {
+          usuarioId: userData.usuarioId,
+          ...updateData
+        }
+      });
+
+      console.log('🔄 Contexto: Resultado de la actualización:', result);
+
+      // Actualizar el estado local inmediatamente después de la actualización exitosa
       setUserData(prev => {
         if (!prev) return null;
         
@@ -268,11 +321,15 @@ export const UserProvider = ({ children }: { children: ReactNode }) => {
           updatedAt: new Date().toISOString()
         };
         
+        console.log('🔄 Contexto: Estado local actualizado inmediatamente:', updatedData);
         return updatedData;
       });
+
+      console.log('✅ Usuario actualizado exitosamente en la base de datos');
     } catch (err) {
-      console.error('Error updating user:', err);
-      setError('Error al actualizar usuario');
+      console.error('❌ Contexto: Error updating user:', err);
+      setError('Error al actualizar usuario en la base de datos');
+      throw err; // Re-throw para que el componente pueda manejar el error
     } finally {
       setLoading(false);
     }

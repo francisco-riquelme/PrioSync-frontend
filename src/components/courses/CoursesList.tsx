@@ -17,6 +17,7 @@ import {
 } from '@mui/material';
 import { Search as SearchIcon, Clear as ClearIcon } from '@mui/icons-material';
 import { useUser } from '@/contexts/UserContext';
+import { useCursosConProgreso } from '@/hooks/useCursosConProgreso';
 import { CourseCard } from './CourseCard';
 
 export default function CoursesList() {
@@ -25,10 +26,22 @@ export default function CoursesList() {
   // Use UserContext to get user's courses
   const { userData, loading, error } = useUser();
   
+  // Get courses with progress
+  const { cursos: cursosConProgreso } = useCursosConProgreso();
+  
   // Local filter state
   const [searchTerm, setSearchTerm] = useState('');
   const [levelFilter, setLevelFilter] = useState('todos');
   const [durationFilter, setDurationFilter] = useState('todos');
+
+  // Create a map for quick progress lookup
+  const progresoMap = useMemo(() => {
+    const map = new Map<string, number>();
+    cursosConProgreso.forEach(curso => {
+      map.set(curso.cursoId, curso.progreso);
+    });
+    return map;
+  }, [cursosConProgreso]);
 
   // Apply filters to courses
   const filteredCourses = useMemo(() => {
@@ -177,6 +190,7 @@ export default function CoursesList() {
                   key={course.cursoId} 
                   course={course} 
                   onCourseClick={handleCourseClick}
+                  progreso={progresoMap.get(course.cursoId)}
                 />
               ))}
             </Box>

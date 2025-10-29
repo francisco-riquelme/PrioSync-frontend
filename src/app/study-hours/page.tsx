@@ -14,7 +14,7 @@ export default function StudyHoursPage() {
   // Proteger la ruta - redirigir si no está autenticado
   useEffect(() => {
     if (!loading && !userData) {
-      router.push('/auth/login');
+      router.push('/');
     }
   }, [userData, loading, router]);
 

@@ -1,31 +1,11 @@
 'use client';
 
 import React, { useState } from 'react';
-import {
-  Box,
-  Card,
-  CardContent,
-  Typography,
-  Avatar,
-  Button,
-  Tabs,
-  Tab,
-  List,
-  ListItem,
-  ListItemText,
-  Divider,
-  TextField,
-  Dialog,
-  DialogTitle,
-  DialogContent,
-  DialogActions,
-  CircularProgress,
-} from '@mui/material';
-import {
-  Edit as EditIcon,
-  Security as SecurityIcon,
-} from '@mui/icons-material';
+import { Box, Tabs, Tab, CircularProgress, Typography } from '@mui/material';
 import { useUser } from '@/contexts/UserContext';
+import ProfileHeader from './ProfileHeader';
+import PasswordChangeCard from './PasswordChangeCard';
+import ActivityHistory from './ActivityHistory';
 
 interface TabPanelProps {
   children?: React.ReactNode;
@@ -50,12 +30,21 @@ function TabPanel(props: TabPanelProps) {
 }
 
 export default function UserProfile() {
-  const { userData, loading } = useUser();
+  const { userData, loading, updateUser } = useUser();
   const [tabValue, setTabValue] = useState(0);
-  const [openPasswordDialog, setOpenPasswordDialog] = useState(false);
 
   const handleTabChange = (event: React.SyntheticEvent, newValue: number) => {
     setTabValue(newValue);
+  };
+
+  const handleUpdateUser = async (data: { nombre: string; apellido: string }) => {
+    try {
+      await updateUser({ nombre: data.nombre, apellido: data.apellido });
+      return true;
+    } catch (error) {
+      console.error('Error updating user:', error);
+      return false;
+    }
   };
 
   // Loading state
@@ -66,41 +55,6 @@ export default function UserProfile() {
       </Box>
     );
   }
-
-  // Helper function to get user initials
-  const getUserInitials = (nombre: string, apellido?: string | null) => {
-    const firstInitial = nombre ? nombre.charAt(0).toUpperCase() : '';
-    const lastInitial = apellido ? apellido.charAt(0).toUpperCase() : '';
-    return firstInitial + lastInitial;
-  };
-
-  // Helper function to get full name
-  const getFullName = (nombre: string, apellido?: string | null) => {
-    return apellido ? `${nombre} ${apellido}` : nombre;
-  };
-
-  const activityHistory = [
-    {
-      title: 'Completado: Gestión de Proyectos',
-      subtitle: 'Curso Completo - Proyecto',
-      date: '01/09/2025'
-    },
-    {
-      title: 'HTML y CSS',
-      subtitle: 'Desarrollo de Software - Módulo',
-      date: '28/08/2025'
-    },
-    {
-      title: 'Evaluación Módulo 1',
-      subtitle: 'Cálculo Avanzado - Evaluación (100%)',
-      date: '25/08/2025'
-    },
-    {
-      title: 'Introducción a Derivadas',
-      subtitle: 'Cálculo Avanzado - Módulo',
-      date: '23/08/2025'
-    }
-  ];
 
   return (
     <Box>
@@ -129,184 +83,17 @@ export default function UserProfile() {
           }}
         >
           {/* Información del Usuario */}
-          <Card>
-            <CardContent>
-              <Typography variant="h6" gutterBottom sx={{ fontWeight: 600 }}>
-                Información Personal
-              </Typography>
-              
-              <Box sx={{ display: 'flex', alignItems: 'center', mb: 3 }}>
-                <Avatar
-                  sx={{
-                    width: 80,
-                    height: 80,
-                    backgroundColor: 'primary.main',
-                    fontSize: '2rem',
-                    mr: 2,
-                  }}
-                >
-                  {userData ? getUserInitials(userData.nombre, userData.apellido) : 'U'}
-                </Avatar>
-                <Box>
-                  <Typography variant="h6" sx={{ fontWeight: 600 }}>
-                    {userData ? getFullName(userData.nombre, userData.apellido) : 'Usuario'}
-                  </Typography>
-                  <Typography variant="body2" color="text.secondary">
-                    {userData?.email || 'No disponible'}
-                  </Typography>
-                  <Button
-                    startIcon={<EditIcon />}
-                    size="small"
-                    sx={{ mt: 1, textTransform: 'none' }}
-                  >
-                    Editar Información
-                  </Button>
-                </Box>
-              </Box>
-            </CardContent>
-          </Card>
+          <ProfileHeader userData={userData} onUpdateUser={handleUpdateUser} />
 
           {/* Cambiar Contraseña */}
-          <Card>
-            <CardContent>
-              <Typography variant="h6" gutterBottom sx={{ fontWeight: 600 }}>
-                Cambiar Contraseña
-              </Typography>
-              
-              <Typography variant="body2" color="text.secondary" sx={{ mb: 2 }}>
-                Contraseña Actual
-              </Typography>
-              
-              <Typography variant="body2" color="text.secondary" sx={{ mb: 2 }}>
-                Nueva Contraseña
-              </Typography>
-              
-              <Button
-                variant="contained"
-                fullWidth
-                onClick={() => setOpenPasswordDialog(true)}
-                sx={{
-                  backgroundColor: 'primary.main',
-                  '&:hover': {
-                    backgroundColor: 'primary.dark',
-                  },
-                }}
-              >
-                Actualizar Contraseña
-              </Button>
-            </CardContent>
-          </Card>
+          <PasswordChangeCard />
         </Box>
       </TabPanel>
 
       {/* Tab Panel 2: Historial de Actividad */}
       <TabPanel value={tabValue} index={1}>
-        <Card>
-          <CardContent>
-            <Box sx={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', mb: 2 }}>
-              <Typography variant="h6" sx={{ fontWeight: 600 }}>
-                Cambiar Contraseña
-              </Typography>
-              <Button
-                variant="contained"
-                sx={{
-                  backgroundColor: 'primary.main',
-                  '&:hover': {
-                    backgroundColor: 'primary.dark',
-                  },
-                }}
-              >
-                Actualizar Contraseña
-              </Button>
-            </Box>
-
-            <Typography variant="h6" gutterBottom sx={{ fontWeight: 600, mt: 4 }}>
-              Historial de Actividad
-            </Typography>
-
-            <Box sx={{ display: 'flex', gap: 2, mb: 3 }}>
-              <Button variant="outlined" size="small">
-                Todas
-              </Button>
-              <Button variant="text" size="small">
-                Tareas
-              </Button>
-            </Box>
-
-            <List>
-              {activityHistory.map((activity, index) => (
-                <React.Fragment key={index}>
-                  <ListItem sx={{ px: 0 }}>
-                    <ListItemText
-                      primary={
-                        <Typography variant="body1" sx={{ fontWeight: 500 }}>
-                          {activity.title}
-                        </Typography>
-                      }
-                      secondary={activity.subtitle}
-                    />
-                    <Typography variant="body2" color="text.secondary">
-                      {activity.date}
-                    </Typography>
-                  </ListItem>
-                  {index < activityHistory.length - 1 && <Divider />}
-                </React.Fragment>
-              ))}
-            </List>
-          </CardContent>
-        </Card>
+        <ActivityHistory />
       </TabPanel>
-
-      {/* Dialog para cambiar contraseña */}
-      <Dialog open={openPasswordDialog} onClose={() => setOpenPasswordDialog(false)} maxWidth="sm" fullWidth>
-        <DialogTitle>
-          <Box sx={{ display: 'flex', alignItems: 'center', gap: 1 }}>
-            <SecurityIcon />
-            Cambiar Contraseña
-          </Box>
-        </DialogTitle>
-        <DialogContent>
-          <Box sx={{ pt: 2 }}>
-            <TextField
-              fullWidth
-              label="Contraseña Actual"
-              type="password"
-              variant="outlined"
-              sx={{ mb: 2 }}
-            />
-            <TextField
-              fullWidth
-              label="Nueva Contraseña"
-              type="password"
-              variant="outlined"
-              sx={{ mb: 2 }}
-            />
-            <TextField
-              fullWidth
-              label="Confirmar Nueva Contraseña"
-              type="password"
-              variant="outlined"
-            />
-          </Box>
-        </DialogContent>
-        <DialogActions>
-          <Button onClick={() => setOpenPasswordDialog(false)}>
-            Cancelar
-          </Button>
-          <Button
-            variant="contained"
-            onClick={() => setOpenPasswordDialog(false)}
-            sx={{
-              backgroundColor: 'primary.main',
-              '&:hover': {
-                backgroundColor: 'primary.dark',
-              },
-            }}
-          >
-            Actualizar
-          </Button>
-        </DialogActions>
-      </Dialog>
     </Box>
   );
 }

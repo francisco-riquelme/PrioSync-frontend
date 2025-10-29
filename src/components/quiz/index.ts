@@ -19,7 +19,7 @@ export type {
   UseQuizDetailDataParams,
   CuestionarioWithQuestions,
   PreguntaFromCuestionario,
-  OpcionFromPregunta,
+  OpcionPreguntaDetail,
   QuizAttemptWithAnswers,
 } from "./hooks/useQuizDetailData";
 export type {

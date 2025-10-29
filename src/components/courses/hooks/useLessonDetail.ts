@@ -46,15 +46,53 @@ const lessonDetailSelectionSet = [
   "Modulo.Curso.Modulos.Lecciones.orden",
 ] as const;
 
-// Use SelectionSet to infer proper types
-type LeccionWithRelations = SelectionSet<
-  Leccion,
-  typeof lessonDetailSelectionSet
->;
+// Define types for response data (doesn't extend complex Amplify types)
+interface CursoWithModulos {
+  cursoId: string;
+  titulo: string;
+  descripcion?: string | null;
+  imagen_portada?: string | null;
+  duracion_estimada?: number | null;
+  nivel_dificultad?: string | null;
+  estado?: string | null;
+  progreso_estimado?: number | null;
+  playlistId: string;
+  usuarioId: string;
+  Modulos?: ModuloWithLecciones[];
+}
 
-// Extract nested types for easier access
-type ModuloFromLeccion = NonNullable<LeccionWithRelations["Modulo"]>;
-type CursoFromLeccion = NonNullable<ModuloFromLeccion["Curso"]>;
+interface ModuloWithLecciones {
+  moduloId: string;
+  titulo: string;
+  orden?: number | null;
+  Lecciones?: Leccion[];
+}
+
+interface ModuloWithCurso {
+  moduloId: string;
+  titulo: string;
+  descripcion?: string | null;
+  duracion_estimada?: number | null;
+  orden?: number | null;
+  imagen_portada?: string | null;
+  progreso_estimado?: number | null;
+  cursoId: string;
+  Curso?: CursoWithModulos;
+  Lecciones?: Leccion[];
+}
+
+interface LeccionWithRelations {
+  leccionId: string;
+  titulo: string;
+  descripcion?: string | null;
+  duracion_minutos?: number | null;
+  tipo?: string | null;
+  url_contenido: string;
+  completada?: boolean | null;
+  orden?: number | null;
+  moduloId: string;
+  Modulo?: ModuloWithCurso;
+}
 
 export interface UseLessonDetailParams {
   leccionId: string;
@@ -62,8 +100,8 @@ export interface UseLessonDetailParams {
 
 export interface UseLessonDetailReturn {
   leccion: Leccion | null;
-  modulo: ModuloFromLeccion | null;
-  curso: CursoFromLeccion | null;
+  modulo: ModuloWithCurso | null;
+  curso: CursoWithModulos | null;
   loading: boolean;
   error: string | null;
 }
@@ -78,8 +116,8 @@ export const useLessonDetail = (
   const { leccionId } = params;
 
   const [leccion, setLeccion] = useState<Leccion | null>(null);
-  const [modulo, setModulo] = useState<ModuloFromLeccion | null>(null);
-  const [curso, setCurso] = useState<CursoFromLeccion | null>(null);
+  const [modulo, setModulo] = useState<ModuloWithCurso | null>(null);
+  const [curso, setCurso] = useState<CursoWithModulos | null>(null);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
 
@@ -106,11 +144,11 @@ export const useLessonDetail = (
 
         // Extract related data
         if (leccionRes.Modulo) {
-          const moduloData = leccionRes.Modulo as unknown as ModuloFromLeccion;
+          const moduloData = leccionRes.Modulo as unknown as ModuloWithCurso;
           setModulo(moduloData);
 
           if (moduloData.Curso) {
-            setCurso(moduloData.Curso as unknown as CursoFromLeccion);
+            setCurso(moduloData.Curso as unknown as CursoWithModulos);
           }
         }
       } else {

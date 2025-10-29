@@ -197,7 +197,7 @@ function ModuloGenerateButton({
         },
       }}
     >
-      {loading ? 'Generando...' : progreso < 70 ? `Progreso: ${progreso}%` : 'Generar cuestionario'}
+      {loading ? 'Generando...' : progreso < 70 ? `Progreso: ${progreso}%` : 'Generar Quiz del Módulo'}
     </Box>
   );
 }
@@ -370,7 +370,7 @@ function ModuleBlock({
                 </TableRow>
               </TableHead>
               <TableBody>
-                {modulo.Lecciones
+                {[...(modulo.Lecciones || [])]
                   .sort((a: LeccionFromModulo, b: LeccionFromModulo) => (a.orden || 0) - (b.orden || 0))
                   .map((leccion: LeccionFromModulo) => (
                     <TableRow

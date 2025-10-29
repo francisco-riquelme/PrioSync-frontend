@@ -1,7 +1,6 @@
 import { useState, useCallback } from "react";
 import { getQueryFactories } from "@/utils/commons/queries";
 import { MainTypes } from "@/utils/api/schema";
-import type { SelectionSet } from "aws-amplify/data";
 import { ProgresoCuestionario } from "@/types/quiz";
 
 // Define selection sets as const arrays
@@ -31,19 +30,32 @@ const progresoCuestionarioWithRelationsSelectionSet = [
   "Cuestionario.porcentaje_aprobacion",
 ] as const;
 
-// Use SelectionSet to infer proper types
-type ProgresoCuestionarioWithRelations = SelectionSet<
-  ProgresoCuestionario,
-  typeof progresoCuestionarioWithRelationsSelectionSet
->;
+// Define types for response data (doesn't extend complex Amplify types)
+interface CuestionarioFromProgreso {
+  cuestionarioId: string;
+  titulo: string;
+  descripcion?: string | null;
+  tipo?: string | null;
+  puntos_maximos?: number | null;
+  duracion_minutos?: number | null;
+  intentos_permitidos?: number | null;
+  preguntas_aleatorias?: boolean | null;
+  porcentaje_aprobacion?: number | null;
+}
 
-// Extract nested types for easier access
-// type UsuarioFromProgreso = NonNullable<
-//   ProgresoCuestionarioWithRelations["Usuario"]
-// >;
-type CuestionarioFromProgreso = NonNullable<
-  ProgresoCuestionarioWithRelations["Cuestionario"]
->;
+interface ProgresoCuestionarioWithRelations {
+  progresoCuestionarioId: string;
+  estado?: string | null;
+  puntaje_obtenido?: number | null;
+  aprobado?: boolean | null;
+  fecha_completado?: string | null;
+  intento_numero: number;
+  ultima_pregunta_respondida?: number | null;
+  recomendaciones?: string | null;
+  usuarioId: string;
+  cuestionarioId: string;
+  Cuestionario?: CuestionarioFromProgreso;
+}
 
 // Quiz attempt with extended info
 export interface QuizAttempt extends ProgresoCuestionario {

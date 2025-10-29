@@ -68,12 +68,18 @@ export default function AppLayout({ children }: LayoutProps) {
   };
 
   const handleLogout = async () => {
-    // Primero navegar a la página de inicio
-    router.push('/');
-    
-    // Luego limpiar la sesión y datos del usuario
-    await logout();
-    clearUserData();
+    try {
+      // Primero limpiar la sesión y datos del usuario
+      await logout();
+      clearUserData();
+      
+      // Luego navegar a la página de inicio (landing page)
+      router.push('/');
+    } catch (error) {
+      console.error('Error during logout:', error);
+      // Aún así redirigir a landing en caso de error
+      router.push('/');
+    }
   };
 
   // Get user initials for avatar

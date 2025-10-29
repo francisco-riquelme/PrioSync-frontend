@@ -68,6 +68,16 @@ export default function ForgotPasswordForm() {
 
   useEffect(() => {
     setMounted(true);
+
+    // Check if we came from the first step (email in URL)
+    if (typeof window !== 'undefined') {
+      const params = new URLSearchParams(window.location.search);
+      const emailParam = params.get('email');
+      if (emailParam) {
+        setEmail(emailParam);
+        setActiveStep(1);
+      }
+    }
   }, []);
 
   const handleRequestReset = async (event: React.FormEvent<HTMLFormElement>) => {
@@ -84,7 +94,8 @@ export default function ForgotPasswordForm() {
     const result = await requestPasswordReset({ email });
 
     if (result.success) {
-      setActiveStep(1);
+      // Redirect to confirmation page with email in query params
+      router.push(`/auth/reset-password?email=${encodeURIComponent(email)}`);
     } else {
       setFieldErrors(prev => ({ ...prev, email: true }));
     }
@@ -131,6 +142,12 @@ export default function ForgotPasswordForm() {
   };
 
   const handleBack = () => {
+    // If we're on /auth/reset-password, go back to forgot-password
+    if (typeof window !== 'undefined' && window.location.pathname.includes('reset-password')) {
+      router.push('/auth/forgot-password');
+      return;
+    }
+    
     setActiveStep(0);
     clearResetPasswordError();
     clearConfirmPasswordResetError();
@@ -397,7 +414,7 @@ export default function ForgotPasswordForm() {
                   error={fieldErrors.newPassword}
                   required
                   autoComplete="new-password"
-                  helperText="Mínimo 8 caracteres, con mayúscula, minúscula y número"
+                  helperText="La contraseña debe contener al menos una letra mayúscula, una minúscula, un número y un símbolo (!@#$%^&*)"
                   InputProps={{
                     startAdornment: (
                       <InputAdornment position="start">

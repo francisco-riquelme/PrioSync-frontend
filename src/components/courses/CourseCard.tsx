@@ -6,32 +6,30 @@ import {
   CardContent,
   Button,
   Chip,
+  LinearProgress,
 } from '@mui/material';
 import { School as SchoolIcon } from '@mui/icons-material';
 import { useState } from 'react';
 import { CourseListItem } from '@/components/courses/hooks/useCoursesListData';
 import type { MainTypes } from '@/utils/api/schema';
-import type { SelectionSet } from 'aws-amplify/data';
 
-// Type for courses from UserContext using SelectionSet
-type Usuario = MainTypes["Usuario"]["type"];
-type UserCoursesSelectionSet = [
-  'Cursos.cursoId',
-  'Cursos.titulo',
-  'Cursos.descripcion',
-  'Cursos.imagen_portada',
-  'Cursos.duracion_estimada',
-  'Cursos.nivel_dificultad',
-  'Cursos.estado',
-  'Cursos.createdAt',
-  'Cursos.updatedAt'
-];
-
-type UserCourse = NonNullable<SelectionSet<Usuario, UserCoursesSelectionSet>["Cursos"]>[0];
+// Type for courses from UserContext
+interface CursoFromUsuario {
+  readonly cursoId: string;
+  readonly titulo: string;
+  readonly descripcion: string | null;
+  readonly imagen_portada: string | null;
+  readonly duracion_estimada: number | null;
+  readonly nivel_dificultad: "basico" | "intermedio" | "avanzado" | null;
+  readonly estado: "activo" | "inactivo" | null;
+  readonly createdAt: string | null;
+  readonly updatedAt: string | null;
+}
 
 interface CourseCardProps {
-  course: CourseListItem | UserCourse;
+  course: CourseListItem | CursoFromUsuario;
   onCourseClick: (courseId: number | string) => void;
+  progreso?: number; // 0-100, opcional
 }
 
 const formatDuration = (minutes: number) => {
@@ -48,7 +46,7 @@ const getLevelColor = (level: string) => {
   }
 };
 
-export const CourseCard = ({ course, onCourseClick }: CourseCardProps) => {
+export const CourseCard = ({ course, onCourseClick, progreso }: CourseCardProps) => {
   const [imageError, setImageError] = useState(false);
 
   const handleImageError = () => {
@@ -112,7 +110,7 @@ export const CourseCard = ({ course, onCourseClick }: CourseCardProps) => {
         sx={{ 
           flexGrow: 1, 
           display: 'grid',
-          gridTemplateRows: 'auto auto 1fr auto',
+          gridTemplateRows: progreso !== undefined ? 'auto auto 1fr auto auto' : 'auto auto 1fr auto',
           gap: 1,
           alignContent: 'start',
         }}
@@ -152,6 +150,33 @@ export const CourseCard = ({ course, onCourseClick }: CourseCardProps) => {
         >
           {course.descripcion}
         </Typography>
+
+        {/* Barra de progreso (solo si existe) */}
+        {progreso !== undefined && progreso >= 0 && (
+          <Box>
+            <Box sx={{ display: 'flex', justifyContent: 'space-between', mb: 0.5 }}>
+              <Typography variant="caption" color="text.secondary">
+                Progreso
+              </Typography>
+              <Typography variant="caption" color="text.secondary" sx={{ fontWeight: 600 }}>
+                {progreso}%
+              </Typography>
+            </Box>
+            <LinearProgress
+              variant="determinate"
+              value={progreso}
+              sx={{
+                height: 6,
+                borderRadius: 2,
+                backgroundColor: 'grey.200',
+                '& .MuiLinearProgress-bar': {
+                  borderRadius: 2,
+                  backgroundColor: 'success.main',
+                },
+              }}
+            />
+          </Box>
+        )}
 
         {/* Botón de acción */}
         <Button
