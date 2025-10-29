@@ -21,18 +21,6 @@ export const ResolverSchema = a
       })
       .returns(a.customType({ message: a.string().required() })),
 
-    crearMaterialResolver: a
-      .mutation()
-      .arguments({
-        moduloId: a.string().required(),
-      })
-      .returns(
-        a.customType({
-          materialId: a.string().required(),
-          message: a.string(),
-        })
-      ),
-
     crearQuestionarioFinalResolver: a
       .mutation()
       .arguments({
