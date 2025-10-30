@@ -6,8 +6,6 @@ import { getQueryFactories } from '@/utils/commons/queries';
 import type { MainTypes } from '@/utils/api/schema';
 import { useAmplify } from '@/components/providers/AmplifyProvider';
 
-// Import schema types
-type Usuario = MainTypes["Usuario"]["type"];
 
 // Define types for curso with relations (matching SelectionSet return types exactly)
 interface CursoFromUsuario {

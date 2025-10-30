@@ -71,8 +71,8 @@ interface MaterialWithRelations {
   cuestionarioId?: string | null;
   cursoId: string;
   leccionId?: string | null;
-  Curso?: CursoFromMaterial;
-  Leccion?: LeccionFromMaterial;
+  Curso?: CursoFromMaterial | null;
+  Leccion?: LeccionFromMaterial | null;
   contenido_generado?: string | null;
 }
 
@@ -86,6 +86,7 @@ export interface UseMaterialDetailReturn {
   leccion: LeccionFromMaterial | null;
   loading: boolean;
   error: string | null;
+  contenidoParsed?: unknown | null;
 }
 
 /**
@@ -102,6 +103,7 @@ export const useMaterialDetail = (
   const [leccion, setLeccion] = useState<LeccionFromMaterial | null>(null);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
+  const [contenidoParsed, setContenidoParsed] = useState<unknown | null>(null);
 
   const loadMaterialDetail = useCallback(async () => {
     try {
@@ -131,6 +133,30 @@ export const useMaterialDetail = (
         if (materialRes.Leccion) {
           setLeccion(materialRes.Leccion as unknown as LeccionFromMaterial);
         }
+        // Parse contenido_generado safely and store a parsed representation
+        try {
+          const rawContent = materialRes.contenido_generado;
+          if (!rawContent) {
+            setContenidoParsed(null);
+          } else {
+            let parsed: unknown = rawContent as unknown;
+            if (typeof rawContent === 'string') {
+              // Try JSON parse, handle double-encoded strings
+              parsed = JSON.parse(rawContent as string);
+              if (typeof parsed === 'string') {
+                try {
+                  parsed = JSON.parse(parsed as string);
+                } catch {
+                  // keep first parse result
+                }
+              }
+            }
+            setContenidoParsed(parsed ?? null);
+          }
+        } catch {
+          // If parsing fails, keep the raw string as fallback
+          setContenidoParsed(materialRes.contenido_generado ?? null);
+        }
       } else {
         setError("Material no encontrado.");
       }
@@ -153,8 +179,12 @@ export const useMaterialDetail = (
     leccion,
     loading,
     error,
+    contenidoParsed,
   };
 };
 
 // Export types for convenience
 export type { MaterialEstudio, Curso, Leccion };
+
+// Export the frontend-friendly interfaces so other modules can consume them
+export type { CursoFromMaterial, LeccionFromMaterial, MaterialWithRelations };
