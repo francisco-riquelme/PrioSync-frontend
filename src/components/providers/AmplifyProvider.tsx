@@ -22,6 +22,12 @@ export const useAmplify = () => useContext(AmplifyContext);
 export default function AmplifyProvider({ children }: AmplifyProviderProps) {
   const [isInitialized, setIsInitialized] = useState(false);
   const [error, setError] = useState<string | null>(null);
+  const [isMounted, setIsMounted] = useState(false);
+
+  // Handle client-side mounting to avoid hydration mismatch
+  useEffect(() => {
+    setIsMounted(true);
+  }, []);
 
   useEffect(() => {
     const initializeAmplify = async () => {
@@ -43,8 +49,15 @@ export default function AmplifyProvider({ children }: AmplifyProviderProps) {
       }
     };
 
-    initializeAmplify();
-  }, []);
+    if (isMounted) {
+      initializeAmplify();
+    }
+  }, [isMounted]);
+
+  // Prevent hydration mismatch by not rendering loading UI on server
+  if (!isMounted) {
+    return null;
+  }
 
   if (!isInitialized && !error) {
     return (
