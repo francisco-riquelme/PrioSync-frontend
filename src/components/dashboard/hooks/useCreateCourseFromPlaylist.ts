@@ -1,7 +1,6 @@
 import { useState, useCallback } from "react";
 import { generateClient } from "aws-amplify/api";
 import { ResolversTypes } from "@/utils/api/resolverSchema";
-import { getGlobalCache } from "@/utils/commons/queries/cache";
 
 let _client: ReturnType<typeof generateClient<ResolversTypes>> | null = null;
 function getClient() {
@@ -11,27 +10,38 @@ function getClient() {
   return _client;
 }
 
-export interface CrearQuestionarioResponse {
+export interface CreateCourseFromPlaylistResponse {
   message?: string;
+  executionArn?: string | null;
+  cursoId?: string | null;
+  playlistId?: string | null;
+  usuarioId?: string | null;
+  status?: string | null;
 }
 
-export interface UseCrearQuestionarioParams {
-  onSuccess?: () => void;
+export interface UseCreateCourseFromPlaylistParams {
+  onSuccess?: (response: CreateCourseFromPlaylistResponse) => void;
 }
 
-export const useCrearQuestionario = (params?: UseCrearQuestionarioParams) => {
+export const useCreateCourseFromPlaylist = (
+  params?: UseCreateCourseFromPlaylistParams
+) => {
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
 
-  const crear = useCallback(
-    async (moduloId: string): Promise<CrearQuestionarioResponse> => {
+  const createCourse = useCallback(
+    async (
+      playlistId: string,
+      usuarioId: string
+    ): Promise<CreateCourseFromPlaylistResponse> => {
       setLoading(true);
       setError(null);
       try {
         const client = getClient();
         const { data, errors } =
-          await client.mutations.crearQuestionarioResolver({
-            moduloId: moduloId,
+          await client.mutations.createCourseFromPlaylistResolver({
+            playlistId: playlistId,
+            usuarioId: usuarioId,
           });
 
         if (errors && errors.length > 0) {
@@ -48,7 +58,7 @@ export const useCrearQuestionario = (params?: UseCrearQuestionarioParams) => {
         }
 
         if (!data) {
-          const message = "No se pudo crear el cuestionario";
+          const message = "No se pudo crear el curso";
           setError(message);
           throw new Error(message);
         }
@@ -56,21 +66,16 @@ export const useCrearQuestionario = (params?: UseCrearQuestionarioParams) => {
         // Call success callback if provided
         if (params?.onSuccess) {
           console.log(
-            "✅ Quiz created successfully, calling onSuccess callback"
+            "✅ Course created successfully, calling onSuccess callback"
           );
-          params.onSuccess();
+          params.onSuccess(data as CreateCourseFromPlaylistResponse);
         } else {
           console.log(
-            "✅ Quiz created successfully, but no onSuccess callback provided"
+            "✅ Course created successfully, but no onSuccess callback provided"
           );
         }
 
-        // Invalidate cache for Curso model since it now has a new quiz
-        const cache = getGlobalCache();
-        cache.invalidatePattern("Curso:");
-        console.log("🗑️ Cache invalidated for Curso model");
-
-        return data as CrearQuestionarioResponse;
+        return data as CreateCourseFromPlaylistResponse;
       } catch (err) {
         const message = err instanceof Error ? err.message : String(err);
         setError(message);
@@ -79,8 +84,8 @@ export const useCrearQuestionario = (params?: UseCrearQuestionarioParams) => {
         setLoading(false);
       }
     },
-    [params]
+    [params, params?.onSuccess]
   );
 
-  return { loading, error, crear } as const;
+  return { loading, error, createCourse } as const;
 };

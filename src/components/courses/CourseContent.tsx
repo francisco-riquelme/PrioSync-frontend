@@ -14,6 +14,7 @@ interface CourseContentProps {
   cuestionarios: CuestionarioFromCourse[];
   quizzesLoading: boolean;
   onQuizCreated?: () => void;
+  onMaterialCreated?: () => void;
 }
 
 export default function CourseContent({ 
@@ -22,11 +23,12 @@ export default function CourseContent({
   materialesLoading, 
   cuestionarios, 
   quizzesLoading,
-  onQuizCreated
+  onQuizCreated,
+  onMaterialCreated
 }: CourseContentProps) {
   return (
     <Box>
-      <CourseLessons modulos={modulos} loading={false} onQuizCreated={onQuizCreated} />
+  <CourseLessons modulos={modulos} loading={false} onQuizCreated={onQuizCreated} materiales={materiales} onMaterialCreated={onMaterialCreated} />
       <CourseMaterials materiales={materiales} loading={materialesLoading} />
       <CourseQuizzes cuestionarios={cuestionarios} loading={quizzesLoading} />
     </Box>

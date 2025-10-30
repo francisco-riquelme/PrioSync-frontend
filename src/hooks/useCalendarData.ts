@@ -1,7 +1,6 @@
 import { useState, useEffect, useCallback } from "react";
 import { getQueryFactories } from "@/utils/commons/queries";
 import { MainTypes } from "@/utils/api/schema";
-import type { SelectionSet } from "aws-amplify/data";
 import {
   convertStudyBlocksToDaySchedule,
   type StudyBlock,
@@ -40,10 +39,40 @@ const usuarioWithCalendarDataSelectionSet = [
   "BloqueEstudio.usuarioId",
 ] as const;
 
-type UsuarioWithCalendarData = SelectionSet<
-  MainTypes["Usuario"]["type"],
-  typeof usuarioWithCalendarDataSelectionSet
->;
+type UsuarioSesionEstudioLite = {
+  readonly sesionEstudioId: string;
+  readonly fecha: string;
+  readonly hora_inicio: string;
+  readonly hora_fin: string;
+  readonly duracion_minutos: number | null;
+  readonly tipo: string | null;
+  readonly estado: string | null;
+  readonly google_event_id: string | null;
+  readonly recordatorios: string[] | null;
+  readonly usuarioId: string;
+  readonly cursoId: string | null;
+  readonly leccionId: string | null;
+  readonly createdAt: string | null;
+  readonly updatedAt: string | null;
+};
+
+type UsuarioBloqueEstudioLite = {
+  readonly bloqueEstudioId: string;
+  readonly dia_semana: string;
+  readonly hora_inicio: string;
+  readonly hora_fin: string;
+  readonly duracion_minutos: number | null;
+  readonly usuarioId: string;
+};
+
+type UsuarioWithCalendarData = {
+  readonly usuarioId: string;
+  readonly email: string;
+  readonly nombre: string | null;
+  readonly apellido: string | null;
+  readonly SesionesDeEstudio: readonly UsuarioSesionEstudioLite[] | null;
+  readonly BloqueEstudio: readonly UsuarioBloqueEstudioLite[] | null;
+};
 
 export interface UseCalendarDataReturn {
   sessions: SesionEstudio[];
@@ -93,7 +122,9 @@ export const useCalendarData = (usuarioId?: string): UseCalendarDataReturn => {
       })) as unknown as UsuarioWithCalendarData;
 
       // Extract and sort sessions
-      const userSessions = (userRes?.SesionesDeEstudio || []).sort((a, b) => {
+      const userSessions = (
+        [...(userRes?.SesionesDeEstudio || [])] as UsuarioSesionEstudioLite[]
+      ).sort((a: UsuarioSesionEstudioLite, b: UsuarioSesionEstudioLite) => {
         const dateA = new Date(`${a.fecha}T${a.hora_inicio}`);
         const dateB = new Date(`${b.fecha}T${b.hora_inicio}`);
         return dateA.getTime() - dateB.getTime();

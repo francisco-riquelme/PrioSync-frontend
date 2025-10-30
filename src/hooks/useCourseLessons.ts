@@ -1,7 +1,6 @@
 import { useState, useEffect } from "react";
 import { getQueryFactories } from "@/utils/commons/queries";
 import { MainTypes } from "@/utils/api/schema";
-import type { SelectionSet } from "aws-amplify/data";
 
 // Define selection set for Curso with nested Modulos and Lecciones
 const cursoWithLessonsSelectionSet = [
@@ -16,11 +15,26 @@ const cursoWithLessonsSelectionSet = [
   "Modulos.Lecciones.orden",
 ] as const;
 
-// Infer type from selection set
-type CursoWithLessons = SelectionSet<
-  MainTypes["Curso"]["type"],
-  typeof cursoWithLessonsSelectionSet
->;
+// Explicit lightweight types to avoid complex union expansion from SelectionSet
+type CursoLeccionLite = {
+  readonly leccionId: string;
+  readonly titulo: string;
+  readonly duracion_minutos: number | null;
+  readonly orden: number | null;
+};
+
+type CursoModuloLite = {
+  readonly moduloId: string;
+  readonly titulo: string;
+  readonly orden: number | null;
+  readonly Lecciones: readonly CursoLeccionLite[] | null;
+};
+
+type CursoWithLessonsLite = {
+  readonly cursoId: string;
+  readonly titulo: string;
+  readonly Modulos: readonly CursoModuloLite[] | null;
+};
 
 // Extract nested types
 
@@ -60,7 +74,7 @@ export const useCourseLessons = (cursoId?: string) => {
         const cursoRes = (await Curso.get({
           input: { cursoId },
           selectionSet: cursoWithLessonsSelectionSet,
-        })) as unknown as CursoWithLessons;
+        })) as unknown as CursoWithLessonsLite;
 
         if (!cursoRes) {
           setLessons([]);
