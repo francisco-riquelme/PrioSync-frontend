@@ -1,6 +1,8 @@
 'use client';
 
 import { createContext, useContext, useEffect, useState } from 'react';
+import { Box, Typography, CircularProgress, Paper, Button, Alert } from '@mui/material';
+import { Error as ErrorIcon, Refresh as RefreshIcon } from '@mui/icons-material';
 import { AmplifyOutputsType, initializeQueries, AmplifyModelType } from "@/utils/commons/queries";
 import amplifyOutputs from "../../../amplify_outputs.json";
 import { MainSchema } from "@/utils/api/schema";
@@ -46,29 +48,86 @@ export default function AmplifyProvider({ children }: AmplifyProviderProps) {
 
   if (!isInitialized && !error) {
     return (
-      <div className="flex items-center justify-center min-h-screen">
-        <div className="text-center">
-          <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-blue-600 mx-auto mb-4"></div>
-          <p className="text-gray-600">Initializing database connection...</p>
-        </div>
-      </div>
+      <Box
+        sx={{
+          display: 'flex',
+          alignItems: 'center',
+          justifyContent: 'center',
+          minHeight: '100vh',
+          backgroundColor: 'background.default',
+        }}
+      >
+        <Box sx={{ textAlign: 'center' }}>
+          <CircularProgress 
+            size={48} 
+            thickness={4}
+            sx={{ mb: 2 }}
+          />
+          <Typography variant="body1" color="text.secondary">
+            Initializing database connection...
+          </Typography>
+        </Box>
+      </Box>
     );
   }
 
   if (error) {
     return (
-      <div className="flex items-center justify-center min-h-screen">
-        <div className="text-center p-6 bg-red-50 rounded-lg max-w-md">
-          <div className="text-red-600 mb-2">⚠️ Database Connection Error</div>
-          <p className="text-sm text-red-800 mb-4">{error}</p>
-          <button 
-            onClick={() => window.location.reload()} 
-            className="px-4 py-2 bg-red-600 text-white rounded hover:bg-red-700"
+      <Box
+        sx={{
+          display: 'flex',
+          alignItems: 'center',
+          justifyContent: 'center',
+          minHeight: '100vh',
+          backgroundColor: 'background.default',
+          p: 2,
+        }}
+      >
+        <Paper
+          elevation={3}
+          sx={{
+            maxWidth: 500,
+            width: '100%',
+            p: 4,
+            textAlign: 'center',
+          }}
+        >
+          <ErrorIcon 
+            sx={{ 
+              fontSize: 64, 
+              color: 'error.main',
+              mb: 2,
+            }} 
+          />
+          
+          <Typography 
+            variant="h5" 
+            color="error" 
+            gutterBottom
+            fontWeight={600}
           >
-            Retry
-          </button>
-        </div>
-      </div>
+            Database Connection Error
+          </Typography>
+          
+          <Alert severity="error" sx={{ mb: 3, textAlign: 'left' }}>
+            {error}
+          </Alert>
+          
+          <Button
+            variant="contained"
+            color="error"
+            size="large"
+            startIcon={<RefreshIcon />}
+            onClick={() => window.location.reload()}
+            sx={{
+              px: 4,
+              py: 1.5,
+            }}
+          >
+            Retry Connection
+          </Button>
+        </Paper>
+      </Box>
     );
   }
 
