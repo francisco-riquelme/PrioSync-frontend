@@ -37,15 +37,44 @@ const materialDetailSelectionSet = [
   "contenido_generado",
 ] as const;
 
-type MaterialWithRelations = MaterialEstudio & {
-  Curso?: Record<string, unknown> | null;
-  Leccion?: Record<string, unknown> | null;
-  contenido_generado?: string | null;
-};
+// Define types for response data (doesn't extend complex Amplify types)
+interface CursoFromMaterial {
+  cursoId: string;
+  titulo: string;
+  descripcion?: string | null;
+  imagen_portada?: string | null;
+  duracion_estimada?: number | null;
+  nivel_dificultad?: string | null;
+  estado?: string | null;
+  progreso_estimado?: number | null;
+}
 
-// Extract nested types for easier access
-type CursoFromMaterial = NonNullable<MaterialWithRelations["Curso"]>;
-type LeccionFromMaterial = NonNullable<MaterialWithRelations["Leccion"]>;
+interface LeccionFromMaterial {
+  leccionId: string;
+  titulo: string;
+  descripcion?: string | null;
+  duracion_minutos?: number | null;
+  tipo?: string | null;
+  url_contenido: string;
+  completada?: boolean | null;
+  orden?: number | null;
+  moduloId: string;
+}
+
+interface MaterialWithRelations {
+  materialEstudioId: string;
+  titulo: string;
+  tipo?: string | null;
+  url_contenido: string;
+  orden?: number | null;
+  descripcion?: string | null;
+  cuestionarioId?: string | null;
+  cursoId: string;
+  leccionId?: string | null;
+  Curso?: CursoFromMaterial | null;
+  Leccion?: LeccionFromMaterial | null;
+  contenido_generado?: string | null;
+}
 
 export interface UseMaterialDetailParams {
   materialId: string;
@@ -57,6 +86,7 @@ export interface UseMaterialDetailReturn {
   leccion: LeccionFromMaterial | null;
   loading: boolean;
   error: string | null;
+  contenidoParsed?: unknown | null;
 }
 
 /**
@@ -73,6 +103,7 @@ export const useMaterialDetail = (
   const [leccion, setLeccion] = useState<LeccionFromMaterial | null>(null);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
+  const [contenidoParsed, setContenidoParsed] = useState<unknown | null>(null);
 
   const loadMaterialDetail = useCallback(async () => {
     try {
@@ -102,6 +133,30 @@ export const useMaterialDetail = (
         if (materialRes.Leccion) {
           setLeccion(materialRes.Leccion as unknown as LeccionFromMaterial);
         }
+        // Parse contenido_generado safely and store a parsed representation
+        try {
+          const rawContent = materialRes.contenido_generado;
+          if (!rawContent) {
+            setContenidoParsed(null);
+          } else {
+            let parsed: unknown = rawContent as unknown;
+            if (typeof rawContent === 'string') {
+              // Try JSON parse, handle double-encoded strings
+              parsed = JSON.parse(rawContent as string);
+              if (typeof parsed === 'string') {
+                try {
+                  parsed = JSON.parse(parsed as string);
+                } catch {
+                  // keep first parse result
+                }
+              }
+            }
+            setContenidoParsed(parsed ?? null);
+          }
+        } catch {
+          // If parsing fails, keep the raw string as fallback
+          setContenidoParsed(materialRes.contenido_generado ?? null);
+        }
       } else {
         setError("Material no encontrado.");
       }
@@ -124,8 +179,12 @@ export const useMaterialDetail = (
     leccion,
     loading,
     error,
+    contenidoParsed,
   };
 };
 
 // Export types for convenience
 export type { MaterialEstudio, Curso, Leccion };
+
+// Export the frontend-friendly interfaces so other modules can consume them
+export type { CursoFromMaterial, LeccionFromMaterial, MaterialWithRelations };

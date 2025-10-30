@@ -25,39 +25,22 @@ interface MaterialDetailProps {
 
 export default function MaterialDetail({ materialId }: MaterialDetailProps) {
   const router = useRouter();
-  const { material, loading, error } = useMaterialDetail({ materialId });
+  const { material, loading, error, contenidoParsed } = useMaterialDetail({ materialId });
   const generatedContent = (material as unknown as { contenido_generado?: string | null })?.contenido_generado;
-  // Parse and validate generated content early so we can decide whether to show the outer header
+  // If the hook already parsed generated content, try to validate it here
   let parsedGenerated: GeneratedMaterial | null = null;
-  if (generatedContent) {
+  if (contenidoParsed) {
     try {
-      let raw: unknown = generatedContent;
-
-      // If it's a string, try to JSON.parse it. Handle double-encoded strings too.
-      if (typeof generatedContent === 'string') {
-        raw = JSON.parse(generatedContent as string);
-        if (typeof raw === 'string') {
-          try {
-            raw = JSON.parse(raw as string);
-          } catch {
-            // keep raw as-is (first-parse result)
-          }
-        }
-      }
-
-      // If we have an object, try Zod validation. If validation fails, still use the object as a best-effort fallback
-      if (raw && typeof raw === 'object') {
-        const res = generatedMaterialSchema.safeParse(raw);
-        if (res.success) {
-          parsedGenerated = res.data;
-        } else {
+      if (typeof contenidoParsed === 'object') {
+        const res = generatedMaterialSchema.safeParse(contenidoParsed);
+        if (res.success) parsedGenerated = res.data;
+        else {
           console.warn('Generated material validation failed, rendering best-effort object', res.error.issues);
-          parsedGenerated = raw as GeneratedMaterial;
+          parsedGenerated = contenidoParsed as GeneratedMaterial;
         }
       }
     } catch (parseErr) {
-      // Parsing failed — we'll fallback to sanitized HTML/text below
-      console.warn('Failed to parse generated content JSON', parseErr);
+      console.warn('Failed to validate parsed generated content', parseErr);
     }
   }
 
