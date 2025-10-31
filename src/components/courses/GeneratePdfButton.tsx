@@ -75,13 +75,36 @@ export default function GeneratePdfButton({
             if (n.hasAttribute('aria-expanded') && n.getAttribute('aria-expanded') === 'false') {
               n.setAttribute('aria-expanded', 'true');
             }
-          } catch (e) {
+          } catch {
             // ignore individual node errors
           }
         });
       };
 
       forceShowAll(clone);
+
+      // Force text color to black for headings, paragraphs and typical typography elements
+      const forceTextBlack = (root: HTMLElement) => {
+        const textSelectors = ['h1','h2','h3','h4','h5','h6','p','span','li','a','div','section'];
+        const nodes = Array.from(root.querySelectorAll<HTMLElement>(textSelectors.join(',')));
+        // include root
+        nodes.unshift(root);
+        nodes.forEach((n) => {
+          try {
+            const txt = (n.textContent || '').trim();
+            if (!txt) return;
+            // avoid overriding elements that are likely non-text (images/svg wrappers) by checking for img/svg descendants
+            if (n.querySelector('img, svg')) return;
+            n.style.color = '#000000';
+            // also remove low-opacity which can make text appear grey
+            n.style.opacity = '1';
+          } catch {
+            // ignore
+          }
+        });
+      };
+
+      forceTextBlack(clone);
 
       // render the clone to a canvas (full height)
       const canvas = await html2canvas(clone as HTMLElement, {
