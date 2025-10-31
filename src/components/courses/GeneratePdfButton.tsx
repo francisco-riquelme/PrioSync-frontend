@@ -35,39 +35,101 @@ export default function GeneratePdfButton({
         import('jspdf'),
       ]);
 
-      // render the element to a canvas
-      const canvas = await html2canvas(el as HTMLElement, {
+      // Create an offscreen clone and force-show collapsed content (accordions) so the PDF
+      // includes all section bodies even if they are collapsed in the UI.
+      const originalEl = el as HTMLElement;
+      const cloneWrapper = document.createElement('div');
+      // Position offscreen so it won't flash on the page
+      cloneWrapper.style.position = 'absolute';
+      cloneWrapper.style.left = '-99999px';
+      cloneWrapper.style.top = '0';
+      // keep same width to get similar layout
+      cloneWrapper.style.width = `${originalEl.offsetWidth}px`;
+      const clone = originalEl.cloneNode(true) as HTMLElement;
+      cloneWrapper.appendChild(clone);
+      document.body.appendChild(cloneWrapper);
+
+      // Force all nodes inside the clone to be visible, remove hidden attributes/styles that
+      // collapse content (common in accordion implementations)
+      const forceShowAll = (root: HTMLElement) => {
+        const nodes = Array.from(root.querySelectorAll<HTMLElement>('*'));
+        // Include root itself
+        nodes.unshift(root);
+        nodes.forEach((n) => {
+          try {
+            // remove HTML5 hidden
+            if (n.hasAttribute('hidden')) n.removeAttribute('hidden');
+            // remove aria-hidden
+            if (n.getAttribute('aria-hidden') === 'true') n.setAttribute('aria-hidden', 'false');
+            // remove inline display:none
+            const s = n.style;
+            if (s && s.display === 'none') s.display = '';
+            // make sure collapsed panels with max-height or height 0 become visible
+            if (s) {
+              s.maxHeight = 'none';
+              s.height = 'auto';
+              s.overflow = 'visible';
+              s.visibility = 'visible';
+            }
+            // set aria-expanded where relevant
+            if (n.hasAttribute('aria-expanded') && n.getAttribute('aria-expanded') === 'false') {
+              n.setAttribute('aria-expanded', 'true');
+            }
+          } catch (e) {
+            // ignore individual node errors
+          }
+        });
+      };
+
+      forceShowAll(clone);
+
+      // render the clone to a canvas (full height)
+      const canvas = await html2canvas(clone as HTMLElement, {
         scale: 2,
         useCORS: true,
         allowTaint: false,
         logging: false,
       });
 
-      const imgData = canvas.toDataURL('image/png');
+      // cleanup clone
+      document.body.removeChild(cloneWrapper);
 
       // create PDF
       const pdf = new jsPDF('p', 'mm', 'a4');
       const pageWidth = pdf.internal.pageSize.getWidth();
       const pageHeight = pdf.internal.pageSize.getHeight();
 
-      // calculate image dimensions to fit page width
-      const imgProps = { width: canvas.width, height: canvas.height };
-      const imgWidth = pageWidth;
-      const imgHeight = (imgProps.height * imgWidth) / imgProps.width;
+      // Map canvas px to mm based on page width
+      const pxFullWidth = canvas.width;
+      const pxFullHeight = canvas.height;
+      const mmFullWidth = pageWidth;
+      const pxPerMm = pxFullWidth / mmFullWidth;
+      const pageHeightPx = Math.floor(pageHeight * pxPerMm);
 
-      let heightLeft = imgHeight;
-      let position = 0;
+      // Slice the canvas into page-sized pieces and add each as an image
+      let y = 0;
+      while (y < pxFullHeight) {
+        const sliceHeight = Math.min(pageHeightPx, pxFullHeight - y);
 
-      pdf.addImage(imgData, 'PNG', 0, position, imgWidth, imgHeight);
-      heightLeft -= pageHeight;
+        // create a temporary canvas for the slice
+        const pageCanvas = document.createElement('canvas');
+        pageCanvas.width = pxFullWidth;
+        pageCanvas.height = sliceHeight;
+        const ctx = pageCanvas.getContext('2d');
+        if (!ctx) throw new Error('Cannot get canvas context');
 
-      while (heightLeft > -1) {
-        position = heightLeft - imgHeight;
-        if (heightLeft > 0) {
-          pdf.addPage();
-          pdf.addImage(imgData, 'PNG', 0, position, imgWidth, imgHeight);
-        }
-        heightLeft -= pageHeight;
+        ctx.fillStyle = '#ffffff';
+        ctx.fillRect(0, 0, pageCanvas.width, pageCanvas.height);
+        ctx.drawImage(canvas, 0, y, pxFullWidth, sliceHeight, 0, 0, pxFullWidth, sliceHeight);
+
+        const imgData = pageCanvas.toDataURL('image/png');
+
+        const imgHeightMm = sliceHeight / pxPerMm;
+
+        if (y > 0) pdf.addPage();
+        pdf.addImage(imgData, 'PNG', 0, 0, mmFullWidth, imgHeightMm);
+
+        y += sliceHeight;
       }
 
       pdf.save(fileName);

@@ -26,7 +26,7 @@ interface MaterialDetailProps {
 
 export default function MaterialDetail({ materialId }: MaterialDetailProps) {
   const router = useRouter();
-  const { material, loading, error, contenidoParsed } = useMaterialDetail({ materialId });
+  const { material, leccion, loading, error, contenidoParsed } = useMaterialDetail({ materialId });
   const generatedContent = (material as unknown as { contenido_generado?: string | null })?.contenido_generado;
   // If the hook already parsed generated content, try to validate it here
   let parsedGenerated: GeneratedMaterial | null = null;
@@ -130,7 +130,7 @@ export default function MaterialDetail({ materialId }: MaterialDetailProps) {
           {/* Only enable PDF export when we have generated content (not an iframe) */}
           <GeneratePdfButton
             contentElementId="material-pdf-content"
-            fileName={`material-${material.materialEstudioId ?? 'unknown'}.pdf`}
+            fileName={`material-${(leccion?.Modulo?.titulo ?? material.titulo ?? material.materialEstudioId ?? 'unknown').toString().replace(/\s+/g, '_')}.pdf`}
           />
         </Box>
 
