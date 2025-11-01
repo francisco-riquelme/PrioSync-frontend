@@ -56,19 +56,19 @@ export const useCrearQuestionario = (params?: UseCrearQuestionarioParams) => {
         // Call success callback if provided
         if (params?.onSuccess) {
           console.log(
-            "✅ Quiz created successfully, calling onSuccess callback"
+            "Quiz created successfully, calling onSuccess callback"
           );
           params.onSuccess();
         } else {
           console.log(
-            "✅ Quiz created successfully, but no onSuccess callback provided"
+            "Quiz created successfully, but no onSuccess callback provided"
           );
         }
 
         // Invalidate cache for Curso model since it now has a new quiz
         const cache = getGlobalCache();
         cache.invalidatePattern("Curso:");
-        console.log("🗑️ Cache invalidated for Curso model");
+        console.log("Cache invalidated for Curso model");
 
         return data as CrearQuestionarioResponse;
       } catch (err) {
