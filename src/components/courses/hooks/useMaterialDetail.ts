@@ -34,6 +34,8 @@ const materialDetailSelectionSet = [
   "Leccion.completada",
   "Leccion.orden",
   "Leccion.moduloId",
+  "Leccion.Modulo.moduloId",
+  "Leccion.Modulo.titulo",
   "contenido_generado",
 ] as const;
 
@@ -59,6 +61,7 @@ interface LeccionFromMaterial {
   completada?: boolean | null;
   orden?: number | null;
   moduloId: string;
+  Modulo?: { moduloId: string; titulo?: string | null } | null;
 }
 
 interface MaterialWithRelations {

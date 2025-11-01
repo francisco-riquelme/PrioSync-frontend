@@ -18,6 +18,7 @@ import { getMaterialTypeLabelWithDefault, getMaterialTypeColor } from './courseU
 import DOMPurify from 'dompurify';
 import GeneratedMaterialView from './GeneratedMaterialView';
 import generatedMaterialSchema, { GeneratedMaterial } from './schemas/generatedMaterialSchema';
+import GeneratePdfButton from './GeneratePdfButton';
 
 interface MaterialDetailProps {
   materialId: string;
@@ -25,7 +26,7 @@ interface MaterialDetailProps {
 
 export default function MaterialDetail({ materialId }: MaterialDetailProps) {
   const router = useRouter();
-  const { material, loading, error, contenidoParsed } = useMaterialDetail({ materialId });
+  const { material, leccion, loading, error, contenidoParsed } = useMaterialDetail({ materialId });
   const generatedContent = (material as unknown as { contenido_generado?: string | null })?.contenido_generado;
   // If the hook already parsed generated content, try to validate it here
   let parsedGenerated: GeneratedMaterial | null = null;
@@ -125,6 +126,14 @@ export default function MaterialDetail({ materialId }: MaterialDetailProps) {
           />
         </Box>
 
+        <Box sx={{ display: 'flex', justifyContent: 'flex-end', mb: 1 }}>
+          {/* Only enable PDF export when we have generated content (not an iframe) */}
+          <GeneratePdfButton
+            contentElementId="material-pdf-content"
+            fileName={`material-${(leccion?.Modulo?.titulo ?? material.titulo ?? material.materialEstudioId ?? 'unknown').toString().replace(/\s+/g, '_')}.pdf`}
+          />
+        </Box>
+
         {/* If the generated content already includes title/description, avoid duplicating them */}
         {!parsedGenerated?.titulo && (
           <Typography variant="h4" sx={{ fontWeight: 700, mb: 2, color: 'text.primary' }}>
@@ -167,7 +176,7 @@ export default function MaterialDetail({ materialId }: MaterialDetailProps) {
             allowFullScreen
           />
         ) : generatedContent ? (
-          <Box sx={{ width: '100%', height: '100%', overflow: 'auto', p: 3 }}>
+          <Box id="material-pdf-content" sx={{ width: '100%', height: '100%', overflow: 'auto', p: 3 }}>
                 {parsedGenerated ? (
                   <GeneratedMaterialView content={parsedGenerated} />
                 ) : generatedContent ? (
