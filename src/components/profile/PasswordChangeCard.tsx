@@ -1,7 +1,7 @@
 'use client';
 
-import React, { useState, useEffect } from 'react';
-import { Card, CardContent, Typography, Button, Box } from '@mui/material';
+import React, { useState } from 'react';
+import { Card, CardContent, Typography, Button } from '@mui/material';
 import { usePasswordChange } from './hooks/usePasswordChange';
 import PasswordChangeDialog from './PasswordChangeDialog';
 

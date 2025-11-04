@@ -4183,6 +4183,27 @@
               "type": "String",
               "isRequired": true,
               "attributes": []
+            },
+            "executionArn": {
+              "name": "executionArn",
+              "isArray": false,
+              "type": "String",
+              "isRequired": false,
+              "attributes": []
+            },
+            "cursoId": {
+              "name": "cursoId",
+              "isArray": false,
+              "type": "String",
+              "isRequired": false,
+              "attributes": []
+            },
+            "status": {
+              "name": "status",
+              "isArray": false,
+              "type": "String",
+              "isRequired": false,
+              "attributes": []
             }
           }
         },
@@ -4334,8 +4355,8 @@
               "type": "String",
               "isRequired": true
             },
-            "modoGeneneracion": {
-              "name": "modoGeneneracion",
+            "modoGeneracion": {
+              "name": "modoGeneracion",
               "isArray": false,
               "type": "String",
               "isRequired": false

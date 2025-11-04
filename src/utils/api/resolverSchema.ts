@@ -26,13 +26,20 @@ export const ResolverSchema = a
       .arguments({
         cursoId: a.string().required(),
       })
-      .returns(a.customType({ message: a.string().required() })),
+      .returns(
+        a.customType({
+          message: a.string().required(),
+          executionArn: a.string(),
+          cursoId: a.string(),
+          status: a.string(),
+        })
+      ),
 
     crearMaterialResolver: a
       .mutation()
       .arguments({
         moduloId: a.string().required(),
-        modoGeneneracion: a.string(),
+        modoGeneracion: a.string(),
       })
       .returns(
         a.customType({
