@@ -30,7 +30,6 @@ import {
   Email as EmailIcon,
   CalendarToday as CalendarIcon,
   School as SchoolIcon,
-  TrendingUp as TrendingUpIcon,
   CheckCircle as CheckCircleIcon,
   PhotoCamera as PhotoCameraIcon,
   Save as SaveIcon,
@@ -90,6 +89,12 @@ export default function UserProfile() {
     apellido?: string;
   }>({});
   const [message, setMessage] = useState<{ type: 'success' | 'error'; text: string } | null>(null);
+
+  // Obtener historial de actividades desde el backend - debe llamarse antes de cualquier return condicional
+  const { activities: activityHistory, loading: loadingActivities } = useActivityHistory({
+    usuarioId: userData?.usuarioId || '',
+    tipoFiltro: tipoFiltro,
+  });
 
   const handleTabChange = (event: React.SyntheticEvent, newValue: number) => {
     setTabValue(newValue);
@@ -162,7 +167,7 @@ export default function UserProfile() {
         console.log('✅ Foto cargada desde userData');
       }
     }
-  }, [userData?.usuarioId, userData?.nombre, userData?.apellido, userData?.email, editFormData.nombre, editFormData.apellido, editFormData.email, profileImage]);
+  }, [userData, editFormData.nombre, editFormData.apellido, editFormData.email, profileImage]);
 
   const handleImageUpload = (event: React.ChangeEvent<HTMLInputElement>) => {
     const file = event.target.files?.[0];
@@ -340,13 +345,6 @@ export default function UserProfile() {
   const getFullName = (nombre: string, apellido?: string | null) => {
     return apellido ? `${nombre} ${apellido}` : nombre;
   };
-
-  // Obtener historial de actividades desde el backend
-  const { activities: activityHistory, loading: loadingActivities } = useActivityHistory({
-    usuarioId: userData?.usuarioId || '',
-    tipoFiltro: tipoFiltro,
-  });
-
 
   return (
     <Box sx={{ maxWidth: 1200, mx: 'auto', p: 2 }}>

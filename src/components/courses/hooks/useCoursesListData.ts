@@ -72,7 +72,7 @@ export const useCoursesListData = (
       });
 
       // Build filter based on params
-      const filterConditions: Record<string, any> = {
+      const filterConditions: Record<string, { eq: string }> = {
         estado: { eq: "activo" },
       };
 
@@ -133,7 +133,6 @@ export const useCoursesListData = (
     } finally {
       setLoading(false);
     }
-    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [params?.usuarioId, params?.levelFilter, params?.durationFilter, params?.searchTerm]);
 
   // Load courses on mount and when params change
