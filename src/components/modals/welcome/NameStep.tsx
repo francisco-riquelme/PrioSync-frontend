@@ -16,7 +16,7 @@ interface NameStepProps {
 export default function NameStep({ nombre, onChange, error }: NameStepProps) {
   return (
     <Box>
-      <Typography variant="h6" gutterBottom sx={{ color: '#1976d2', mb: 3 }}>
+      <Typography variant="h6" gutterBottom sx={{ color: 'primary.main', mb: 3 }}>
         ¡Hola! Empecemos conociéndote mejor
       </Typography>
       <TextField

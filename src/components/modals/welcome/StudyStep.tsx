@@ -16,7 +16,7 @@ interface StudyStepProps {
 export default function StudyStep({ estudio, onChange, error }: StudyStepProps) {
   return (
     <Box>
-      <Typography variant="h6" gutterBottom sx={{ color: '#1976d2', mb: 3 }}>
+      <Typography variant="h6" gutterBottom sx={{ color: 'primary.main', mb: 3 }}>
         ¿Qué te gustaría estudiar?
       </Typography>
       <TextField

@@ -187,18 +187,18 @@ export default function ScheduleStep({ schedule, onChange, error }: ScheduleStep
 
   return (
     <Box>
-      <Typography variant="h6" gutterBottom sx={{ color: '#1976d2', mb: 1 }}>
+      <Typography variant="h6" gutterBottom sx={{ color: 'primary.main', mb: 1 }}>
         ¿Entre qué rango de horarios tienes disponibilidad para estudiar?
       </Typography>
 
-      <Box sx={{ mb: 3, display: 'flex', alignItems: 'center', gap: 1, p: 2, bgcolor: '#e3f2fd', borderRadius: 2 }}>
+      <Box sx={{ mb: 3, display: 'flex', alignItems: 'center', gap: 1, p: 2, bgcolor: 'primary.light', borderRadius: 2, opacity: 0.15 }}>
         <Box 
           component="span" 
           sx={{ 
             width: 24, 
             height: 24, 
             borderRadius: '50%', 
-            bgcolor: '#1976d2', 
+            bgcolor: 'primary.main', 
             color: 'white', 
             display: 'flex', 
             alignItems: 'center', 
@@ -237,22 +237,22 @@ export default function ScheduleStep({ schedule, onChange, error }: ScheduleStep
                 cursor: 'pointer',
                 transition: 'all 0.2s ease',
                 backgroundColor: isSelected 
-                  ? '#1976d2' 
+                  ? 'primary.main' 
                   : hasSchedule 
-                    ? '#e3f2fd' 
+                    ? 'primary.light' 
                     : '#f5f5f5',
-                border: isSelected
-                  ? '2px solid #1565c0'
+                border: (theme) => isSelected
+                  ? `2px solid ${theme.palette.primary.dark}`
                   : hasSchedule 
-                    ? '2px solid #1976d2' 
+                    ? `2px solid ${theme.palette.primary.main}` 
                     : '1px solid #e0e0e0',
                 '&:hover': {
                   transform: 'translateY(-2px)',
                   boxShadow: 3,
-                  backgroundColor: isSelected
-                    ? '#1565c0'
+                  backgroundColor: (theme) => isSelected
+                    ? theme.palette.primary.dark
                     : hasSchedule
-                      ? '#bbdefb'
+                      ? theme.palette.primary.light
                       : '#eeeeee'
                 }
               }}
@@ -261,7 +261,7 @@ export default function ScheduleStep({ schedule, onChange, error }: ScheduleStep
                 <Typography 
                   variant="subtitle1" 
                   sx={{ 
-                    color: isSelected ? 'white' : hasSchedule ? '#1976d2' : '#666',
+                    color: isSelected ? 'white' : hasSchedule ? 'primary.main' : '#666',
                     textAlign: 'center',
                     fontWeight: 'bold',
                     mb: 1,
@@ -289,10 +289,10 @@ export default function ScheduleStep({ schedule, onChange, error }: ScheduleStep
                           fontSize: '0.7rem',
                           height: '24px',
                           backgroundColor: isSelected ? 'white' : undefined,
-                          color: isSelected ? '#1976d2' : undefined,
+                          color: isSelected ? 'primary.main' : undefined,
                           '& .MuiChip-deleteIcon': {
                             fontSize: '14px',
-                            color: isSelected ? '#1976d2' : 'white'
+                            color: isSelected ? 'primary.main' : 'white'
                           }
                         }}
                       />
@@ -425,7 +425,8 @@ export default function ScheduleStep({ schedule, onChange, error }: ScheduleStep
               sx={{
                 py: 1.5,
                 borderRadius: 2,
-                background: 'linear-gradient(135deg, #1976d2 0%, #1565c0 100%)',
+                background: (theme) =>
+                  `linear-gradient(135deg, ${theme.palette.primary.main} 0%, ${theme.palette.primary.dark} 100%)`,
               }}
             >
               Agregar Horario

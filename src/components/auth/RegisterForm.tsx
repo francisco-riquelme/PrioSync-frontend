@@ -168,7 +168,8 @@ export default function RegisterForm() {
               >
                 <Box
                   sx={{
-                    background: 'linear-gradient(135deg, #1976d2 0%, #1565c0 100%)',
+                    background: (theme) =>
+                      `linear-gradient(135deg, ${theme.palette.primary.main} 0%, ${theme.palette.primary.dark} 100%)`,
                     color: 'white',
                     width: 48,
                     height: 48,
@@ -185,7 +186,7 @@ export default function RegisterForm() {
                   component="h1"
                   sx={{
                     fontWeight: 500,
-                    color: '#1976d2',
+                    color: 'primary.main',
                   }}
                 >
                   PrioSync
@@ -352,11 +353,14 @@ export default function RegisterForm() {
                 sx={{
                   height: 48,
                   borderRadius: 2,
-                  background: 'linear-gradient(135deg, #1976d2 0%, #1565c0 100%)',
+                  background: (theme) =>
+                    `linear-gradient(135deg, ${theme.palette.primary.main} 0%, ${theme.palette.primary.dark} 100%)`,
                   '&:hover': {
-                    background: 'linear-gradient(135deg, #1565c0 0%, #0d47a1 100%)',
+                    background: (theme) =>
+                      `linear-gradient(135deg, ${theme.palette.primary.dark} 0%, ${theme.palette.primary.dark} 100%)`,
                     transform: 'translateY(-2px)',
-                    boxShadow: '0 4px 12px rgba(25, 118, 210, 0.3)',
+                    boxShadow: (theme) =>
+                      `0 4px 12px ${theme.palette.primary.main}40`,
                   },
                   '&:disabled': {
                     background: '#e0e0e0',
@@ -376,7 +380,7 @@ export default function RegisterForm() {
                   component={Link}
                   href="/auth/login"
                   sx={{
-                    color: '#1976d2',
+                    color: 'primary.main',
                     textDecoration: 'none',
                     fontWeight: 500,
                     '&:hover': {
