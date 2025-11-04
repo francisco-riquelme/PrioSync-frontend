@@ -240,11 +240,11 @@ interface ModuloWithCurso {
   Curso: Curso | null;
 }
 
-interface LeccionWithModulo extends Leccion {
+type LeccionWithModulo = Omit<Leccion, 'Modulo'> & {
   Modulo?: ModuloWithCurso | null;
-}
+};
 
-interface CuestionarioWithCurso extends Cuestionario {
+type CuestionarioWithCurso = Omit<Cuestionario, 'Curso'> & {
   Curso: Curso | null;
-}
+};
 
