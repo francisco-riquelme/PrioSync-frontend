@@ -43,6 +43,7 @@ import {
   loadPhotoFromLocalStorage, 
   getDetailedValidationErrorMessage
 } from '@/utils/profilePhotoUtils';
+import { useActivityHistory } from '@/hooks/useActivityHistory';
 
 interface TabPanelProps {
   children?: React.ReactNode;
@@ -69,6 +70,7 @@ function TabPanel(props: TabPanelProps) {
 export default function UserProfile() {
   const { userData, loading, updateUser } = useUser();
   const [tabValue, setTabValue] = useState(0);
+  const [tipoFiltro, setTipoFiltro] = useState<'all' | 'lesson_completed' | 'quiz_completed'>('all');
   const [openPasswordDialog, setOpenPasswordDialog] = useState(false);
   const [profileImage, setProfileImage] = useState<string | null>(null);
   const [editFormData, setEditFormData] = useState({
@@ -339,8 +341,11 @@ export default function UserProfile() {
     return apellido ? `${nombre} ${apellido}` : nombre;
   };
 
-  // Obtener actividades reales del usuario (si están disponibles en userData)
-  const activityHistory = userData?.activities || [];
+  // Obtener historial de actividades desde el backend
+  const { activities: activityHistory, loading: loadingActivities } = useActivityHistory({
+    usuarioId: userData?.usuarioId || '',
+    tipoFiltro: tipoFiltro,
+  });
 
 
   return (
@@ -596,13 +601,35 @@ export default function UserProfile() {
                 Historial de Actividad Reciente
               </Typography>
               <Box sx={{ display: 'flex', gap: 1 }}>
-                <Chip label="Todas" color="primary" size="small" />
-                <Chip label="Cursos" variant="outlined" size="small" />
-                <Chip label="Evaluaciones" variant="outlined" size="small" />
+                <Chip 
+                  label="Todas" 
+                  color={tipoFiltro === 'all' ? 'primary' : 'default'} 
+                  size="small" 
+                  onClick={() => setTipoFiltro('all')}
+                  sx={{ cursor: 'pointer' }}
+                />
+                <Chip 
+                  label="Lecciones" 
+                  variant={tipoFiltro === 'lesson_completed' ? 'filled' : 'outlined'} 
+                  size="small"
+                  onClick={() => setTipoFiltro('lesson_completed')}
+                  sx={{ cursor: 'pointer' }}
+                />
+                <Chip 
+                  label="Cuestionarios" 
+                  variant={tipoFiltro === 'quiz_completed' ? 'filled' : 'outlined'} 
+                  size="small"
+                  onClick={() => setTipoFiltro('quiz_completed')}
+                  sx={{ cursor: 'pointer' }}
+                />
               </Box>
             </Box>
 
-            {activityHistory.length > 0 ? (
+            {loadingActivities ? (
+              <Box sx={{ display: 'flex', justifyContent: 'center', py: 4 }}>
+                <CircularProgress />
+              </Box>
+            ) : activityHistory.length > 0 ? (
               <List sx={{ bgcolor: 'background.paper' }}>
                 {activityHistory.map((activity, index) => (
                   <React.Fragment key={activity.id || index}>
@@ -618,10 +645,8 @@ export default function UserProfile() {
                     >
                       <Box sx={{ display: 'flex', alignItems: 'center', width: '100%' }}>
                         <Box sx={{ mr: 2 }}>
-                          {activity.type === 'course_completed' && <SchoolIcon color="primary" />}
-                          {activity.type === 'module_completed' && <TrendingUpIcon color="secondary" />}
-                          {activity.type === 'evaluation_completed' && <CheckCircleIcon color="success" />}
-                          {activity.type === 'assignment_completed' && <CheckCircleIcon color="info" />}
+                          {activity.type === 'lesson_completed' && <SchoolIcon color="primary" />}
+                          {activity.type === 'quiz_completed' && <CheckCircleIcon color="success" />}
                         </Box>
                         <Box sx={{ flex: 1 }}>
                           <Typography variant="body1" sx={{ fontWeight: 500, mb: 0.5 }}>
@@ -654,7 +679,7 @@ export default function UserProfile() {
                   No hay actividades registradas aún
                 </Typography>
                 <Typography variant="body2" color="text.secondary" sx={{ mt: 1 }}>
-                  Las actividades aparecerán aquí cuando completes cursos o evaluaciones
+                  Las actividades aparecerán aquí cuando completes lecciones o cuestionarios
                 </Typography>
               </Box>
             )}
