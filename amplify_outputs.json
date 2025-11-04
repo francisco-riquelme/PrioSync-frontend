@@ -545,6 +545,15 @@
               "isRequired": false,
               "attributes": []
             },
+            "workflow_status": {
+              "name": "workflow_status",
+              "isArray": false,
+              "type": {
+                "enum": "CursoWorkflow_status"
+              },
+              "isRequired": false,
+              "attributes": []
+            },
             "playlistId": {
               "name": "playlistId",
               "isArray": false,
@@ -2172,6 +2181,15 @@
               "name": "porcentaje_aprobacion",
               "isArray": false,
               "type": "Int",
+              "isRequired": false,
+              "attributes": []
+            },
+            "workflow_status": {
+              "name": "workflow_status",
+              "isArray": false,
+              "type": {
+                "enum": "CuestionarioWorkflow_status"
+              },
               "isRequired": false,
               "attributes": []
             },
@@ -4040,6 +4058,15 @@
             "inactivo"
           ]
         },
+        "CursoWorkflow_status": {
+          "name": "CursoWorkflow_status",
+          "values": [
+            "pending",
+            "in_progress",
+            "completed",
+            "failed"
+          ]
+        },
         "CursoCompartidoEstado": {
           "name": "CursoCompartidoEstado",
           "values": [
@@ -4103,6 +4130,15 @@
           "values": [
             "autoevaluacion",
             "prueba_final"
+          ]
+        },
+        "CuestionarioWorkflow_status": {
+          "name": "CuestionarioWorkflow_status",
+          "values": [
+            "pending",
+            "in_progress",
+            "completed",
+            "failed"
           ]
         },
         "PreguntaTipo": {
@@ -4182,6 +4218,27 @@
               "isArray": false,
               "type": "String",
               "isRequired": true,
+              "attributes": []
+            },
+            "executionArn": {
+              "name": "executionArn",
+              "isArray": false,
+              "type": "String",
+              "isRequired": false,
+              "attributes": []
+            },
+            "cursoId": {
+              "name": "cursoId",
+              "isArray": false,
+              "type": "String",
+              "isRequired": false,
+              "attributes": []
+            },
+            "status": {
+              "name": "status",
+              "isArray": false,
+              "type": "String",
+              "isRequired": false,
               "attributes": []
             }
           }

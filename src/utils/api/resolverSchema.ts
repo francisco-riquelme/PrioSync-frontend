@@ -21,6 +21,20 @@ export const ResolverSchema = a
       })
       .returns(a.customType({ message: a.string().required() })),
 
+    crearQuestionarioFinalResolver: a
+      .mutation()
+      .arguments({
+        cursoId: a.string().required(),
+      })
+      .returns(
+        a.customType({
+          message: a.string().required(),
+          executionArn: a.string(),
+          cursoId: a.string(),
+          status: a.string(),
+        })
+      ),
+
     crearMaterialResolver: a
       .mutation()
       .arguments({
@@ -33,13 +47,6 @@ export const ResolverSchema = a
           message: a.string(),
         })
       ),
-
-    crearQuestionarioFinalResolver: a
-      .mutation()
-      .arguments({
-        cursoId: a.string().required(),
-      })
-      .returns(a.customType({ message: a.string().required() })),
 
     generarCitasResolver: a
       .mutation()
