@@ -1,7 +1,7 @@
 'use client';
 
 import { useRouter } from 'next/navigation';
-import { useState, useMemo } from 'react';
+import { useState, useEffect, useMemo } from 'react';
 import {
   Box,
   Typography,
@@ -19,20 +19,31 @@ import { Search as SearchIcon, Clear as ClearIcon } from '@mui/icons-material';
 import { useUser } from '@/contexts/UserContext';
 import { useCursosConProgreso } from '@/hooks/useCursosConProgreso';
 import { CourseCard } from './CourseCard';
+import { useCoursesListData } from './hooks/useCoursesListData';
 
 export default function CoursesList() {
   const router = useRouter();
   
-  // Use UserContext to get user's courses
-  const { userData, loading, error } = useUser();
+  // Get user data
+  const { userData } = useUser();
   
   // Get courses with progress
   const { cursos: cursosConProgreso } = useCursosConProgreso();
   
   // Local filter state
   const [searchTerm, setSearchTerm] = useState('');
+  const [debouncedSearchTerm, setDebouncedSearchTerm] = useState('');
   const [levelFilter, setLevelFilter] = useState('todos');
   const [durationFilter, setDurationFilter] = useState('todos');
+
+  // Debounce search term to avoid too many backend queries
+  useEffect(() => {
+    const timer = setTimeout(() => {
+      setDebouncedSearchTerm(searchTerm);
+    }, 300);
+
+    return () => clearTimeout(timer);
+  }, [searchTerm]);
 
   // Create a map for quick progress lookup
   const progresoMap = useMemo(() => {
@@ -43,44 +54,13 @@ export default function CoursesList() {
     return map;
   }, [cursosConProgreso]);
 
-  // Apply filters to courses
-  const filteredCourses = useMemo(() => {
-    const courses = userData?.Cursos || [];
-    let filtered = [...courses];
-
-    // Apply search filter
-    if (searchTerm.trim()) {
-      const searchLower = searchTerm.toLowerCase();
-      filtered = filtered.filter(course => 
-        course.titulo.toLowerCase().includes(searchLower) ||
-        course.descripcion?.toLowerCase().includes(searchLower)
-      );
-    }
-
-    // Apply level filter
-    if (levelFilter !== 'todos') {
-      filtered = filtered.filter(course => course.nivel_dificultad === levelFilter);
-    }
-
-    // Apply duration filter
-    if (durationFilter !== 'todos') {
-      filtered = filtered.filter(course => {
-        const duration = course.duracion_estimada || 0;
-        switch (durationFilter) {
-          case 'corto':
-            return duration <= 30;
-          case 'medio':
-            return duration > 30 && duration <= 120;
-          case 'largo':
-            return duration > 120;
-          default:
-            return true;
-        }
-      });
-    }
-
-    return filtered;
-  }, [userData?.Cursos, searchTerm, levelFilter, durationFilter]);
+  // Use optimized hook with filters
+  const { courses, loading, error } = useCoursesListData({
+    searchTerm: debouncedSearchTerm,
+    levelFilter,
+    durationFilter,
+    usuarioId: userData?.usuarioId,
+  });
 
   const handleCourseClick = (courseId: number | string) => {
     router.push(`/courses/${courseId}`);
@@ -177,7 +157,7 @@ export default function CoursesList() {
       {!loading && !error && (
         <>
           {/* Lista de cursos */}
-          {filteredCourses.length > 0 ? (
+          {courses.length > 0 ? (
             <Box 
               sx={{ 
                 display: 'grid',
@@ -185,7 +165,7 @@ export default function CoursesList() {
                 gap: 3
               }}
             >
-              {filteredCourses.map((course) => (
+              {courses.map((course) => (
                 <CourseCard 
                   key={course.cursoId} 
                   course={course} 
