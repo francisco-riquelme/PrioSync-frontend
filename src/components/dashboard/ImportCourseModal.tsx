@@ -1,6 +1,6 @@
 'use client';
 
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import {
   Dialog,
   DialogTitle,
@@ -20,6 +20,7 @@ interface ImportCourseModalProps {
   onClose: () => void;
   userId: string;
   onSuccess?: () => void;
+  onWorkflowStatusChange?: (isWaiting: boolean) => void;
 }
 
 export default function ImportCourseModal({
@@ -27,11 +28,12 @@ export default function ImportCourseModal({
   onClose,
   userId,
   onSuccess,
+  onWorkflowStatusChange,
 }: ImportCourseModalProps) {
   const [playlistUrl, setPlaylistUrl] = useState('');
   const [validationError, setValidationError] = useState<string | null>(null);
   
-  const { loading, error, createCourse } = useCreateCourseFromPlaylist({
+  const { loading, error, createCourse, isWaitingForWorkflow } = useCreateCourseFromPlaylist({
     onSuccess: () => {
       // Reset form
       setPlaylistUrl('');
@@ -46,6 +48,13 @@ export default function ImportCourseModal({
       onClose();
     },
   });
+
+  // Notify parent component of workflow status changes
+  useEffect(() => {
+    if (onWorkflowStatusChange) {
+      onWorkflowStatusChange(isWaitingForWorkflow);
+    }
+  }, [isWaitingForWorkflow, onWorkflowStatusChange]);
 
   const extractPlaylistId = (url: string): string | null => {
     // Handle different YouTube playlist URL formats:
@@ -108,7 +117,8 @@ export default function ImportCourseModal({
   };
 
   const handleClose = () => {
-    if (!loading) {
+    // Prevent closing while loading or waiting for workflow
+    if (!loading && !isWaitingForWorkflow) {
       setPlaylistUrl('');
       setValidationError(null);
       onClose();
@@ -116,56 +126,68 @@ export default function ImportCourseModal({
   };
 
   return (
-    <Dialog open={open} onClose={handleClose} maxWidth="sm" fullWidth>
-      <DialogTitle sx={{ fontWeight: 600 }}>
-        Importar Curso desde YouTube
-      </DialogTitle>
-      <DialogContent>
-        <Box sx={{ py: 2 }}>
-          <Typography variant="body2" color="text.secondary" sx={{ mb: 3 }}>
-            Ingresa la URL de una playlist de YouTube para crear un curso basado en sus videos.
-            El proceso puede tomar unos momentos mientras procesamos el contenido.
-          </Typography>
-          
-          {(validationError || error) && (
-            <Alert severity="error" sx={{ mb: 2 }}>
-              {validationError || error}
-            </Alert>
-          )}
-          
-          <TextField
-            label="URL de Playlist de YouTube"
-            placeholder="https://www.youtube.com/playlist?list=PLxxxx"
-            fullWidth
-            value={playlistUrl}
-            onChange={(e) => setPlaylistUrl(e.target.value)}
-            disabled={loading}
-            autoFocus
-          />
-          
-          {loading && (
-            <Box sx={{ display: 'flex', alignItems: 'center', gap: 1, mt: 2 }}>
-              <CircularProgress size={16} />
-              <Typography variant="body2" color="text.secondary">
-                Procesando playlist...
-              </Typography>
-            </Box>
-          )}
-        </Box>
-      </DialogContent>
-      <DialogActions>
-        <Button onClick={handleClose} disabled={loading}>
-          Cancelar
-        </Button>
-        <Button 
-          onClick={handleSubmit} 
-          variant="contained" 
-          disabled={loading || !playlistUrl.trim()}
-        >
-          Importar
-        </Button>
-      </DialogActions>
-    </Dialog>
+    <>
+      <Dialog 
+        open={open} 
+        onClose={handleClose} 
+        maxWidth="sm" 
+        fullWidth
+        disableEscapeKeyDown={isWaitingForWorkflow}
+      >
+        <DialogTitle sx={{ fontWeight: 600 }}>
+          Importar Curso desde YouTube
+        </DialogTitle>
+        <DialogContent>
+          <Box sx={{ py: 2 }}>
+            <Typography variant="body2" color="text.secondary" sx={{ mb: 3 }}>
+              Ingresa la URL de una playlist de YouTube para crear un curso basado en sus videos.
+              El proceso puede tomar unos momentos mientras procesamos el contenido.
+            </Typography>
+            
+            {(validationError || error) && (
+              <Alert severity="error" sx={{ mb: 2 }}>
+                {validationError || error}
+              </Alert>
+            )}
+            
+            <TextField
+              label="URL de Playlist de YouTube"
+              placeholder="https://www.youtube.com/playlist?list=PLxxxx"
+              fullWidth
+              value={playlistUrl}
+              onChange={(e) => setPlaylistUrl(e.target.value)}
+              disabled={loading || isWaitingForWorkflow}
+              autoFocus
+            />
+            
+            {loading && (
+              <Box sx={{ display: 'flex', alignItems: 'center', gap: 1, mt: 2 }}>
+                <CircularProgress size={16} />
+                <Typography variant="body2" color="text.secondary">
+                  Procesando playlist...
+                </Typography>
+              </Box>
+            )}
+          </Box>
+        </DialogContent>
+        <DialogActions>
+          <Button 
+            onClick={handleClose} 
+            disabled={loading || isWaitingForWorkflow}
+          >
+            Cancelar
+          </Button>
+          <Button 
+            onClick={handleSubmit} 
+            variant="contained" 
+            disabled={loading || isWaitingForWorkflow || !playlistUrl.trim()}
+          >
+            Importar
+          </Button>
+        </DialogActions>
+      </Dialog>
+
+    </>
   );
 }
 
