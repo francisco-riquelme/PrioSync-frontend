@@ -103,17 +103,25 @@ export const useActivityHistory = (
             continue;
           }
 
+          // Manejar fecha_completado de manera consistente
+          const fechaCompletado = prog.fecha_completado || null;
+          
+          // Generar ID único sin usar undefined
+          const activityId = fechaCompletado 
+            ? `${prog.leccionId}-${fechaCompletado}`
+            : `${prog.leccionId}-${prog.usuarioId}`;
+
           allActivities.push({
-            id: `${prog.leccionId}-${prog.fecha_completado}`,
+            id: activityId,
             type: "lesson_completed",
             title: leccion.titulo,
             subtitle: `Lección completada${
               leccion.Modulo?.Curso ? ` - ${leccion.Modulo.Curso.titulo}` : ""
             }`,
-            date: new Date(prog.fecha_completado || Date.now()).toLocaleDateString(
-              "es-ES"
-            ),
-            fecha_completado: prog.fecha_completado || undefined,
+            date: fechaCompletado 
+              ? new Date(fechaCompletado).toLocaleDateString("es-ES")
+              : "Fecha no disponible",
+            fecha_completado: fechaCompletado || undefined,
             cursoId: leccion.Modulo?.Curso?.cursoId,
             cursoNombre: leccion.Modulo?.Curso?.titulo,
           });
@@ -172,17 +180,26 @@ export const useActivityHistory = (
             continue;
           }
 
+          // Manejar fecha_completado de manera consistente
+          const fechaCompletado = prog.fecha_completado || null;
+          
+          // Generar ID único usando intento_numero si existe, o usuarioId si no hay fecha
+          const intentoNumero = prog.intento_numero || 1;
+          const activityId = fechaCompletado
+            ? `${prog.cuestionarioId}-${fechaCompletado}-${intentoNumero}`
+            : `${prog.cuestionarioId}-${prog.usuarioId}-${intentoNumero}`;
+
           allActivities.push({
-            id: `${prog.cuestionarioId}-${prog.fecha_completado}`,
+            id: activityId,
             type: "quiz_completed",
             title: cuestionario.titulo,
             subtitle: `Cuestionario completado${
               cuestionario.Curso ? ` - ${cuestionario.Curso.titulo}` : ""
             }`,
-            date: new Date(prog.fecha_completado || Date.now()).toLocaleDateString(
-              "es-ES"
-            ),
-            fecha_completado: prog.fecha_completado || undefined,
+            date: fechaCompletado
+              ? new Date(fechaCompletado).toLocaleDateString("es-ES")
+              : "Fecha no disponible",
+            fecha_completado: fechaCompletado || undefined,
             cursoId: cuestionario.Curso?.cursoId,
             cursoNombre: cuestionario.Curso?.titulo,
             puntaje: prog.puntaje_obtenido || 0,
@@ -192,10 +209,24 @@ export const useActivityHistory = (
       }
 
       // Ordenar por fecha (más reciente primero)
+      // Actividades sin fecha van al final
       allActivities.sort((a, b) => {
-        const dateA = new Date(a.fecha_completado || 0).getTime();
-        const dateB = new Date(b.fecha_completado || 0).getTime();
-        return dateB - dateA;
+        // Si ambas tienen fecha, ordenar normalmente
+        if (a.fecha_completado && b.fecha_completado) {
+          const dateA = new Date(a.fecha_completado).getTime();
+          const dateB = new Date(b.fecha_completado).getTime();
+          return dateB - dateA;
+        }
+        // Si solo 'a' tiene fecha, va primero
+        if (a.fecha_completado && !b.fecha_completado) {
+          return -1;
+        }
+        // Si solo 'b' tiene fecha, va primero
+        if (!a.fecha_completado && b.fecha_completado) {
+          return 1;
+        }
+        // Si ninguna tiene fecha, mantener orden original (usar ID como desempate)
+        return a.id.localeCompare(b.id);
       });
 
       setActivities(allActivities);
