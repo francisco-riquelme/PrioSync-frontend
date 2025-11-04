@@ -11,6 +11,7 @@ import {
 import { School as SchoolIcon } from '@mui/icons-material';
 import { useState } from 'react';
 import { CourseListItem } from '@/components/courses/hooks/useCoursesListData';
+import type { MainTypes } from '@/utils/api/schema';
 
 // Type for courses from UserContext
 interface CursoFromUsuario {
