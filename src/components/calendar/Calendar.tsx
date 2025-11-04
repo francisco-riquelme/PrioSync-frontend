@@ -148,106 +148,135 @@ const Calendar: React.FC = () => {
     fontFamily: "'Inter', 'Roboto', 'Arial', sans-serif",
     backgroundColor: theme.palette.background.paper,
     border: 'none',
-    borderRadius: 16,
+    borderRadius: 4,
     overflow: 'hidden',
-    boxShadow: theme.shadows[2],
     '& .rbc-calendar': {
-      borderRadius: 16,
-      backgroundColor: '#ffffff !important',
-      border: 'none !important',
+      backgroundColor: theme.palette.background.paper,
+      border: 'none',
     },
     '& .rbc-header': {
-      backgroundColor: `${theme.palette.primary.main} !important`,
-      color: '#fff !important',
+      backgroundColor: `${theme.palette.primary.main}`,
+      color: `${theme.palette.primary.contrastText}`,
       fontWeight: 600,
-      padding: '10px 6px',
-      borderBottom: `1px solid ${theme.palette.divider} !important`,
-      borderRight: '1px solid rgba(255,255,255,0.1) !important',
-      fontSize: '1rem',
+      padding: '12px 8px',
+      border: 'none',
+      borderBottom: `2px solid ${theme.palette.primary.dark}`,
     },
-    '& .rbc-header:last-child': {
-      borderRight: 'none !important',
+    '& .rbc-header + .rbc-header': {
+      borderLeft: `1px solid ${theme.palette.primary.dark}`,
     },
-    '& .rbc-row-bg, & .rbc-time-slot, & .rbc-timeslot-group, & .rbc-time-header, & .rbc-time-content, & .rbc-month-row': {
-      backgroundColor: '#ffffff !important',
-      border: `1px solid ${theme.palette.divider} !important`,
-      minHeight: 32,
-      transition: 'background 0.2s',
+    '& .rbc-month-view': {
+      border: 'none',
+      borderRadius: '0 0 4px 4px',
+      overflow: 'hidden',
+    },
+    '& .rbc-month-row': {
+      border: 'none',
+      borderTop: `1px solid ${theme.palette.divider}`,
+      minHeight: 120,
+      overflow: 'visible',
+    },
+    '& .rbc-month-row:first-of-type': {
+      borderTop: 'none',
     },
     '& .rbc-day-bg': {
-      backgroundColor: '#ffffff',
-      border: `1px solid ${theme.palette.divider}`,
+      backgroundColor: theme.palette.background.paper,
+      border: 'none',
+      borderRight: `1px solid ${theme.palette.divider}`,
       minHeight: 32,
       transition: 'background 0.2s',
     },
-    '& .rbc-time-view': {
-      backgroundColor: '#ffffff !important',
-    },
-    '& .rbc-time-gutter': {
-      backgroundColor: '#ffffff !important',
-      borderRight: `1px solid ${theme.palette.divider} !important`,
-    },
-    '& .rbc-day-slot': {
-      backgroundColor: '#ffffff !important',
-    },
-    '& .rbc-current-time-indicator': {
-      backgroundColor: theme.palette.error.main,
-    },
-    '& .rbc-today': {
-      backgroundColor: '#e8f5e9', // Verde claro minimalista
-      border: '1px solid #81c784',
+    '& .rbc-day-bg + .rbc-day-bg': {
+      borderLeft: 'none',
     },
     '& .rbc-off-range-bg': {
-      backgroundColor: `${theme.palette.action.disabledBackground} !important`,
+      backgroundColor: `${theme.palette.action.disabledBackground}`,
+    },
+    '& .rbc-today': {
+      backgroundColor: theme.palette.secondary.light + '20',
+      border: 'none',
+      borderRight: `1px solid ${theme.palette.divider}`,
     },
     // Estilos para fechas pasadas (deshabilitadas)
     '& .rbc-day-bg.past-date': {
-      backgroundColor: `${theme.palette.action.disabledBackground} !important`,
-      cursor: 'not-allowed !important',
+      backgroundColor: `${theme.palette.action.disabledBackground}`,
+      cursor: 'not-allowed',
       opacity: 0.6,
     },
     '& .rbc-date-cell.past-date': {
-      color: `${theme.palette.text.disabled} !important`,
-      cursor: 'not-allowed !important',
+      color: `${theme.palette.text.disabled}`,
+      cursor: 'not-allowed',
     },
     // Estilos para días con bloques de estudio
     '& .rbc-day-bg.study-block-day': {
-      backgroundColor: '#e8f5e9 !important',
-      borderLeft: '3px solid #4caf50 !important',
-      border: '1px solid #81c784 !important',
+      backgroundColor: `${theme.palette.secondary.light}15`,
+      borderLeft: `3px solid ${theme.palette.secondary.main}`,
+      borderRight: `1px solid ${theme.palette.divider}`,
+    },
+    '& .rbc-date-cell': {
+      textAlign: 'right',
+      padding: '8px',
+      fontWeight: 500,
+      color: theme.palette.text.secondary,
+      fontSize: '0.95rem',
     },
     '& .rbc-event': {
-      borderRadius: 8,
+      borderRadius: 6,
       border: 'none',
       fontSize: 13,
       fontWeight: 500,
       padding: '4px 8px',
-      boxShadow: theme.shadows[1],
-      backgroundColor: theme.palette.secondary.main,
-      color: theme.palette.secondary.contrastText,
-      margin: '2px 0',
+      boxShadow: 'none',
+      backgroundColor: theme.palette.primary.main,
+      color: theme.palette.primary.contrastText,
+      margin: '2px 4px',
     },
     '& .rbc-selected': {
       backgroundColor: theme.palette.primary.dark,
-      color: '#fff',
+      color: theme.palette.primary.contrastText,
     },
     '& .rbc-toolbar': {
       marginBottom: '16px',
       background: 'transparent',
     },
-    '& .rbc-month-row': {
-      minHeight: 120, // Increase from 80 to 120 to show more events
+    '& .rbc-time-view': {
+      backgroundColor: `${theme.palette.background.paper}`,
+      border: 'none',
     },
-    '& .rbc-date-cell': {
-      textAlign: 'right',
-      padding: '4px 8px',
-      fontWeight: 500,
-      color: theme.palette.text.secondary,
-      fontSize: '0.95rem',
+    '& .rbc-time-header': {
+      border: 'none',
+      borderBottom: `1px solid ${theme.palette.divider}`,
+    },
+    '& .rbc-time-content': {
+      border: 'none',
+      borderTop: `1px solid ${theme.palette.divider}`,
+    },
+    '& .rbc-time-slot': {
+      borderTop: `1px solid ${theme.palette.divider}`,
+    },
+    '& .rbc-timeslot-group': {
+      borderLeft: `1px solid ${theme.palette.divider}`,
+      minHeight: 40,
+    },
+    '& .rbc-time-gutter': {
+      backgroundColor: `${theme.palette.background.paper}`,
+      borderRight: `1px solid ${theme.palette.divider}`,
+    },
+    '& .rbc-day-slot': {
+      backgroundColor: `${theme.palette.background.paper}`,
+    },
+    '& .rbc-current-time-indicator': {
+      backgroundColor: theme.palette.error.main,
+      height: 2,
     },
     '& .rbc-label': {
       color: theme.palette.text.secondary,
       fontWeight: 500,
+      fontSize: '0.875rem',
+      padding: '4px 8px',
+    },
+    '& .rbc-row-segment': {
+      padding: '2px 4px',
     },
   }), [theme]);
 
