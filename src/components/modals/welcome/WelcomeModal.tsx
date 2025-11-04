@@ -213,7 +213,7 @@ export default function WelcomeModal({ open, onClose, onComplete }: WelcomeModal
       }}
     >
       <DialogTitle sx={{ pb: 1 }}>
-        <Typography variant="h4" component="div" sx={{ color: '#1976d2', fontWeight: 'bold', mb: 2 }}>
+        <Typography variant="h4" component="div" sx={{ color: 'primary.main', fontWeight: 'bold', mb: 2 }}>
           ¡Bienvenido a PrioSync! 🎓
         </Typography>
         <Stepper activeStep={activeStep} alternativeLabel>
@@ -254,7 +254,8 @@ export default function WelcomeModal({ open, onClose, onComplete }: WelcomeModal
           sx={{
             borderRadius: 2,
             ml: 1,
-            background: 'linear-gradient(135deg, #1976d2 0%, #1565c0 100%)',
+            background: (theme) =>
+              `linear-gradient(135deg, ${theme.palette.primary.main} 0%, ${theme.palette.primary.dark} 100%)`,
           }}
         >
           {activeStep === steps.length - 1 ? 'Continuar' : 'Siguiente'}

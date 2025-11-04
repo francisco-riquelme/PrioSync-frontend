@@ -170,7 +170,7 @@ export default function LandingPage() {
   return (
     <Box>
       {/* Navbar */}
-      <AppBar position="static" sx={{ backgroundColor: '#1976d2' }}>
+      <AppBar position="static" sx={{ backgroundColor: 'primary.main' }}>
         <Container maxWidth="lg">
           <Toolbar>
             <Typography variant="h6" component="div" sx={{ flexGrow: 1, fontWeight: 'bold' }}>
@@ -204,7 +204,7 @@ export default function LandingPage() {
       <Box 
         id="inicio"
         sx={{ 
-          background: 'linear-gradient(135deg, #667eea 0%, #764ba2 100%)',
+          background: (theme) => `linear-gradient(135deg, ${theme.palette.primary.main} 0%, ${theme.palette.primary.dark} 100%)`,
           py: 8,
           color: 'white',
           textAlign: 'center'
@@ -225,7 +225,15 @@ export default function LandingPage() {
             variant="contained" 
             size="large" 
             onClick={openWelcomeModal}
-            sx={{ backgroundColor: 'white', color: '#667eea', py: 1.5, px: 4 }}
+            sx={{ 
+              backgroundColor: 'white', 
+              color: 'primary.main',
+              py: 1.5, 
+              px: 4,
+              '&:hover': {
+                backgroundColor: 'grey.100',
+              }
+            }}
           >
             Comenzar Ahora
           </Button>
@@ -233,15 +241,15 @@ export default function LandingPage() {
       </Box>
 
       {/* Features Section */}
-      <Box id="funcionalidades" sx={{ py: 8, backgroundColor: '#f5f5f5' }}>
+      <Box id="funcionalidades" sx={{ py: 8, backgroundColor: 'background.default' }}>
         <Container maxWidth="lg">
-          <Typography variant="h3" component="h2" gutterBottom textAlign="center" sx={{ mb: 6, color: '#333' }}>
+          <Typography variant="h3" component="h2" gutterBottom textAlign="center" sx={{ mb: 6, color: 'text.primary' }}>
             Funcionalidades Principales
           </Typography>
           <Stack direction={{ xs: 'column', md: 'row' }} spacing={4}>
             <Card sx={{ flex: 1, textAlign: 'center', p: 2 }}>
               <CardContent>
-                <CalendarToday sx={{ fontSize: 60, color: '#1976d2', mb: 2 }} />
+                <CalendarToday sx={{ fontSize: 60, color: 'primary.main', mb: 2 }} />
                 <Typography variant="h5" component="h3" gutterBottom>
                   Gestión de Horarios
                 </Typography>
@@ -254,7 +262,7 @@ export default function LandingPage() {
 
             <Card sx={{ flex: 1, textAlign: 'center', p: 2 }}>
               <CardContent>
-                <School sx={{ fontSize: 60, color: '#1976d2', mb: 2 }} />
+                <School sx={{ fontSize: 60, color: 'primary.main', mb: 2 }} />
                 <Typography variant="h5" component="h3" gutterBottom>
                   Seguimiento Académico
                 </Typography>
@@ -267,7 +275,7 @@ export default function LandingPage() {
 
             <Card sx={{ flex: 1, textAlign: 'center', p: 2 }}>
               <CardContent>
-                <Assessment sx={{ fontSize: 60, color: '#1976d2', mb: 2 }} />
+                <Assessment sx={{ fontSize: 60, color: 'primary.main', mb: 2 }} />
                 <Typography variant="h5" component="h3" gutterBottom>
                   Control de Evaluaciones
                 </Typography>
@@ -282,7 +290,7 @@ export default function LandingPage() {
       </Box>
 
       {/* Footer */}
-      <Box id="contacto" sx={{ backgroundColor: '#1976d2', color: 'white', py: 2 }}>
+      <Box id="contacto" sx={{ backgroundColor: 'primary.main', color: 'white', py: 2 }}>
         <Container maxWidth="lg">
           <Stack direction={{ xs: 'column', md: 'row' }} spacing={4} justifyContent="space-between">
             <Box>
