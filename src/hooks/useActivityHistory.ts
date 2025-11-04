@@ -1,14 +1,6 @@
 import { useState, useEffect, useCallback } from "react";
 import { getQueryFactories } from "@/utils/commons/queries";
 import { MainTypes } from "@/utils/api/schema";
-import type { SelectionSet } from "aws-amplify/data";
-
-// Types from schema
-type ProgresoLeccion = MainTypes["ProgresoLeccion"]["type"];
-type Leccion = MainTypes["Leccion"]["type"];
-type ProgresoCuestionario = MainTypes["ProgresoCuestionario"]["type"];
-type Cuestionario = MainTypes["Cuestionario"]["type"];
-type Curso = MainTypes["Curso"]["type"];
 
 // Combined activity interface
 export interface Activity {
@@ -89,11 +81,6 @@ export const useActivityHistory = (
           "Leccion.Modulo.Curso.titulo",
         ] as const;
 
-        type ProgresoLeccionWithRelations = SelectionSet<
-          ProgresoLeccion,
-          typeof selectionSetLeccion
-        >;
-
         const leccionesCompletadas = await ProgresoLeccion.list({
           filter: {
             and: [{ usuarioId: { eq: usuarioId } }, { completada: { eq: true } }],
@@ -104,10 +91,10 @@ export const useActivityHistory = (
         });
 
         for (const progreso of leccionesCompletadas.items || []) {
-          const prog = progreso as unknown as ProgresoLeccionWithRelations;
-          const leccion = prog.Leccion as unknown as LeccionWithModulo & {
-            Modulo: ModuloWithCurso;
-          };
+          // eslint-disable-next-line @typescript-eslint/no-explicit-any
+          const prog = progreso as any;
+          // eslint-disable-next-line @typescript-eslint/no-explicit-any
+          const leccion = prog.Leccion as any;
 
           if (!leccion) continue;
 
@@ -160,11 +147,6 @@ export const useActivityHistory = (
           "Cuestionario.Curso.titulo",
         ] as const;
 
-        type ProgresoCuestionarioWithRelations = SelectionSet<
-          ProgresoCuestionario,
-          typeof selectionSetCuestionario
-        >;
-
         const cuestionariosCompletados = await ProgresoCuestionario.list({
           filter: {
             and: [
@@ -178,8 +160,10 @@ export const useActivityHistory = (
         });
 
         for (const progreso of cuestionariosCompletados.items || []) {
-          const prog = progreso as unknown as ProgresoCuestionarioWithRelations;
-          const cuestionario = prog.Cuestionario as unknown as CuestionarioWithCurso;
+          // eslint-disable-next-line @typescript-eslint/no-explicit-any
+          const prog = progreso as any;
+          // eslint-disable-next-line @typescript-eslint/no-explicit-any
+          const cuestionario = prog.Cuestionario as any;
 
           if (!cuestionario) continue;
 
@@ -235,16 +219,4 @@ export const useActivityHistory = (
   };
 };
 
-// Helper types for the nested relations
-interface ModuloWithCurso {
-  Curso: Curso | null;
-}
-
-type LeccionWithModulo = Omit<Leccion, 'Modulo'> & {
-  Modulo?: ModuloWithCurso | null;
-};
-
-type CuestionarioWithCurso = Omit<Cuestionario, 'Curso'> & {
-  Curso: Curso | null;
-};
 
