@@ -84,7 +84,7 @@ export const useCreateCourseFromPlaylist = (
         setLoading(false);
       }
     },
-    [params]
+    [params, params?.onSuccess]
   );
 
   return { loading, error, createCourse } as const;

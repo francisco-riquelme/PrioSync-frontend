@@ -4334,8 +4334,8 @@
               "type": "String",
               "isRequired": true
             },
-            "modoGeneracion": {
-              "name": "modoGeneracion",
+            "modoGeneneracion": {
+              "name": "modoGeneneracion",
               "isArray": false,
               "type": "String",
               "isRequired": false
