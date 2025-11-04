@@ -1,7 +1,6 @@
 import { useState, useEffect, useCallback } from "react";
 import { getQueryFactories } from "@/utils/commons/queries";
 import { MainTypes } from "@/utils/api/schema";
-import type { SelectionSet } from "aws-amplify/data";
 
 type Course = MainTypes["Curso"]["type"];
 
@@ -26,11 +25,26 @@ const coursesListSelectionSet = [
   "usuarioId",
 ] as const;
 
-// Use SelectionSet to infer proper types
-export type CourseListItem = SelectionSet<
-  Course,
-  typeof coursesListSelectionSet
->;
+// Lightweight type aligned with selection set
+export type CourseListItem = {
+  readonly cursoId: string;
+  readonly titulo: string;
+  readonly descripcion: string | null;
+  readonly imagen_portada: string | null;
+  readonly duracion_estimada: number | null;
+  readonly nivel_dificultad: "basico" | "intermedio" | "avanzado" | null;
+  readonly estado: "activo" | "inactivo" | null;
+  readonly progreso_estimado: number | null;
+  readonly playlistId: string | null;
+  readonly playlistTitle: string | null;
+  readonly playlistDescription: string | null;
+  readonly playlistThumbnail: string | null;
+  readonly playlistChannelTitle: string | null;
+  readonly playlistChannelId: string | null;
+  readonly playlistPublishedAt: string | null;
+  readonly playlistItemCount: number | null;
+  readonly usuarioId: string;
+};
 
 export interface UseCoursesListDataParams {
   searchTerm?: string;

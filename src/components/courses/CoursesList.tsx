@@ -1,7 +1,7 @@
 'use client';
 
 import { useRouter } from 'next/navigation';
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useMemo } from 'react';
 import {
   Box,
   Typography,
@@ -17,6 +17,7 @@ import {
 } from '@mui/material';
 import { Search as SearchIcon, Clear as ClearIcon } from '@mui/icons-material';
 import { useUser } from '@/contexts/UserContext';
+import { useCursosConProgreso } from '@/hooks/useCursosConProgreso';
 import { CourseCard } from './CourseCard';
 import { useCoursesListData } from './hooks/useCoursesListData';
 
@@ -25,6 +26,9 @@ export default function CoursesList() {
   
   // Get user data
   const { userData } = useUser();
+  
+  // Get courses with progress
+  const { cursos: cursosConProgreso } = useCursosConProgreso();
   
   // Local filter state
   const [searchTerm, setSearchTerm] = useState('');
@@ -40,6 +44,15 @@ export default function CoursesList() {
 
     return () => clearTimeout(timer);
   }, [searchTerm]);
+
+  // Create a map for quick progress lookup
+  const progresoMap = useMemo(() => {
+    const map = new Map<string, number>();
+    cursosConProgreso.forEach(curso => {
+      map.set(curso.cursoId, curso.progreso);
+    });
+    return map;
+  }, [cursosConProgreso]);
 
   // Use optimized hook with filters
   const { courses, loading, error } = useCoursesListData({
@@ -157,6 +170,7 @@ export default function CoursesList() {
                   key={course.cursoId} 
                   course={course} 
                   onCourseClick={handleCourseClick}
+                  progreso={progresoMap.get(course.cursoId)}
                 />
               ))}
             </Box>

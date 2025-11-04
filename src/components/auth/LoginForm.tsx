@@ -52,9 +52,20 @@ export default function LoginForm() {
     email: false,
     password: false
   });
+  const [showVerifiedMessage, setShowVerifiedMessage] = useState(false);
 
   useEffect(() => {
     setMounted(true);
+    
+    // Verificar si el usuario viene de la página de verificación
+    if (typeof window !== 'undefined') {
+      const urlParams = new URLSearchParams(window.location.search);
+      if (urlParams.get('verified') === 'true') {
+        setShowVerifiedMessage(true);
+        // Limpiar el parámetro de la URL
+        window.history.replaceState({}, '', '/auth/login');
+      }
+    }
   }, []);
 
   const handleLogin = async (event: React.FormEvent<HTMLFormElement>) => {
@@ -194,6 +205,17 @@ export default function LoginForm() {
             </Box>
 
             {/* Mensajes de estado */}
+            {showVerifiedMessage && (
+              <Alert
+                severity="success"
+                icon={<CheckCircle />}
+                sx={{ mb: 2 }}
+                onClose={() => setShowVerifiedMessage(false)}
+              >
+                ¡Cuenta verificada exitosamente! Por favor inicia sesión.
+              </Alert>
+            )}
+
             {loginState.error && (
               <Alert
                 severity="error"

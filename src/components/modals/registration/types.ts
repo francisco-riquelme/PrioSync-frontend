@@ -31,7 +31,7 @@ export const ERROR_MESSAGES = {
   INVALID_EMAIL: "Por favor ingresa un correo electrónico válido",
   PASSWORD_TOO_SHORT: `La contraseña debe tener al menos ${VALIDATION_CONFIG.PASSWORD_MIN_LENGTH} caracteres`,
   PASSWORD_WEAK:
-    "La contraseña debe contener al menos una letra mayúscula, una minúscula y un número",
+    "La contraseña debe contener al menos una letra mayúscula, una minúscula, un número y un símbolo (!@#$%^&*)",
   PASSWORDS_DONT_MATCH: "Las contraseñas no coinciden",
   REGISTRATION_FAILED: "Error al crear la cuenta. Inténtalo de nuevo.",
 } as const;
@@ -54,8 +54,9 @@ export const validatePassword = (
   const hasUpperCase = /[A-Z]/.test(password);
   const hasLowerCase = /[a-z]/.test(password);
   const hasNumbers = /\d/.test(password);
+  const hasSymbols = /[!@#$%^&*()_+\-=\[\]{}|;:,.<>?]/.test(password);
 
-  if (!hasUpperCase || !hasLowerCase || !hasNumbers) {
+  if (!hasUpperCase || !hasLowerCase || !hasNumbers || !hasSymbols) {
     return {
       isValid: false,
       message: ERROR_MESSAGES.PASSWORD_WEAK,

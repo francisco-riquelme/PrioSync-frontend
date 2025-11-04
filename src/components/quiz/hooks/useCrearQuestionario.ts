@@ -79,7 +79,7 @@ export const useCrearQuestionario = (params?: UseCrearQuestionarioParams) => {
         setLoading(false);
       }
     },
-    [params?.onSuccess]
+    [params]
   );
 
   return { loading, error, crear } as const;

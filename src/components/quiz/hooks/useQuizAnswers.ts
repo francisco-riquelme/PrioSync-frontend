@@ -1,7 +1,6 @@
 import { useState, useCallback } from "react";
 import { getQueryFactories } from "@/utils/commons/queries";
 import { MainTypes } from "@/utils/api/schema";
-import type { SelectionSet } from "aws-amplify/data";
 import { QuizQuestionView, QuizAnalysis, QuizDataView } from "@/types/quiz";
 
 type Cuestionario = MainTypes["Cuestionario"]["type"];
@@ -38,18 +37,39 @@ const opcionPreguntaSelectionSet = [
   "preguntaId",
 ] as const;
 
-// Use SelectionSet to infer proper types
-type RespuestaWithRelations = SelectionSet<
-  MainTypes["Respuesta"]["type"],
-  typeof respuestaWithRelationsSelectionSet
->;
-type OpcionPreguntaSelected = SelectionSet<
-  MainTypes["OpcionPregunta"]["type"],
-  typeof opcionPreguntaSelectionSet
->;
+// Define types for response data (doesn't extend complex Amplify types)
+interface RespuestaWithRelations {
+  respuestaId: string;
+  respuesta_texto?: string | null;
+  es_correcta?: boolean | null;
+  fecha_respuesta?: string | null;
+  usuarioId: string;
+  preguntaId: string;
+  opcionId?: string | null;
+  progresoCuestionarioId?: string | null;
+  Opcion?: {
+    opcionId: string;
+    texto: string;
+    orden?: number | null;
+    imagen?: string | null;
+    audio?: string | null;
+    video?: string | null;
+    archivo?: string | null;
+    es_correcta: boolean;
+  };
+}
 
-// Extract nested types for easier access
-// type OpcionFromRespuesta = NonNullable<RespuestaWithRelations["Opcion"]>;
+interface OpcionPreguntaSelected {
+  opcionId: string;
+  texto: string;
+  orden?: number | null;
+  imagen?: string | null;
+  audio?: string | null;
+  video?: string | null;
+  archivo?: string | null;
+  es_correcta: boolean;
+  preguntaId: string;
+}
 
 export interface UseQuizAnswersReturn {
   // User answers

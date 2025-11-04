@@ -6,7 +6,6 @@
 import { getQueryFactories } from "@/utils/commons/queries";
 import type { MainTypes } from "@/utils/api/schema";
 import { DaySchedule } from "@/components/modals/welcome/types";
-import type { SelectionSet } from "aws-amplify/data";
 
 // Define selection set for BloqueEstudio queries
 const studyBlockSelectionSet = [
@@ -20,13 +19,15 @@ const studyBlockSelectionSet = [
   "updatedAt",
 ] as const;
 
-// Infer DiaSemana type from schema using SelectionSet
-type BloqueEstudioData = SelectionSet<
-  MainTypes["BloqueEstudio"]["type"],
-  typeof studyBlockSelectionSet
->;
-
-export type DiaSemana = NonNullable<BloqueEstudioData["dia_semana"]>;
+// Lightweight enum-like type for days used by backend
+export type DiaSemana =
+  | "Lunes"
+  | "Martes"
+  | "Miercoles"
+  | "Jueves"
+  | "Viernes"
+  | "Sabado"
+  | "Domingo";
 
 export interface StudyBlock {
   bloqueEstudioId: string;

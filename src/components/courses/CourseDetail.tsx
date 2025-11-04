@@ -1,6 +1,6 @@
 'use client';
 
-import React from 'react';
+import React, { useState } from 'react';
 import { useRouter } from 'next/navigation';
 import {
   Box,
@@ -12,17 +12,21 @@ import {
   LinearProgress,
   CircularProgress,
   Alert,
+  Chip,
 } from '@mui/material';
 import {
   ArrowBack as ArrowBackIcon,
   Feedback as FeedbackIcon,
+  Star as StarIcon,
 } from '@mui/icons-material';
 import { useCourseDetailData } from '@/components/courses/hooks/useCourseDetailData';
 import { useProgresoCurso } from '@/components/courses/hooks/useProgresoCurso';
 import { useCourseStudySessions } from '@/components/courses/hooks/useCourseStudySessions';
+import { useEvaluacionCurso } from '@/hooks/useEvaluacionCurso';
 import { useUser } from '@/contexts/UserContext';
 import StudySessionsTable from './StudySessionsTable';
 import CourseContent from './CourseContent';
+import CourseFeedbackModal from './CourseFeedbackModal';
 
 interface CourseDetailProps {
   courseId: string;
@@ -64,9 +68,19 @@ export default function CourseDetail({ courseId }: CourseDetailProps) {
     usuarioId: userData?.usuarioId || '',
   });
 
+  // Hook para manejar evaluaciones del curso
+  const {
+    evaluacion,
+    loading: evaluacionLoading,
+    saving: evaluacionSaving,
+    guardarEvaluacion,
+  } = useEvaluacionCurso({
+    cursoId: courseId,
+    usuarioId: userData?.usuarioId,
+  });
 
-
-
+  // Estado del modal de feedback
+  const [feedbackModalOpen, setFeedbackModalOpen] = useState(false);
 
   // Handle loading state
   if (loading) {
@@ -125,25 +139,16 @@ export default function CourseDetail({ courseId }: CourseDetailProps) {
     return `${hours} horas`;
   };
 
-  // // TODO: Backend Integration - Implementar completar lección con API
-  // const handleCompleteLesson = async (moduleId: string, lessonId: string) => {
-  //   // TODO: Implement with real API call
-  //   console.log('Complete lesson:', moduleId, lessonId);
-  // };
-
-  // TODO: Backend Integration - Implementar envío de feedback
-  const handleCourseFeedback = async () => {
-    // TODO: Implement with real API call
-    console.log('Course feedback');
+  // Handler para abrir modal de feedback
+  const handleCourseFeedback = () => {
+    setFeedbackModalOpen(true);
   };
 
-  // const handleModuleFeedback = async (moduleId: string) => {
-  //   console.log('Module feedback:', moduleId);
-  // };
-
-  // const handleLessonFeedback = async (moduleId: string, lessonId: string) => {
-  //   console.log('Lesson feedback:', moduleId, lessonId);
-  // };
+  // Handler para guardar evaluación
+  const handleSaveEvaluacion = async (data: { calificacion: number; comentario: string }) => {
+    const success = await guardarEvaluacion(data);
+    return success;
+  };
 
   return (
     <Box>
@@ -197,15 +202,26 @@ export default function CourseDetail({ courseId }: CourseDetailProps) {
                   {leccionesCompletadas} de {totalLecciones} lecciones completadas
                 </Typography>
               </Box>
-              <Button
-                variant="outlined"
-                size="small"
-                startIcon={<FeedbackIcon />}
-                onClick={handleCourseFeedback}
-                sx={{ textTransform: 'none' }}
-              >
-                Feedback del curso
-              </Button>
+              <Box sx={{ display: 'flex', gap: 1, alignItems: 'center' }}>
+                {!evaluacionLoading && evaluacion && (
+                  <Chip
+                    icon={<StarIcon />}
+                    label={`${evaluacion.calificacion}/5`}
+                    size="small"
+                    color="primary"
+                    variant="outlined"
+                  />
+                )}
+                <Button
+                  variant="outlined"
+                  size="small"
+                  startIcon={<FeedbackIcon />}
+                  onClick={handleCourseFeedback}
+                  sx={{ textTransform: 'none' }}
+                >
+                  {evaluacion ? 'Editar Evaluación' : 'Evaluar Curso'}
+                </Button>
+              </Box>
             </Box>
             <LinearProgress
               variant="determinate"
@@ -232,11 +248,24 @@ export default function CourseDetail({ courseId }: CourseDetailProps) {
         cuestionarios={quizzes}
         quizzesLoading={false}
         onQuizCreated={handleQuizCreated}
+        onMaterialCreated={refreshCourseData}
       />
 
       {/* Sesiones de Estudio */}
       <StudySessionsTable sessions={courseSessions} loading={sessionsLoading} />
 
+      {/* Modal de Feedback/Evaluación */}
+      <CourseFeedbackModal
+        open={feedbackModalOpen}
+        onClose={() => setFeedbackModalOpen(false)}
+        onSubmit={handleSaveEvaluacion}
+        courseTitle={course?.titulo || 'Curso'}
+        initialData={{
+          calificacion: evaluacion?.calificacion ?? undefined,
+          comentario: evaluacion?.comentario ?? undefined,
+        }}
+        saving={evaluacionSaving}
+      />
     </Box>
   );
 }

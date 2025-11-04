@@ -3,10 +3,8 @@
 import { useState, useEffect, useCallback } from "react";
 import { getQueryFactories } from "@/utils/commons/queries";
 import type { MainTypes } from "@/utils/api/schema";
-import type { SelectionSet } from "aws-amplify/data";
 
 type SesionEstudio = MainTypes["SesionEstudio"]["type"];
-type Usuario = MainTypes["Usuario"]["type"];
 
 // Define the selection set for user with study sessions
 const usuarioWithSessionsSelectionSet = [
@@ -26,10 +24,26 @@ const usuarioWithSessionsSelectionSet = [
   "SesionesDeEstudio.updatedAt",
 ] as const;
 
-type UsuarioWithSessions = SelectionSet<
-  Usuario,
-  typeof usuarioWithSessionsSelectionSet
->;
+type UsuarioSesionEstudioLite = {
+  readonly sesionEstudioId: string;
+  readonly fecha: string;
+  readonly hora_inicio: string;
+  readonly hora_fin: string;
+  readonly duracion_minutos: number | null;
+  readonly tipo: string | null;
+  readonly estado: string | null;
+  readonly google_event_id: string | null;
+  readonly recordatorios: string[] | null;
+  readonly cursoId: string | null;
+  readonly leccionId: string | null;
+  readonly createdAt: string | null;
+  readonly updatedAt: string | null;
+};
+
+type UsuarioWithSessionsLite = {
+  readonly usuarioId: string;
+  readonly SesionesDeEstudio: readonly UsuarioSesionEstudioLite[] | null;
+};
 
 interface UseCourseStudySessionsParams {
   cursoId: string;
@@ -73,14 +87,16 @@ export const useCourseStudySessions = ({
       const userRes = (await Usuario.get({
         input: { usuarioId },
         selectionSet: usuarioWithSessionsSelectionSet,
-      })) as unknown as UsuarioWithSessions;
+      })) as unknown as UsuarioWithSessionsLite;
 
       // Extract and filter sessions for this specific course, then sort by date/time
-      const allSessions = (userRes?.SesionesDeEstudio || []).filter(
+      const allSessions = [...(userRes?.SesionesDeEstudio || [])].filter(
         (session) => session.cursoId === cursoId
       );
 
-      const courseSessions = allSessions.sort((a, b) => {
+      const courseSessions = (
+        [...allSessions] as UsuarioSesionEstudioLite[]
+      ).sort((a: UsuarioSesionEstudioLite, b: UsuarioSesionEstudioLite) => {
         const dateA = new Date(`${a.fecha}T${a.hora_inicio}`);
         const dateB = new Date(`${b.fecha}T${b.hora_inicio}`);
         return dateA.getTime() - dateB.getTime();
