@@ -5,7 +5,6 @@ import { getQueryFactories } from "@/utils/commons/queries";
 import type { MainTypes } from "@/utils/api/schema";
 
 type SesionEstudio = MainTypes["SesionEstudio"]["type"];
-type Usuario = MainTypes["Usuario"]["type"];
 
 // Define the selection set for user with study sessions
 const usuarioWithSessionsSelectionSet = [

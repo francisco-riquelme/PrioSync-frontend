@@ -51,6 +51,7 @@ const courseDetailSelectionSet = [
   "MaterialEstudio.titulo",
   "MaterialEstudio.tipo",
   "MaterialEstudio.url_contenido",
+  "MaterialEstudio.modo_generacion",
   "MaterialEstudio.orden",
   "MaterialEstudio.descripcion",
   "MaterialEstudio.cuestionarioId",

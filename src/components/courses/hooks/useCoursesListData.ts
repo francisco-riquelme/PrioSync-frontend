@@ -46,18 +46,29 @@ export type CourseListItem = {
   readonly usuarioId: string;
 };
 
+export interface UseCoursesListDataParams {
+  searchTerm?: string;
+  levelFilter?: string;
+  durationFilter?: string;
+  usuarioId?: string;
+}
+
 export interface UseCoursesListDataReturn {
   courses: CourseListItem[];
   loading: boolean;
   error: string | null;
+  refreshCourses: () => Promise<void>;
 }
 
 /**
  * Hook for fetching courses list data (basic fields only, no relations)
  * Used for courses grid/list view where we only need basic course information
- * Auto-fetches on mount, filters for active courses, sorts by title
+ * Supports filtering by search term, level, duration, and user
+ * Applies filters on backend for better performance
  */
-export const useCoursesListData = (): UseCoursesListDataReturn => {
+export const useCoursesListData = (
+  params?: UseCoursesListDataParams
+): UseCoursesListDataReturn => {
   const [courses, setCourses] = useState<CourseListItem[]>([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
@@ -74,26 +85,71 @@ export const useCoursesListData = (): UseCoursesListDataReturn => {
         entities: ["Curso"],
       });
 
-      // Filter for active courses only
-      const filter = { estado: { eq: "activo" } };
+      // Build filter based on params
+      const filterConditions: Record<string, { eq: string }> = {
+        estado: { eq: "activo" },
+      };
+
+      // Add user filter if provided
+      if (params?.usuarioId) {
+        filterConditions.usuarioId = { eq: params.usuarioId };
+      }
+
+      // Add level filter
+      if (params?.levelFilter && params.levelFilter !== "todos") {
+        filterConditions.nivel_dificultad = { eq: params.levelFilter };
+      }
+
+      // Add duration filter - GraphQL doesn't support complex numeric ranges
+      // so we'll need to handle this client-side or with multiple queries
+      // For now, we'll fetch all and filter client-side for duration
 
       const res = await Curso.list({
-        filter,
+        filter: filterConditions,
         followNextToken: true,
         maxPages: 10,
         selectionSet: coursesListSelectionSet,
       });
 
-      setCourses(((res.items || []) as unknown as CourseListItem[]) || []);
+      let filteredCourses = (res.items as unknown as CourseListItem[]) || [];
+
+      // Apply duration filter client-side (backend limitation)
+      if (params?.durationFilter && params.durationFilter !== "todos") {
+        filteredCourses = filteredCourses.filter((course) => {
+          const duration = course.duracion_estimada || 0;
+          switch (params.durationFilter) {
+            case "corto":
+              return duration <= 30;
+            case "medio":
+              return duration > 30 && duration <= 120;
+            case "largo":
+              return duration > 120;
+            default:
+              return true;
+          }
+        });
+      }
+
+      // Apply search filter client-side (GraphQL doesn't support contains)
+      if (params?.searchTerm && params.searchTerm.trim()) {
+        const searchLower = params.searchTerm.toLowerCase();
+        filteredCourses = filteredCourses.filter(
+          (course) =>
+            course.titulo.toLowerCase().includes(searchLower) ||
+            course.descripcion?.toLowerCase().includes(searchLower)
+        );
+      }
+
+      setCourses(filteredCourses);
     } catch (err) {
       console.error("Error loading courses:", err);
       setError("Error al cargar los cursos. Por favor, intenta nuevamente.");
     } finally {
       setLoading(false);
     }
-  }, []);
+  }, [params?.usuarioId, params?.levelFilter, params?.durationFilter, params?.searchTerm]);
 
-  // Load courses on mount
+  // Load courses on mount and when params change
   useEffect(() => {
     loadCourses();
   }, [loadCourses]);
@@ -102,6 +158,7 @@ export const useCoursesListData = (): UseCoursesListDataReturn => {
     courses,
     loading,
     error,
+    refreshCourses: loadCourses,
   };
 };
 
