@@ -4320,6 +4320,25 @@
               "attributes": []
             }
           }
+        },
+        "GenerarRetroalimentacionQuizResolverReturnType": {
+          "name": "GenerarRetroalimentacionQuizResolverReturnType",
+          "fields": {
+            "recomendaciones": {
+              "name": "recomendaciones",
+              "isArray": false,
+              "type": "String",
+              "isRequired": true,
+              "attributes": []
+            },
+            "message": {
+              "name": "message",
+              "isArray": false,
+              "type": "String",
+              "isRequired": false,
+              "attributes": []
+            }
+          }
         }
       },
       "mutations": {
@@ -4431,6 +4450,34 @@
           "arguments": {
             "playlistId": {
               "name": "playlistId",
+              "isArray": false,
+              "type": "String",
+              "isRequired": true
+            },
+            "usuarioId": {
+              "name": "usuarioId",
+              "isArray": false,
+              "type": "String",
+              "isRequired": true
+            }
+          }
+        },
+        "generarRetroalimentacionQuizResolver": {
+          "name": "generarRetroalimentacionQuizResolver",
+          "isArray": false,
+          "type": {
+            "nonModel": "GenerarRetroalimentacionQuizResolverReturnType"
+          },
+          "isRequired": false,
+          "arguments": {
+            "progresoCuestionarioId": {
+              "name": "progresoCuestionarioId",
+              "isArray": false,
+              "type": "String",
+              "isRequired": true
+            },
+            "cuestionarioId": {
+              "name": "cuestionarioId",
               "isArray": false,
               "type": "String",
               "isRequired": true
