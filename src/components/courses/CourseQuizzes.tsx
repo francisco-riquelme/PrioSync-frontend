@@ -1,6 +1,6 @@
 'use client';
 
-import React from 'react';
+import React, { useState, useEffect } from 'react';
 import { useRouter } from 'next/navigation';
 import {
   Box,
@@ -24,6 +24,8 @@ import {
   ArrowForward as ArrowForwardIcon,
   EmojiEvents as TrophyIcon,
 } from '@mui/icons-material';
+import { getQueryFactories } from '@/utils/commons/queries';
+import { MainTypes } from '@/utils/api/schema';
 import type { CuestionarioFromCourse } from './hooks/useCourseDetailData';
 
 interface CourseQuizzesProps {
@@ -49,11 +51,53 @@ const formatDuration = (minutes?: number | null) => {
 
 export default function CourseQuizzes({ cuestionarios, loading }: CourseQuizzesProps) {
   const router = useRouter();
+  const [questionCounts, setQuestionCounts] = useState<Record<string, number>>({});
+  const [loadingCounts, setLoadingCounts] = useState(true);
+
+  // Fetch question counts for each quiz
+  useEffect(() => {
+    const fetchQuestionCounts = async () => {
+      if (!cuestionarios || cuestionarios.length === 0) {
+        setLoadingCounts(false);
+        return;
+      }
+
+      try {
+        const { Pregunta } = await getQueryFactories<
+          Pick<MainTypes, 'Pregunta'>,
+          'Pregunta'
+        >({
+          entities: ['Pregunta'],
+        });
+
+        const counts: Record<string, number> = {};
+
+        for (const cuestionario of cuestionarios) {
+          const result = await Pregunta.list({
+            filter: {
+              cuestionarioId: { eq: cuestionario.cuestionarioId },
+            },
+            selectionSet: ['preguntaId'],
+          });
+          counts[cuestionario.cuestionarioId] = result.items?.length || 0;
+        }
+
+        setQuestionCounts(counts);
+      } catch (error) {
+        console.error('Error fetching question counts:', error);
+      } finally {
+        setLoadingCounts(false);
+      }
+    };
+
+    fetchQuestionCounts();
+  }, [cuestionarios]);
 
   // Debug: Log the quizzes data
   console.log('📊 CourseQuizzes - cuestionarios:', cuestionarios);
   console.log('📊 CourseQuizzes - loading:', loading);
   console.log('📊 CourseQuizzes - cuestionarios length:', cuestionarios?.length || 0);
+  console.log('📊 CourseQuizzes - questionCounts:', questionCounts);
 
   // Loading state
   if (loading) {
@@ -112,7 +156,7 @@ export default function CourseQuizzes({ cuestionarios, loading }: CourseQuizzesP
                     Preguntas
                   </TableCell>
                   <TableCell sx={{ fontWeight: 600 }} align="center">
-                    Duración
+                    Tiempo límite
                   </TableCell>
                   <TableCell sx={{ fontWeight: 600 }} align="center">
                     Intentos
@@ -171,9 +215,13 @@ export default function CourseQuizzes({ cuestionarios, loading }: CourseQuizzesP
                       </TableCell>
 
                       <TableCell align="center">
-                        <Typography variant="body2">
-                          -
-                        </Typography>
+                        {loadingCounts ? (
+                          <CircularProgress size={16} />
+                        ) : (
+                          <Typography variant="body2" sx={{ fontWeight: 500 }}>
+                            {questionCounts[cuestionario.cuestionarioId] || 0}
+                          </Typography>
+                        )}
                       </TableCell>
 
                       <TableCell align="center">
