@@ -133,7 +133,7 @@ const QuizResults: React.FC<QuizResultsProps> = ({
                 flexDirection: 'column'
               }}
             >
-              <Typography variant="h3" sx={{ fontWeight: 'bold', color: passed ? 'success.main' : 'error.main' }}>
+              <Typography variant="h3" sx={{ fontWeight: 'bold', color: passed ? 'success.main' : 'error.main', fontSize: '2.5rem' }}>
                 {percentage}%
               </Typography>
             </Box>
@@ -216,61 +216,64 @@ const QuizResults: React.FC<QuizResultsProps> = ({
               </Typography>
             </Box>
           </Box>
+
+          {/* Botones de acción */}
+          <Stack direction="row" spacing={2} justifyContent="center" flexWrap="wrap" gap={1} sx={{ mt: 3 }}>
+            <Button 
+              variant="outlined" 
+              onClick={onRetry}
+              startIcon={<Refresh />}
+              size="medium"
+            >
+              Reintentar Quiz
+            </Button>
+            
+            {onReviewAnswers && (
+              <Button 
+                variant="outlined" 
+                color="info"
+                startIcon={<Visibility />}
+                onClick={onReviewAnswers}
+                size="medium"
+              >
+                Revisar Respuestas
+              </Button>
+            )}
+            
+            {onViewRecommendations && (
+              <Button 
+                variant="contained" 
+                startIcon={<Lightbulb />}
+                onClick={onViewRecommendations}
+                size="medium"
+                sx={{
+                  background: 'linear-gradient(135deg, #667eea 0%, #764ba2 100%)',
+                  '&:hover': {
+                    background: 'linear-gradient(135deg, #5568d3 0%, #633d8a 100%)',
+                  }
+                }}
+              >
+                Recomendaciones
+              </Button>
+            )}
+          </Stack>
         </CardContent>
       </Card>
 
-      {/* Botones de acción */}
-      <Stack direction="row" spacing={2} justifyContent="center" flexWrap="wrap" gap={1}>
-        <Button 
-          variant="outlined" 
-          onClick={onRetry}
-          startIcon={<Refresh />}
-          size="large"
-        >
-          Reintentar Quiz
-        </Button>
-        
-        {onReviewAnswers && (
-          <Button 
-            variant="outlined" 
-            color="info"
-            startIcon={<Visibility />}
-            onClick={onReviewAnswers}
-            size="large"
-          >
-            Revisar Respuestas
-          </Button>
-        )}
-        
-        {onViewRecommendations && (
-          <Button 
-            variant="contained" 
-            startIcon={<Lightbulb />}
-            onClick={onViewRecommendations}
-            size="large"
-            sx={{
-              background: 'linear-gradient(135deg, #667eea 0%, #764ba2 100%)',
-              '&:hover': {
-                background: 'linear-gradient(135deg, #5568d3 0%, #633d8a 100%)',
-              }
-            }}
-          >
-            Recomendaciones
-          </Button>
-        )}
-        
-        {onReturnToCourse && (
+      {/* Botón Volver al Curso fuera del Card */}
+      {onReturnToCourse && (
+        <Box sx={{ mt: 2, textAlign: 'center' }}>
           <Button 
             variant="outlined" 
             color="secondary"
             onClick={onReturnToCourse}
             startIcon={<ArrowBack />}
-            size="large"
+            size="medium"
           >
             Volver al Curso
           </Button>
-        )}
-      </Stack>
+        </Box>
+      )}
     </Box>
   );
 };
