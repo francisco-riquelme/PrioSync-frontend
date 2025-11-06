@@ -285,6 +285,8 @@ export const useQuizAnswers = (): UseQuizAnswersReturn => {
         const incorrectQuestions: string[] = [];
         const strengths: string[] = [];
         const weaknesses: string[] = [];
+        const strengthDetails: Array<{ question: string; userAnswer: string; correctAnswer?: string }> = [];
+        const weaknessDetails: Array<{ question: string; userAnswer: string; correctAnswer?: string }> = [];
 
         for (const question of quiz.questions) {
           const userAnswerIndex = answers[question.id];
@@ -293,13 +295,26 @@ export const useQuizAnswers = (): UseQuizAnswersReturn => {
 
           totalPoints += peso;
 
+          const userAnswer = question.options[userAnswerIndex] || 'Sin respuesta';
+          const correctAnswerText = question.options[question.correctAnswer];
+
           if (isCorrect) {
             correctCount++;
             earnedPoints += peso;
             strengths.push(question.question);
+            strengthDetails.push({
+              question: question.question,
+              userAnswer,
+              correctAnswer: correctAnswerText,
+            });
           } else {
             incorrectQuestions.push(question.id);
             weaknesses.push(question.question);
+            weaknessDetails.push({
+              question: question.question,
+              userAnswer,
+              correctAnswer: correctAnswerText,
+            });
           }
         }
 
@@ -321,6 +336,8 @@ export const useQuizAnswers = (): UseQuizAnswersReturn => {
           incorrectQuestions,
           strengths: strengths.slice(0, 5), // Top 5 strengths
           weaknesses: weaknesses.slice(0, 5), // Top 5 weaknesses
+          strengthDetails: strengthDetails.slice(0, 5), // Top 5 con detalles
+          weaknessDetails: weaknessDetails.slice(0, 5), // Top 5 con detalles
           recommendations: [],
           llmLoading: true, // Indica que la retroalimentación está generándose
         };
