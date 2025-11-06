@@ -41,6 +41,20 @@ export const ResolverSchema = a
       })
       .returns(a.customType({ message: a.string().required() })),
 
+    generarRetroalimentacionQuizResolver: a
+      .mutation()
+      .arguments({
+        progresoCuestionarioId: a.string().required(),
+        cuestionarioId: a.string().required(),
+        usuarioId: a.string().required(),
+      })
+      .returns(
+        a.customType({
+          recomendaciones: a.string().required(),
+          message: a.string(),
+        })
+      ),
+
     generarCitasResolver: a
       .mutation()
       .arguments({
