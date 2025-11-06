@@ -51,14 +51,23 @@ export interface StudyRecommendation {
   };
 }
 
+// Detalle de pregunta con respuesta del usuario
+export interface QuestionDetail {
+  question: string;
+  userAnswer: string;
+  correctAnswer?: string;
+}
+
 // Pure UI type (quiz result analysis)
 export interface QuizAnalysis {
   score: number;
   percentage: number;
   level: "excellent" | "good" | "needs-improvement" | "critical";
   incorrectQuestions: string[];
-  strengths: string[];
-  weaknesses: string[];
+  strengths: string[]; // Deprecated: usar strengthDetails
+  weaknesses: string[]; // Deprecated: usar weaknessDetails
+  strengthDetails?: QuestionDetail[]; // Preguntas correctas con respuestas
+  weaknessDetails?: QuestionDetail[]; // Preguntas incorrectas con respuestas
   recommendations: StudyRecommendation[];
   llmFeedback?: string; // Retroalimentación personalizada generada por LLM
   llmLoading?: boolean; // Estado de carga de la retroalimentación
