@@ -256,61 +256,101 @@ const QuizRecommendations: React.FC<QuizRecommendationsProps> = ({
         </CardContent>
       </Card>
 
-      {/* Fortalezas y Debilidades */}
+      {/* Preguntas correctas e incorrectas */}
       {(analysis.strengths.length > 0 || analysis.weaknesses.length > 0) && (
-        <Box sx={{ display: 'flex', gap: 3, mb: 4, flexDirection: { xs: 'column', md: 'row' } }}>
-          {/* Fortalezas */}
+        <Box sx={{ display: 'grid', gridTemplateColumns: { xs: '1fr', md: 'repeat(2, 1fr)' }, gap: 4, mb: 4 }}>
+          {/* Preguntas respondidas correctamente */}
           {analysis.strengths.length > 0 && (
-            <Box sx={{ flex: 1 }}>
-              <Card sx={{ height: '100%', border: '2px solid', borderColor: 'success.main' }}>
-                <CardContent>
-                  <Box sx={{ display: 'flex', alignItems: 'center', gap: 1, mb: 2 }}>
-                    <CheckCircle sx={{ color: 'success.main' }} />
-                    <Typography variant="h6" color="success.main" sx={{ fontWeight: 'bold' }}>
-                      Fortalezas
-                    </Typography>
-                  </Box>
-                  <Stack spacing={1}>
-                    {analysis.strengths.map((strength) => (
-                      <Chip
-                        key={strength}
-                        label={strength}
-                        color="success"
-                        variant="outlined"
-                        size="small"
-                      />
-                    ))}
-                  </Stack>
-                </CardContent>
-              </Card>
-            </Box>
+            <Card 
+              elevation={3}
+              sx={{ 
+                border: '2px solid', 
+                borderColor: 'success.main',
+                transition: 'transform 0.2s',
+                '&:hover': {
+                  transform: 'translateY(-2px)',
+                  boxShadow: 6
+                }
+              }}
+            >
+              <CardContent sx={{ p: 3 }}>
+                <Box sx={{ display: 'flex', alignItems: 'center', gap: 1.5, mb: 3 }}>
+                  <CheckCircle sx={{ color: 'success.main', fontSize: 28 }} />
+                  <Typography variant="h6" color="success.main" sx={{ fontWeight: 'bold', fontSize: '1.1rem' }}>
+                    Preguntas respondidas correctamente
+                  </Typography>
+                </Box>
+                <Stack spacing={1.5}>
+                  {analysis.strengths.map((strength, index) => (
+                    <Chip
+                      key={strength}
+                      label={`${index + 1}. ${strength}`}
+                      color="success"
+                      variant="outlined"
+                      size="medium"
+                      sx={{ 
+                        justifyContent: 'flex-start',
+                        height: 'auto',
+                        py: 1.5,
+                        px: 2,
+                        '& .MuiChip-label': {
+                          whiteSpace: 'normal',
+                          textAlign: 'left',
+                          display: 'block'
+                        }
+                      }}
+                    />
+                  ))}
+                </Stack>
+              </CardContent>
+            </Card>
           )}
 
-          {/* Debilidades */}
+          {/* Preguntas con respuestas incorrectas */}
           {analysis.weaknesses.length > 0 && (
-            <Box sx={{ flex: 1 }}>
-              <Card sx={{ height: '100%', border: '2px solid', borderColor: 'warning.main' }}>
-                <CardContent>
-                  <Box sx={{ display: 'flex', alignItems: 'center', gap: 1, mb: 2 }}>
-                    <Lightbulb sx={{ color: 'warning.main' }} />
-                    <Typography variant="h6" color="warning.main" sx={{ fontWeight: 'bold' }}>
-                      Áreas a Mejorar
-                    </Typography>
-                  </Box>
-                  <Stack spacing={1}>
-                    {analysis.weaknesses.map((weakness) => (
-                      <Chip
-                        key={weakness}
-                        label={weakness}
-                        color="warning"
-                        variant="outlined"
-                        size="small"
-                      />
-                    ))}
-                  </Stack>
-                </CardContent>
-              </Card>
-            </Box>
+            <Card 
+              elevation={3}
+              sx={{ 
+                border: '2px solid', 
+                borderColor: 'warning.main',
+                transition: 'transform 0.2s',
+                '&:hover': {
+                  transform: 'translateY(-2px)',
+                  boxShadow: 6
+                }
+              }}
+            >
+              <CardContent sx={{ p: 3 }}>
+                <Box sx={{ display: 'flex', alignItems: 'center', gap: 1.5, mb: 3 }}>
+                  <Lightbulb sx={{ color: 'warning.main', fontSize: 28 }} />
+                  <Typography variant="h6" color="warning.main" sx={{ fontWeight: 'bold', fontSize: '1.1rem' }}>
+                    Preguntas con respuestas incorrectas
+                  </Typography>
+                </Box>
+                <Stack spacing={1.5}>
+                  {analysis.weaknesses.map((weakness, index) => (
+                    <Chip
+                      key={weakness}
+                      label={`${index + 1}. ${weakness}`}
+                      color="warning"
+                      variant="outlined"
+                      size="medium"
+                      sx={{ 
+                        justifyContent: 'flex-start',
+                        height: 'auto',
+                        py: 1.5,
+                        px: 2,
+                        '& .MuiChip-label': {
+                          whiteSpace: 'normal',
+                          textAlign: 'left',
+                          display: 'block'
+                        }
+                      }}
+                    />
+                  ))}
+                </Stack>
+              </CardContent>
+            </Card>
           )}
         </Box>
       )}
