@@ -23,7 +23,8 @@ import {
   BookmarkBorder,
   ArrowForward,
   School,
-  CheckCircle
+  CheckCircle,
+  Close
 } from '@mui/icons-material';
 import { StudyRecommendation, QuizAnalysis } from '@/types/quiz';
 import { useGenerarRetroalimentacion } from './hooks/useGenerarRetroalimentacion';
@@ -257,10 +258,11 @@ const QuizRecommendations: React.FC<QuizRecommendationsProps> = ({
       </Card>
 
       {/* Preguntas correctas e incorrectas */}
-      {(analysis.strengths.length > 0 || analysis.weaknesses.length > 0) && (
+      {((analysis.strengthDetails && analysis.strengthDetails.length > 0) || 
+        (analysis.weaknessDetails && analysis.weaknessDetails.length > 0)) && (
         <Box sx={{ display: 'grid', gridTemplateColumns: { xs: '1fr', md: 'repeat(2, 1fr)' }, gap: 4, mb: 4 }}>
           {/* Preguntas respondidas correctamente */}
-          {analysis.strengths.length > 0 && (
+          {analysis.strengthDetails && analysis.strengthDetails.length > 0 && (
             <Card 
               elevation={3}
               sx={{ 
@@ -280,26 +282,34 @@ const QuizRecommendations: React.FC<QuizRecommendationsProps> = ({
                     Preguntas respondidas correctamente
                   </Typography>
                 </Box>
-                <Stack spacing={1.5}>
-                  {analysis.strengths.map((strength, index) => (
-                    <Chip
-                      key={strength}
-                      label={`${index + 1}. ${strength}`}
-                      color="success"
-                      variant="outlined"
-                      size="medium"
-                      sx={{ 
-                        justifyContent: 'flex-start',
-                        height: 'auto',
-                        py: 1.5,
-                        px: 2,
-                        '& .MuiChip-label': {
-                          whiteSpace: 'normal',
-                          textAlign: 'left',
-                          display: 'block'
-                        }
-                      }}
-                    />
+                <Stack spacing={2}>
+                  {analysis.strengthDetails.map((detail, index) => (
+                    <Box key={index}>
+                      <Box
+                        sx={{ 
+                          border: '1px solid',
+                          borderColor: 'success.light',
+                          borderRadius: 2,
+                          p: 2,
+                          backgroundColor: 'success.lighter',
+                          transition: 'all 0.2s',
+                          '&:hover': {
+                            backgroundColor: 'success.light',
+                            boxShadow: 1
+                          }
+                        }}
+                      >
+                        <Typography variant="body2" sx={{ fontWeight: 600, mb: 1.5, color: 'text.primary' }}>
+                          {index + 1}. {detail.question}
+                        </Typography>
+                        <Box sx={{ display: 'flex', alignItems: 'center', gap: 1, pl: 2 }}>
+                          <CheckCircle sx={{ color: 'success.main', fontSize: 18 }} />
+                          <Typography variant="body2" sx={{ color: 'success.dark', fontStyle: 'italic' }}>
+                            Tu respuesta: {detail.userAnswer}
+                          </Typography>
+                        </Box>
+                      </Box>
+                    </Box>
                   ))}
                 </Stack>
               </CardContent>
@@ -307,12 +317,12 @@ const QuizRecommendations: React.FC<QuizRecommendationsProps> = ({
           )}
 
           {/* Preguntas con respuestas incorrectas */}
-          {analysis.weaknesses.length > 0 && (
+          {analysis.weaknessDetails && analysis.weaknessDetails.length > 0 && (
             <Card 
               elevation={3}
               sx={{ 
                 border: '2px solid', 
-                borderColor: 'warning.main',
+                borderColor: 'error.main',
                 transition: 'transform 0.2s',
                 '&:hover': {
                   transform: 'translateY(-2px)',
@@ -322,31 +332,47 @@ const QuizRecommendations: React.FC<QuizRecommendationsProps> = ({
             >
               <CardContent sx={{ p: 3 }}>
                 <Box sx={{ display: 'flex', alignItems: 'center', gap: 1.5, mb: 3 }}>
-                  <Lightbulb sx={{ color: 'warning.main', fontSize: 28 }} />
-                  <Typography variant="h6" color="warning.main" sx={{ fontWeight: 'bold', fontSize: '1.1rem' }}>
+                  <Close sx={{ color: 'error.main', fontSize: 28 }} />
+                  <Typography variant="h6" color="error.main" sx={{ fontWeight: 'bold', fontSize: '1.1rem' }}>
                     Preguntas con respuestas incorrectas
                   </Typography>
                 </Box>
-                <Stack spacing={1.5}>
-                  {analysis.weaknesses.map((weakness, index) => (
-                    <Chip
-                      key={weakness}
-                      label={`${index + 1}. ${weakness}`}
-                      color="warning"
-                      variant="outlined"
-                      size="medium"
-                      sx={{ 
-                        justifyContent: 'flex-start',
-                        height: 'auto',
-                        py: 1.5,
-                        px: 2,
-                        '& .MuiChip-label': {
-                          whiteSpace: 'normal',
-                          textAlign: 'left',
-                          display: 'block'
-                        }
-                      }}
-                    />
+                <Stack spacing={2}>
+                  {analysis.weaknessDetails.map((detail, index) => (
+                    <Box key={index}>
+                      <Box
+                        sx={{ 
+                          border: '1px solid',
+                          borderColor: 'error.light',
+                          borderRadius: 2,
+                          p: 2,
+                          backgroundColor: 'error.lighter',
+                          transition: 'all 0.2s',
+                          '&:hover': {
+                            backgroundColor: 'error.light',
+                            boxShadow: 1
+                          }
+                        }}
+                      >
+                        <Typography variant="body2" sx={{ fontWeight: 600, mb: 1.5, color: 'text.primary' }}>
+                          {index + 1}. {detail.question}
+                        </Typography>
+                        <Box sx={{ display: 'flex', alignItems: 'center', gap: 1, pl: 2, mb: 1 }}>
+                          <Close sx={{ color: 'error.main', fontSize: 18 }} />
+                          <Typography variant="body2" sx={{ color: 'error.dark', fontStyle: 'italic' }}>
+                            Tu respuesta: {detail.userAnswer}
+                          </Typography>
+                        </Box>
+                        {detail.correctAnswer && (
+                          <Box sx={{ display: 'flex', alignItems: 'center', gap: 1, pl: 2 }}>
+                            <CheckCircle sx={{ color: 'success.main', fontSize: 18 }} />
+                            <Typography variant="body2" sx={{ color: 'success.dark', fontWeight: 500 }}>
+                              Respuesta correcta: {detail.correctAnswer}
+                            </Typography>
+                          </Box>
+                        )}
+                      </Box>
+                    </Box>
                   ))}
                 </Stack>
               </CardContent>
