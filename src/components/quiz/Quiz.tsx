@@ -165,7 +165,9 @@ const QuizContent: React.FC<QuizContentProps> = ({ usuarioId, cuestionarioId, cu
           <Box sx={{ flex: { xs: '1 1 100%', md: '1 1 66%' } }}>
             <QuizResults
               score={quizAnalysis.score}
-              totalQuestions={preguntas.length}
+              totalQuestions={quizAnalysis.totalQuestions}
+              totalPoints={quizAnalysis.totalPoints}
+              correctCount={quizAnalysis.correctCount}
               percentage={quizAnalysis.percentage}
               passed={quizAnalysis.percentage >= (quiz?.porcentaje_aprobacion || 70)}
               passingScore={quiz?.porcentaje_aprobacion || 70}

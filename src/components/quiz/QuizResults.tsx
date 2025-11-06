@@ -22,8 +22,10 @@ import {
 } from '@mui/icons-material';
 
 interface QuizResultsProps {
-  score: number;
-  totalQuestions: number;
+  score: number; // Puntos obtenidos
+  totalQuestions: number; // Total de preguntas
+  totalPoints?: number; // Puntos máximos (opcional para compatibilidad)
+  correctCount?: number; // Respuestas correctas (opcional para compatibilidad)
   percentage: number;
   passed: boolean;
   passingScore: number;
@@ -36,6 +38,8 @@ interface QuizResultsProps {
 const QuizResults: React.FC<QuizResultsProps> = ({
   score,
   totalQuestions,
+  totalPoints,
+  correctCount,
   percentage,
   passed,
   passingScore,
@@ -44,6 +48,11 @@ const QuizResults: React.FC<QuizResultsProps> = ({
   onReturnToCourse,
   showRecommendationsButton = true
 }) => {
+  // Usar los valores correctos: score es puntos, correctCount es respuestas
+  const displayScore = totalPoints !== undefined ? score : correctCount || score;
+  const displayTotal = totalPoints !== undefined ? totalPoints : totalQuestions;
+  const displayCorrect = correctCount !== undefined ? correctCount : score;
+  const displayIncorrect = totalQuestions - displayCorrect;
   const getResultIcon = () => {
     if (passed) {
       return <CheckCircle sx={{ fontSize: 80, color: 'success.main', mb: 2 }} />;
@@ -133,7 +142,10 @@ const QuizResults: React.FC<QuizResultsProps> = ({
 
           {/* Detalles de puntuación */}
           <Typography variant="h6" sx={{ mb: 1 }}>
-            {score} de {totalQuestions} respuestas correctas
+            {displayScore} de {displayTotal} puntos
+          </Typography>
+          <Typography variant="body2" color="text.secondary" sx={{ mb: 2 }}>
+            {displayCorrect} de {totalQuestions} respuestas correctas
           </Typography>
           
           {/* Chip de estado */}
@@ -170,8 +182,17 @@ const QuizResults: React.FC<QuizResultsProps> = ({
             borderRadius: 2
           }}>
             <Box>
+              <Typography variant="h6" color="success.main">
+                {displayScore}
+              </Typography>
+              <Typography variant="caption" color="text.secondary">
+                Puntos Obtenidos
+              </Typography>
+            </Box>
+            
+            <Box>
               <Typography variant="h6" color="primary.main">
-                {score}
+                {displayCorrect}
               </Typography>
               <Typography variant="caption" color="text.secondary">
                 Correctas
@@ -180,7 +201,7 @@ const QuizResults: React.FC<QuizResultsProps> = ({
             
             <Box>
               <Typography variant="h6" color="error.main">
-                {totalQuestions - score}
+                {displayIncorrect}
               </Typography>
               <Typography variant="caption" color="text.secondary">
                 Incorrectas

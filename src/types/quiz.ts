@@ -60,7 +60,10 @@ export interface QuestionDetail {
 
 // Pure UI type (quiz result analysis)
 export interface QuizAnalysis {
-  score: number;
+  score: number; // Puntos obtenidos (earnedPoints)
+  totalPoints: number; // Puntos máximos posibles
+  correctCount: number; // Número de respuestas correctas
+  totalQuestions: number; // Número total de preguntas
   percentage: number;
   level: "excellent" | "good" | "needs-improvement" | "critical";
   incorrectQuestions: string[];

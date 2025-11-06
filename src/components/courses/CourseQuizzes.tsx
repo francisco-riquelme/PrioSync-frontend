@@ -52,11 +52,12 @@ const formatDuration = (minutes?: number | null) => {
 export default function CourseQuizzes({ cuestionarios, loading }: CourseQuizzesProps) {
   const router = useRouter();
   const [questionCounts, setQuestionCounts] = useState<Record<string, number>>({});
+  const [maxPoints, setMaxPoints] = useState<Record<string, number>>({});
   const [loadingCounts, setLoadingCounts] = useState(true);
 
-  // Fetch question counts for each quiz
+  // Fetch question counts and max points for each quiz
   useEffect(() => {
-    const fetchQuestionCounts = async () => {
+    const fetchQuestionData = async () => {
       if (!cuestionarios || cuestionarios.length === 0) {
         setLoadingCounts(false);
         return;
@@ -71,26 +72,35 @@ export default function CourseQuizzes({ cuestionarios, loading }: CourseQuizzesP
         });
 
         const counts: Record<string, number> = {};
+        const points: Record<string, number> = {};
 
         for (const cuestionario of cuestionarios) {
           const result = await Pregunta.list({
             filter: {
               cuestionarioId: { eq: cuestionario.cuestionarioId },
             },
-            selectionSet: ['preguntaId'],
+            selectionSet: ['preguntaId', 'peso_puntos'],
           });
+          
           counts[cuestionario.cuestionarioId] = result.items?.length || 0;
+          
+          // Calcular puntos máximos sumando peso_puntos de todas las preguntas
+          const totalPoints = result.items?.reduce((sum, pregunta) => {
+            return sum + (pregunta.peso_puntos || 1);
+          }, 0) || 0;
+          points[cuestionario.cuestionarioId] = totalPoints;
         }
 
         setQuestionCounts(counts);
+        setMaxPoints(points);
       } catch (error) {
-        console.error('Error fetching question counts:', error);
+        console.error('Error fetching question data:', error);
       } finally {
         setLoadingCounts(false);
       }
     };
 
-    fetchQuestionCounts();
+    fetchQuestionData();
   }, [cuestionarios]);
 
   // Debug: Log the quizzes data
@@ -98,6 +108,7 @@ export default function CourseQuizzes({ cuestionarios, loading }: CourseQuizzesP
   console.log('📊 CourseQuizzes - loading:', loading);
   console.log('📊 CourseQuizzes - cuestionarios length:', cuestionarios?.length || 0);
   console.log('📊 CourseQuizzes - questionCounts:', questionCounts);
+  console.log('📊 CourseQuizzes - maxPoints:', maxPoints);
 
   // Loading state
   if (loading) {
@@ -256,9 +267,13 @@ export default function CourseQuizzes({ cuestionarios, loading }: CourseQuizzesP
                           }}
                         >
                           <TrophyIcon sx={{ fontSize: 16, color: 'warning.main' }} />
-                          <Typography variant="body2" sx={{ fontWeight: 500 }}>
-                            {cuestionario.puntos_maximos || 100}
-                          </Typography>
+                          {loadingCounts ? (
+                            <CircularProgress size={16} />
+                          ) : (
+                            <Typography variant="body2" sx={{ fontWeight: 500 }}>
+                              {maxPoints[cuestionario.cuestionarioId] || 0}
+                            </Typography>
+                          )}
                         </Box>
                       </TableCell>
 

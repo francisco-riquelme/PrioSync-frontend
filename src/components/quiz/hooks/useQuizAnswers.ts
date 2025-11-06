@@ -330,7 +330,10 @@ export const useQuizAnswers = (): UseQuizAnswersReturn => {
 
         // Generate initial analysis
         const analysis: QuizAnalysis = {
-          score: correctCount,
+          score: earnedPoints, // Puntos obtenidos
+          totalPoints, // Puntos máximos posibles
+          correctCount, // Número de respuestas correctas
+          totalQuestions: quiz.questions.length, // Total de preguntas
           percentage,
           level,
           incorrectQuestions,
