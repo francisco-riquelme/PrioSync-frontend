@@ -133,7 +133,7 @@ const QuizInstructions: React.FC<QuizInstructionsProps> = ({
                   •
                 </Typography>
                 <Typography component="span">
-                  <strong>{preguntas.length} preguntas</strong> de selección múltiple
+                  <strong>{preguntas.length} preguntas</strong> de selección múltiple y verdadero/falso
                 </Typography>
               </Typography>
               

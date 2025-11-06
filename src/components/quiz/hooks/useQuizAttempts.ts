@@ -186,6 +186,25 @@ export const useQuizAttempts = (): UseQuizAttemptsReturn => {
           entities: ["ProgresoCuestionario"],
         });
 
+        // Fetch existing attempts to calculate correct attempt number
+        const existingAttempts = await ProgresoCuestionario.list({
+          filter: {
+            usuarioId: { eq: usuarioId },
+            cuestionarioId: { eq: cuestionarioId },
+          },
+          selectionSet: ['progresoCuestionarioId', 'intento_numero'],
+        });
+
+        // Calculate next attempt number from fresh data
+        const sortedAttempts = [...(existingAttempts.items || [])].sort(
+          (a, b) => (a.intento_numero || 0) - (b.intento_numero || 0)
+        );
+        const maxAttempt = Math.max(
+          0,
+          ...sortedAttempts.map((a) => a.intento_numero || 0)
+        );
+        const nextAttemptNumber = maxAttempt + 1;
+
         const progresoCuestionarioId = crypto.randomUUID();
 
         // Create the attempt record with "en_proceso" status
@@ -197,18 +216,19 @@ export const useQuizAttempts = (): UseQuizAttemptsReturn => {
             puntaje_obtenido: 0,
             estado: "en_proceso",
             fecha_completado: new Date().toISOString(),
-            intento_numero: currentAttemptNumber,
+            intento_numero: nextAttemptNumber,
           },
         });
 
         setCurrentProgresoCuestionarioId(progresoCuestionarioId);
+        setCurrentAttemptNumber(nextAttemptNumber);
         return progresoCuestionarioId;
       } catch (err) {
         console.error("Error starting quiz attempt:", err);
         throw new Error("Error al iniciar el intento del cuestionario");
       }
     },
-    [currentAttemptNumber]
+    []
   );
 
   /**

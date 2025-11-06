@@ -170,7 +170,7 @@ export const useQuizActions = ({
   // Navigation actions
   const handleStartQuiz = useCallback(async () => {
     try {
-      // Start a new quiz attempt
+      // Start a new quiz attempt (now calculates attempt number internally)
       await quizAttempts.startQuizAttempt(
         quiz?.cuestionarioId || "",
         usuarioId
