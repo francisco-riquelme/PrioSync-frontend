@@ -2,6 +2,10 @@ import { useState, useCallback } from "react";
 import { getQueryFactories } from "@/utils/commons/queries";
 import { MainTypes } from "@/utils/api/schema";
 import { QuizQuestionView, QuizAnalysis, QuizDataView } from "@/types/quiz";
+import { generateClient } from 'aws-amplify/api';
+import type { ResolversTypes } from '@/utils/api/resolverSchema';
+
+const client = generateClient<ResolversTypes>();
 
 type Cuestionario = MainTypes["Cuestionario"]["type"];
 
@@ -93,7 +97,8 @@ export interface UseQuizAnswersReturn {
     answers: Record<string, number>,
     quiz: QuizDataView | null,
     cuestionario: Cuestionario | null,
-    currentProgresoCuestionarioId?: string | null
+    currentProgresoCuestionarioId?: string | null,
+    usuarioId?: string
   ) => Promise<QuizAnalysis>;
   fetchAttemptAnswers: (
     progresoCuestionarioId: string,
@@ -251,7 +256,8 @@ export const useQuizAnswers = (): UseQuizAnswersReturn => {
       answers: Record<string, number>,
       quiz: QuizDataView | null,
       cuestionario: Cuestionario | null,
-      currentProgresoCuestionarioId?: string | null
+      currentProgresoCuestionarioId?: string | null,
+      usuarioId?: string
     ): Promise<QuizAnalysis> => {
       if (!quiz || !cuestionario) {
         throw new Error("No quiz loaded");
@@ -307,15 +313,16 @@ export const useQuizAnswers = (): UseQuizAnswersReturn => {
         else if (percentage >= 60) level = "needs-improvement";
         else level = "critical";
 
-        // Generate analysis
+        // Generate initial analysis
         const analysis: QuizAnalysis = {
           score: correctCount,
           percentage,
           level,
           incorrectQuestions,
-          strengths: strengths.slice(0, 3), // Top 3 strengths
-          weaknesses: weaknesses.slice(0, 3), // Top 3 weaknesses
-          recommendations: [], // Could be enhanced with AI recommendations
+          strengths: strengths.slice(0, 5), // Top 5 strengths
+          weaknesses: weaknesses.slice(0, 5), // Top 5 weaknesses
+          recommendations: [],
+          llmLoading: true, // Indica que la retroalimentación está generándose
         };
 
         // Update ProgresoCuestionario with final results
@@ -323,12 +330,29 @@ export const useQuizAnswers = (): UseQuizAnswersReturn => {
           input: {
             progresoCuestionarioId: currentProgresoCuestionarioId,
             puntaje_obtenido: earnedPoints,
-            aprobado: passed, // Store whether user passed or failed
-            estado: "completado", // Always mark as completed when finishing
+            aprobado: passed,
+            estado: "completado",
             fecha_completado: new Date().toISOString(),
-            recomendaciones: undefined, // Will be populated by AI later
+            recomendaciones: undefined, // Se actualizará después con la retroalimentación del LLM
           },
         });
+
+        // Generar retroalimentación con LLM de forma asíncrona (no bloqueante)
+        if (usuarioId) {
+          // Llamar al LLM después de guardar el progreso (sin esperar el resultado)
+          client.mutations.generarRetroalimentacionQuizResolver({
+            progresoCuestionarioId: currentProgresoCuestionarioId,
+            cuestionarioId: cuestionario.cuestionarioId,
+            usuarioId,
+          }).then((response) => {
+            if (response.data) {
+              console.info('[useQuizAnswers] Retroalimentación generada:', response.data.recomendaciones);
+              // La retroalimentación se guardará en el backend y se obtendrá en el próximo refetch
+            }
+          }).catch((llmError) => {
+            console.error('[useQuizAnswers] Error generando retroalimentación:', llmError);
+          });
+        }
 
         return analysis;
       } catch (err) {
