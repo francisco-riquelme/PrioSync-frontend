@@ -49,6 +49,7 @@ export interface UseQuizActionsReturn {
   handleRecommendationAction: (recommendation: StudyRecommendation) => void;
   handleContinueAttempt: (attempt: QuizAttemptWithAnswers) => Promise<void>;
   handleReviewAttempt: (attempt: QuizAttemptWithAnswers) => Promise<void>;
+  handleViewRecommendationsFromAttempt: (attempt: QuizAttemptWithAnswers) => Promise<void>;
   handleBackFromReview: () => void;
   handleReturnToCourse: () => void;
   setTimeLeft: (time: number) => void;
@@ -404,6 +405,76 @@ export const useQuizActions = ({
     [preguntas, quizAnswers]
   );
 
+  const handleViewRecommendationsFromAttempt = useCallback(
+    async (attempt: QuizAttemptWithAnswers) => {
+      try {
+        // Fetch the answers from the attempt
+        const attemptAnswers = await quizAnswers.fetchAttemptAnswers(
+          attempt.progresoCuestionarioId,
+          preguntas.map((p) => ({
+            id: p.preguntaId,
+            question: p.texto_pregunta,
+            options: (p.Opciones || [])
+              .sort((a, b) => (a.orden || 0) - (b.orden || 0))
+              .map((opcion) => opcion.texto),
+            correctAnswer: (p.Opciones || []).findIndex(
+              (opcion) => opcion.es_correcta
+            ),
+            explanation: p.explicacion || undefined,
+            peso_puntos: p.peso_puntos || 1,
+            opcionIds: (p.Opciones || [])
+              .sort((a, b) => (a.orden || 0) - (b.orden || 0))
+              .map((opcion) => opcion.opcionId),
+          }))
+        );
+
+        // Recreate the quiz analysis from the attempt data
+        const quizDataView = {
+          id: quiz?.cuestionarioId || '',
+          courseId: quiz?.cursoId || '',
+          courseName: '',
+          title: quiz?.titulo || '',
+          description: quiz?.descripcion || '',
+          timeLimit: quiz?.duracion_minutos || 30,
+          questions: preguntas.map((p) => ({
+            id: p.preguntaId,
+            question: p.texto_pregunta,
+            options: (p.Opciones || [])
+              .sort((a, b) => (a.orden || 0) - (b.orden || 0))
+              .map((opcion) => opcion.texto),
+            correctAnswer: (p.Opciones || []).findIndex(
+              (opcion) => opcion.es_correcta
+            ),
+            explanation: p.explicacion || undefined,
+            peso_puntos: p.peso_puntos || 1,
+            opcionIds: (p.Opciones || [])
+              .sort((a, b) => (a.orden || 0) - (b.orden || 0))
+              .map((opcion) => opcion.opcionId),
+          })),
+          passingScore: quiz?.porcentaje_aprobacion || 70,
+        };
+
+        // Calculate analysis from attempt
+        const analysis = await quizAnswers.submitQuiz(
+          attemptAnswers,
+          quizDataView,
+          quiz as unknown as Cuestionario,
+          attempt.progresoCuestionarioId,
+          usuarioId
+        );
+
+        // Set the completed progreso ID and analysis
+        setCompletedProgresoCuestionarioId(attempt.progresoCuestionarioId);
+        setQuizAnalysis(analysis);
+        setCurrentScreen("recommendations");
+      } catch (err) {
+        console.error("Error loading recommendations for attempt:", err);
+        alert("Error al cargar las recomendaciones");
+      }
+    },
+    [preguntas, quizAnswers, quiz, usuarioId]
+  );
+
   const handleBackFromReview = useCallback(() => {
     setCurrentScreen("instructions");
     setReviewAttempt(null);
@@ -446,6 +517,7 @@ export const useQuizActions = ({
     handleRecommendationAction,
     handleContinueAttempt,
     handleReviewAttempt,
+    handleViewRecommendationsFromAttempt,
     handleBackFromReview,
     handleReturnToCourse,
     setTimeLeft,

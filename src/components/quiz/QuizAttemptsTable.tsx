@@ -15,6 +15,9 @@ import {
   Chip,
   Button,
   Paper,
+  IconButton,
+  Tooltip,
+  Stack,
 } from '@mui/material';
 import {
   CheckCircle,
@@ -22,6 +25,7 @@ import {
   HourglassEmpty,
   Replay,
   Visibility,
+  Lightbulb,
 } from '@mui/icons-material';
 import { QuizAttemptWithAnswers } from './hooks/useQuizDetailData';
 
@@ -30,6 +34,7 @@ interface QuizAttemptsTableProps {
   currentAttemptNumber: number;
   onContinueAttempt?: (attempt: QuizAttemptWithAnswers) => void;
   onReviewAttempt?: (attempt: QuizAttemptWithAnswers) => void;
+  onViewRecommendations?: (attempt: QuizAttemptWithAnswers) => void;
 }
 
 const QuizAttemptsTable: React.FC<QuizAttemptsTableProps> = ({
@@ -37,6 +42,7 @@ const QuizAttemptsTable: React.FC<QuizAttemptsTableProps> = ({
   currentAttemptNumber,
   onContinueAttempt,
   onReviewAttempt,
+  onViewRecommendations,
 }) => {
   const getStatusIcon = (estado?: string) => {
     switch (estado) {
@@ -170,30 +176,74 @@ const QuizAttemptsTable: React.FC<QuizAttemptsTableProps> = ({
                         </Typography>
                       </TableCell>
                       <TableCell align="center">
-                        <Box sx={{ display: 'flex', gap: 1, justifyContent: 'center' }}>
+                        <Stack direction="row" spacing={0.5} justifyContent="center" alignItems="center">
                           {attempt.estado === 'en_proceso' && onContinueAttempt && (
-                            <Button
-                              size="small"
-                              startIcon={<Replay />}
-                              onClick={() => onContinueAttempt(attempt)}
-                              color="primary"
-                              variant="outlined"
-                            >
-                              Continuar
-                            </Button>
+                            <Tooltip title="Continuar intento" arrow>
+                              <IconButton
+                                size="small"
+                                onClick={() => onContinueAttempt(attempt)}
+                                color="primary"
+                                sx={{
+                                  border: '1px solid',
+                                  borderColor: 'primary.main',
+                                  '&:hover': {
+                                    backgroundColor: 'primary.light',
+                                    borderColor: 'primary.dark',
+                                  }
+                                }}
+                              >
+                                <Replay fontSize="small" />
+                              </IconButton>
+                            </Tooltip>
                           )}
                           {attempt.estado === 'completado' && onReviewAttempt && (
-                            <Button
-                              size="small"
-                              startIcon={<Visibility />}
-                              onClick={() => onReviewAttempt(attempt)}
-                              color="secondary"
-                              variant="outlined"
-                            >
-                              Revisar
-                            </Button>
+                            <Tooltip title="Revisar respuestas" arrow>
+                              <IconButton
+                                size="small"
+                                onClick={() => onReviewAttempt(attempt)}
+                                sx={{
+                                  border: '1px solid',
+                                  borderColor: 'info.main',
+                                  color: 'info.main',
+                                  '&:hover': {
+                                    backgroundColor: 'info.light',
+                                    borderColor: 'info.dark',
+                                  }
+                                }}
+                              >
+                                <Visibility fontSize="small" />
+                              </IconButton>
+                            </Tooltip>
                           )}
-                        </Box>
+                          {attempt.estado === 'completado' && onViewRecommendations && (
+                            <Tooltip title="Ver recomendaciones personalizadas" arrow>
+                              <Button
+                                size="small"
+                                startIcon={<Lightbulb />}
+                                onClick={() => onViewRecommendations(attempt)}
+                                variant="contained"
+                                sx={{
+                                  minWidth: 'auto',
+                                  px: 1.5,
+                                  py: 0.5,
+                                  fontSize: '0.75rem',
+                                  fontWeight: 600,
+                                  textTransform: 'none',
+                                  background: 'linear-gradient(135deg, #667eea 0%, #764ba2 100%)',
+                                  boxShadow: 1,
+                                  '&:hover': {
+                                    background: 'linear-gradient(135deg, #5568d3 0%, #633d8a 100%)',
+                                    boxShadow: 2,
+                                    transform: 'translateY(-1px)',
+                                  },
+                                  transition: 'all 0.2s ease-in-out',
+                                }}
+                              >
+                                Recomendaciones
+                              </Button>
+                            </Tooltip>
+                          )}
+                        </Stack>
                       </TableCell>
                     </TableRow>
                   ))}

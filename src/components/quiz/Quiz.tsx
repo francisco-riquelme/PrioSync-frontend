@@ -77,6 +77,7 @@ const QuizContent: React.FC<QuizContentProps> = ({ usuarioId, cuestionarioId, cu
     handleRecommendationAction,
     handleContinueAttempt,
     handleReviewAttempt,
+    handleViewRecommendationsFromAttempt,
     handleBackFromReview,
     handleReturnToCourse,
     setTimeLeft,
@@ -124,6 +125,7 @@ const QuizContent: React.FC<QuizContentProps> = ({ usuarioId, cuestionarioId, cu
               currentAttemptNumber={quizAttempts.currentAttemptNumber}
               onContinueAttempt={handleContinueAttempt}
               onReviewAttempt={handleReviewAttempt}
+              onViewRecommendations={handleViewRecommendationsFromAttempt}
             />
           </Box>
         </Stack>
@@ -179,6 +181,7 @@ const QuizContent: React.FC<QuizContentProps> = ({ usuarioId, cuestionarioId, cu
               currentAttemptNumber={quizAttempts.currentAttemptNumber}
               onContinueAttempt={handleContinueAttempt}
               onReviewAttempt={handleReviewAttempt}
+              onViewRecommendations={handleViewRecommendationsFromAttempt}
             />
           </Box>
         </Stack>
