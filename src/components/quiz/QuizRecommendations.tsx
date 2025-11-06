@@ -10,7 +10,6 @@ import {
   Stack,
   Chip,
   Avatar,
-  Divider,
   CircularProgress,
   Alert
 } from '@mui/material';
@@ -24,7 +23,8 @@ import {
   ArrowForward,
   School,
   CheckCircle,
-  Close
+  Close,
+  ArrowBack
 } from '@mui/icons-material';
 import { StudyRecommendation, QuizAnalysis } from '@/types/quiz';
 import { useGenerarRetroalimentacion } from './hooks/useGenerarRetroalimentacion';
@@ -33,6 +33,7 @@ interface QuizRecommendationsProps {
   analysis: QuizAnalysis;
   onBackToResults: () => void;
   onActionClick: (recommendation: StudyRecommendation) => void;
+  onReturnToCourse?: () => void;
   progresoCuestionarioId?: string;
   cuestionarioId?: string;
   usuarioId?: string;
@@ -42,6 +43,7 @@ const QuizRecommendations: React.FC<QuizRecommendationsProps> = ({
   analysis,
   onBackToResults,
   onActionClick,
+  onReturnToCourse,
   progresoCuestionarioId,
   cuestionarioId,
   usuarioId,
@@ -186,6 +188,28 @@ const QuizRecommendations: React.FC<QuizRecommendationsProps> = ({
 
   return (
     <Box sx={{ maxWidth: 900, mx: 'auto', p: 3 }}>
+      {/* Botones de navegación superior */}
+      <Stack direction="row" spacing={2} sx={{ mb: 3 }}>
+        <Button 
+          variant="outlined" 
+          onClick={onBackToResults}
+          startIcon={<ArrowBack />}
+          size="medium"
+        >
+          Volver
+        </Button>
+        
+        {onReturnToCourse && (
+          <Button 
+            variant="outlined" 
+            onClick={onReturnToCourse}
+            size="medium"
+          >
+            Volver al Curso
+          </Button>
+        )}
+      </Stack>
+
       {/* Header con análisis general */}
       <Card elevation={3} sx={{ mb: 4, background: 'linear-gradient(135deg, #667eea 0%, #764ba2 100%)', color: 'white' }}>
         <CardContent sx={{ p: 4 }}>
@@ -463,30 +487,6 @@ const QuizRecommendations: React.FC<QuizRecommendationsProps> = ({
           </Box>
         ))}
       </Box>
-
-      {/* Divider */}
-      <Divider sx={{ my: 4 }} />
-
-      {/* Botones de navegación */}
-      <Stack direction="row" spacing={2} justifyContent="center">
-        <Button 
-          variant="outlined" 
-          onClick={onBackToResults}
-          size="large"
-        >
-          Ver Resultados
-        </Button>
-        
-        <Button 
-          variant="contained" 
-          color="primary"
-          startIcon={<School />}
-          href="/courses"
-          size="large"
-        >
-          Explorar Cursos
-        </Button>
-      </Stack>
     </Box>
   );
 };

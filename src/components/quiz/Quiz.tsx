@@ -148,6 +148,7 @@ const QuizContent: React.FC<QuizContentProps> = ({ usuarioId, cuestionarioId, cu
         analysis={quizAnalysis}
         onBackToResults={handleBackToResults}
         onActionClick={handleRecommendationAction}
+        onReturnToCourse={handleReturnToCourse}
         progresoCuestionarioId={completedProgresoCuestionarioId || undefined}
         cuestionarioId={cuestionarioId}
         usuarioId={usuarioId}

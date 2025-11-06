@@ -290,9 +290,19 @@ export const useQuizActions = ({
   }, []);
 
   const handleBackToResults = useCallback(() => {
-    setCurrentScreen("quiz");
-    setShowResults(true);
-  }, []);
+    // Reset quiz to initial state instead of showing results
+    setShowResults(false);
+    setCurrentQuestionIndex(0);
+    setSelectedAnswers({});
+    setCurrentScreen("instructions");
+    if (quiz) {
+      setTimeLeft((quiz.duracion_minutos || 30) * 60);
+    }
+    setQuizAnalysis(null);
+    setCompletedProgresoCuestionarioId(null);
+    // Clear the current attempt ID so a new one is created
+    quizAttempts.clearCurrentAttempt();
+  }, [quiz, quizAttempts]);
 
   const handleRecommendationAction = useCallback(
     (recommendation: StudyRecommendation) => {
