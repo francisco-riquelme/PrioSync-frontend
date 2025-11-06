@@ -49,6 +49,7 @@ export interface UseQuizActionsReturn {
   handleRecommendationAction: (recommendation: StudyRecommendation) => void;
   handleContinueAttempt: (attempt: QuizAttemptWithAnswers) => Promise<void>;
   handleReviewAttempt: (attempt: QuizAttemptWithAnswers) => Promise<void>;
+  handleReviewCurrentAttempt: () => Promise<void>;
   handleViewRecommendationsFromAttempt: (attempt: QuizAttemptWithAnswers) => Promise<void>;
   handleBackFromReview: () => void;
   handleReturnToCourse: () => void;
@@ -405,6 +406,58 @@ export const useQuizActions = ({
     [preguntas, quizAnswers]
   );
 
+  const handleReviewCurrentAttempt = useCallback(
+    async () => {
+      if (!completedProgresoCuestionarioId) {
+        console.error("No completed attempt to review");
+        return;
+      }
+
+      try {
+        // Fetch the answers from the current completed attempt
+        const attemptAnswers = await quizAnswers.fetchAttemptAnswers(
+          completedProgresoCuestionarioId,
+          preguntas.map((p) => ({
+            id: p.preguntaId,
+            question: p.texto_pregunta,
+            options: (p.Opciones || [])
+              .sort((a, b) => (a.orden || 0) - (b.orden || 0))
+              .map((opcion) => opcion.texto),
+            correctAnswer: (p.Opciones || []).findIndex(
+              (opcion) => opcion.es_correcta
+            ),
+            explanation: p.explicacion || undefined,
+            peso_puntos: p.peso_puntos || 1,
+            opcionIds: (p.Opciones || [])
+              .sort((a, b) => (a.orden || 0) - (b.orden || 0))
+              .map((opcion) => opcion.opcionId),
+          }))
+        );
+
+        // Create a minimal attempt object for review
+        const attempt: QuizAttemptWithAnswers = {
+          progresoCuestionarioId: completedProgresoCuestionarioId,
+          usuarioId: usuarioId,
+          cuestionarioId: quiz?.cuestionarioId || '',
+          intento_numero: quizAttempts.currentAttemptNumber,
+          estado: 'completado',
+          puntaje_obtenido: quizAnalysis?.score || 0,
+          aprobado: quizAnalysis?.percentage ? quizAnalysis.percentage >= (quiz?.porcentaje_aprobacion || 70) : false,
+          respuestas: [],
+        };
+
+        // Set review state
+        setReviewAttempt(attempt);
+        setReviewAnswers(attemptAnswers);
+        setCurrentScreen("review");
+      } catch (err) {
+        console.error("Error loading current attempt for review:", err);
+        alert("Error al cargar las respuestas para revisión");
+      }
+    },
+    [completedProgresoCuestionarioId, preguntas, quizAnswers, quiz, quizAttempts.currentAttemptNumber, quizAnalysis, usuarioId]
+  );
+
   const handleViewRecommendationsFromAttempt = useCallback(
     async (attempt: QuizAttemptWithAnswers) => {
       try {
@@ -517,6 +570,7 @@ export const useQuizActions = ({
     handleRecommendationAction,
     handleContinueAttempt,
     handleReviewAttempt,
+    handleReviewCurrentAttempt,
     handleViewRecommendationsFromAttempt,
     handleBackFromReview,
     handleReturnToCourse,

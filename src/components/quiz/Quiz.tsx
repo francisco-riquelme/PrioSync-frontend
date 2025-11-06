@@ -77,6 +77,7 @@ const QuizContent: React.FC<QuizContentProps> = ({ usuarioId, cuestionarioId, cu
     handleRecommendationAction,
     handleContinueAttempt,
     handleReviewAttempt,
+    handleReviewCurrentAttempt,
     handleViewRecommendationsFromAttempt,
     handleBackFromReview,
     handleReturnToCourse,
@@ -172,9 +173,9 @@ const QuizContent: React.FC<QuizContentProps> = ({ usuarioId, cuestionarioId, cu
               passed={quizAnalysis.percentage >= (quiz?.porcentaje_aprobacion || 70)}
               passingScore={quiz?.porcentaje_aprobacion || 70}
               onRetry={handleRetryQuiz}
+              onReviewAnswers={handleReviewCurrentAttempt}
               onViewRecommendations={handleViewRecommendations}
               onReturnToCourse={handleReturnToCourse}
-              showRecommendationsButton={quizAnalysis.percentage < 75 || quizAnalysis.recommendations.length > 0}
             />
           </Box>
           <Box sx={{ flex: { xs: '1 1 100%', md: '1 1 34%' } }}>

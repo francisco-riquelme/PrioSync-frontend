@@ -16,9 +16,8 @@ import {
   Cancel,
   Refresh,
   Lightbulb,
-  TrendingUp,
-  School,
-  ArrowBack
+  ArrowBack,
+  Visibility
 } from '@mui/icons-material';
 
 interface QuizResultsProps {
@@ -30,9 +29,9 @@ interface QuizResultsProps {
   passed: boolean;
   passingScore: number;
   onRetry: () => void;
+  onReviewAnswers?: () => void;
   onViewRecommendations?: () => void;
   onReturnToCourse?: () => void;
-  showRecommendationsButton?: boolean;
 }
 
 const QuizResults: React.FC<QuizResultsProps> = ({
@@ -44,9 +43,9 @@ const QuizResults: React.FC<QuizResultsProps> = ({
   passed,
   passingScore,
   onRetry,
+  onReviewAnswers,
   onViewRecommendations,
   onReturnToCourse,
-  showRecommendationsButton = true
 }) => {
   // Usar los valores correctos: score es puntos, correctCount es respuestas
   const displayScore = totalPoints !== undefined ? score : correctCount || score;
@@ -221,7 +220,7 @@ const QuizResults: React.FC<QuizResultsProps> = ({
       </Card>
 
       {/* Botones de acción */}
-      <Stack direction="row" spacing={2} justifyContent="center">
+      <Stack direction="row" spacing={2} justifyContent="center" flexWrap="wrap" gap={1}>
         <Button 
           variant="outlined" 
           onClick={onRetry}
@@ -231,27 +230,32 @@ const QuizResults: React.FC<QuizResultsProps> = ({
           Reintentar Quiz
         </Button>
         
-        {showRecommendationsButton && onViewRecommendations && (
+        {onReviewAnswers && (
           <Button 
-            variant="contained" 
-            color="primary"
-            startIcon={percentage >= 75 ? <TrendingUp /> : <Lightbulb />}
-            onClick={onViewRecommendations}
+            variant="outlined" 
+            color="info"
+            startIcon={<Visibility />}
+            onClick={onReviewAnswers}
             size="large"
           >
-            {percentage >= 75 ? 'Siguiente Nivel' : 'Ver Recomendaciones'}
+            Revisar Respuestas
           </Button>
         )}
         
-        {!showRecommendationsButton && (
+        {onViewRecommendations && (
           <Button 
             variant="contained" 
-            color="primary"
-            startIcon={<School />}
-            href="/courses"
+            startIcon={<Lightbulb />}
+            onClick={onViewRecommendations}
             size="large"
+            sx={{
+              background: 'linear-gradient(135deg, #667eea 0%, #764ba2 100%)',
+              '&:hover': {
+                background: 'linear-gradient(135deg, #5568d3 0%, #633d8a 100%)',
+              }
+            }}
           >
-            Explorar Cursos
+            Recomendaciones
           </Button>
         )}
         
