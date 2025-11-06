@@ -14,7 +14,6 @@ import QuizAttemptsTable from './QuizAttemptsTable';
 import QuizReview from './QuizReview';
 import { useQuizDetailData } from './hooks/useQuizDetailData';
 import { useQuizActions } from './hooks/useQuizActions';
-import { useQuizAttempts } from './hooks/useQuizAttempts';
 import { useUser } from '@/contexts/UserContext';
 
 export interface QuizProps {
@@ -53,8 +52,6 @@ const QuizContent: React.FC<QuizContentProps> = ({ usuarioId, cuestionarioId, cu
     cuestionarioId,
     usuarioId,
   });
-
-  const quizAttempts = useQuizAttempts();
 
   const {
     currentScreen,
@@ -123,7 +120,6 @@ const QuizContent: React.FC<QuizContentProps> = ({ usuarioId, cuestionarioId, cu
           <Box sx={{ flex: { xs: '1 1 100%', md: '1 1 34%' } }}>
             <QuizAttemptsTable
               attempts={attempts}
-              currentAttemptNumber={quizAttempts.currentAttemptNumber}
               onContinueAttempt={handleContinueAttempt}
               onReviewAttempt={handleReviewAttempt}
               onViewRecommendations={handleViewRecommendationsFromAttempt}
@@ -181,7 +177,6 @@ const QuizContent: React.FC<QuizContentProps> = ({ usuarioId, cuestionarioId, cu
           <Box sx={{ flex: { xs: '1 1 100%', md: '1 1 34%' } }}>
             <QuizAttemptsTable
               attempts={attempts}
-              currentAttemptNumber={quizAttempts.currentAttemptNumber}
               onContinueAttempt={handleContinueAttempt}
               onReviewAttempt={handleReviewAttempt}
               onViewRecommendations={handleViewRecommendationsFromAttempt}

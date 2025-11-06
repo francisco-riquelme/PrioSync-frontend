@@ -31,7 +31,6 @@ import { QuizAttemptWithAnswers } from './hooks/useQuizDetailData';
 
 interface QuizAttemptsTableProps {
   attempts: QuizAttemptWithAnswers[];
-  currentAttemptNumber: number;
   onContinueAttempt?: (attempt: QuizAttemptWithAnswers) => void;
   onReviewAttempt?: (attempt: QuizAttemptWithAnswers) => void;
   onViewRecommendations?: (attempt: QuizAttemptWithAnswers) => void;
@@ -39,7 +38,6 @@ interface QuizAttemptsTableProps {
 
 const QuizAttemptsTable: React.FC<QuizAttemptsTableProps> = ({
   attempts,
-  currentAttemptNumber,
   onContinueAttempt,
   onReviewAttempt,
   onViewRecommendations,
@@ -85,16 +83,9 @@ const QuizAttemptsTable: React.FC<QuizAttemptsTableProps> = ({
   return (
     <Card sx={{ height: '100%' }}>
       <CardContent>
-        <Box sx={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', mb: 2 }}>
-          <Typography variant="h6" component="h2">
-            Historial de Intentos
-          </Typography>
-          <Chip
-            label={`Intento #${currentAttemptNumber}`}
-            color="primary"
-            size="small"
-          />
-        </Box>
+        <Typography variant="h6" component="h2" sx={{ mb: 2 }}>
+          Historial de Intentos
+        </Typography>
 
         {attempts.length === 0 ? (
           <Box sx={{ textAlign: 'center', py: 4 }}>
@@ -118,9 +109,33 @@ const QuizAttemptsTable: React.FC<QuizAttemptsTableProps> = ({
                 </TableRow>
               </TableHead>
               <TableBody>
-                {[...attempts]
-                  .sort((a, b) => (b.intento_numero || 0) - (a.intento_numero || 0))
-                  .map((attempt) => (
+                {(() => {
+                  // Ordenar intentos por fecha (más reciente primero) para asignar números correctos
+                  const sortedAttempts = [...attempts].sort((a, b) => {
+                    const dateA = new Date(a.fecha_completado || 0).getTime();
+                    const dateB = new Date(b.fecha_completado || 0).getTime();
+                    return dateB - dateA;
+                  });
+
+                  // Asignar números de intento secuenciales si están duplicados
+                  const attemptsWithNumbers = sortedAttempts.map((attempt, index) => {
+                    // Si todos tienen intento_numero 1 o indefinido, usar índice inverso
+                    const hasDuplicates = sortedAttempts.every(a => 
+                      !a.intento_numero || a.intento_numero === 1
+                    );
+                    
+                    return {
+                      ...attempt,
+                      displayNumber: hasDuplicates 
+                        ? sortedAttempts.length - index 
+                        : (attempt.intento_numero || 1)
+                    };
+                  });
+
+                  // Ordenar por displayNumber descendente para mostrar
+                  return attemptsWithNumbers
+                    .sort((a, b) => b.displayNumber - a.displayNumber)
+                    .map((attempt) => (
                     <TableRow
                       key={attempt.progresoCuestionarioId}
                       hover
@@ -132,7 +147,7 @@ const QuizAttemptsTable: React.FC<QuizAttemptsTableProps> = ({
                     >
                       <TableCell>
                         <Typography variant="body2" fontWeight="bold">
-                          {attempt.intento_numero}
+                          {attempt.displayNumber}
                         </Typography>
                       </TableCell>
                       <TableCell>
@@ -246,7 +261,8 @@ const QuizAttemptsTable: React.FC<QuizAttemptsTableProps> = ({
                         </Stack>
                       </TableCell>
                     </TableRow>
-                  ))}
+                  ));
+                })()}
               </TableBody>
             </Table>
           </TableContainer>
