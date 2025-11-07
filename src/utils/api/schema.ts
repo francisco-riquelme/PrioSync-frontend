@@ -44,6 +44,7 @@ export const MainSchema = a.schema({
       nombre: a.string(),
       apellido: a.string(),
       area_interes: a.string().default(""),
+      foto_perfil: a.string(),
       ultimo_login: a.datetime(),
       isValid: a.boolean().default(false),
       createdAt: a.datetime(),
