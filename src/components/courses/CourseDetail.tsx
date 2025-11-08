@@ -18,6 +18,7 @@ import {
   ArrowBack as ArrowBackIcon,
   Feedback as FeedbackIcon,
   Star as StarIcon,
+  Share as ShareIcon,
 } from '@mui/icons-material';
 import { useCourseDetailData } from '@/components/courses/hooks/useCourseDetailData';
 import { useProgresoCurso } from '@/components/courses/hooks/useProgresoCurso';
@@ -27,6 +28,7 @@ import { useUser } from '@/contexts/UserContext';
 import StudySessionsTable from './StudySessionsTable';
 import CourseContent from './CourseContent';
 import CourseFeedbackModal from './CourseFeedbackModal';
+import ShareCourseModal from './ShareCourseModal';
 
 interface CourseDetailProps {
   courseId: string;
@@ -81,6 +83,9 @@ export default function CourseDetail({ courseId }: CourseDetailProps) {
 
   // Estado del modal de feedback
   const [feedbackModalOpen, setFeedbackModalOpen] = useState(false);
+
+  // Estado del modal de compartir
+  const [shareModalOpen, setShareModalOpen] = useState(false);
 
   // Handle loading state
   if (loading) {
@@ -215,6 +220,15 @@ export default function CourseDetail({ courseId }: CourseDetailProps) {
                 <Button
                   variant="outlined"
                   size="small"
+                  startIcon={<ShareIcon />}
+                  onClick={() => setShareModalOpen(true)}
+                  sx={{ textTransform: 'none' }}
+                >
+                  Compartir
+                </Button>
+                <Button
+                  variant="outlined"
+                  size="small"
                   startIcon={<FeedbackIcon />}
                   onClick={handleCourseFeedback}
                   sx={{ textTransform: 'none' }}
@@ -266,6 +280,14 @@ export default function CourseDetail({ courseId }: CourseDetailProps) {
           comentario: evaluacion?.comentario ?? undefined,
         }}
         saving={evaluacionSaving}
+      />
+
+      {/* Modal de Compartir Curso */}
+      <ShareCourseModal
+        open={shareModalOpen}
+        onClose={() => setShareModalOpen(false)}
+        courseId={courseId}
+        courseTitle={course?.titulo || 'Curso'}
       />
     </Box>
   );
