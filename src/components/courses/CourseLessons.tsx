@@ -24,6 +24,8 @@ import {
   LinearProgress,
   Snackbar,
   Alert,
+  Button,
+  Tooltip,
 } from '@mui/material';
 import {
   ExpandMore as ExpandMoreIcon,
@@ -161,44 +163,35 @@ function ModuloGenerateButton({
   };
 
   return (
-    <Box
-      component="span"
-      role="button"
-      tabIndex={isDisabled ? -1 : 0}
-      onClick={handleClick}
-      onKeyDown={handleKeyDown}
-      title={progreso < 70 ? `Completa al menos el 70% de las lecciones (${progreso}% actual)` : 'Generar cuestionario'}
-      sx={{
-        display: 'inline-flex',
-        alignItems: 'center',
-        justifyContent: 'center',
-        padding: '6px 16px',
-        fontSize: '0.875rem',
-        fontWeight: 500,
-        lineHeight: 1.75,
-        borderRadius: '4px',
-        textTransform: 'none',
-        cursor: isDisabled ? 'not-allowed' : 'pointer',
-        backgroundColor: isDisabled ? 'rgba(0, 0, 0, 0.12)' : 'rgb(25, 118, 210)',
-        color: isDisabled ? 'rgba(0, 0, 0, 0.26)' : 'rgb(255, 255, 255)',
-        boxShadow: isDisabled ? 'none' : '0px 3px 1px -2px rgba(0,0,0,0.2), 0px 2px 2px 0px rgba(0,0,0,0.14), 0px 1px 5px 0px rgba(0,0,0,0.12)',
-        transition: 'background-color 250ms cubic-bezier(0.4, 0, 0.2, 1) 0ms, box-shadow 250ms cubic-bezier(0.4, 0, 0.2, 1) 0ms, border-color 250ms cubic-bezier(0.4, 0, 0.2, 1) 0ms',
-        '&:hover': {
-          backgroundColor: isDisabled ? 'rgba(0, 0, 0, 0.12)' : 'rgb(21, 101, 192)',
-          boxShadow: isDisabled ? 'none' : '0px 2px 4px -1px rgba(0,0,0,0.2), 0px 4px 5px 0px rgba(0,0,0,0.14), 0px 1px 10px 0px rgba(0,0,0,0.12)',
-        },
-        '&:focus': {
-          outline: 'none',
-          boxShadow: isDisabled ? 'none' : '0px 0px 0px 2px rgba(25, 118, 210, 0.3)',
-        },
-        '&:active': {
-          backgroundColor: isDisabled ? 'rgba(0, 0, 0, 0.12)' : 'rgb(19, 88, 175)',
-          boxShadow: isDisabled ? 'none' : '0px 5px 5px -3px rgba(0,0,0,0.2), 0px 8px 10px 1px rgba(0,0,0,0.14), 0px 3px 14px 2px rgba(0,0,0,0.12)',
-        },
-      }}
+    <Tooltip 
+      title={progreso < 70 ? `Completa al menos el 70% de las lecciones (${progreso}% actual)` : 'Generar cuestionario del módulo'} 
+      placement="top"
     >
-      {loading ? 'Generando...' : progreso < 70 ? `Progreso: ${progreso}%` : 'Generar Quiz del Módulo'}
-    </Box>
+      <span>
+        <Button
+          component="span"
+          role="button"
+          tabIndex={isDisabled ? -1 : 0}
+          variant="contained"
+          size="small"
+          onClick={handleClick}
+          onKeyDown={handleKeyDown}
+          disabled={isDisabled}
+          startIcon={loading ? <CircularProgress size={16} color="inherit" /> : null}
+          sx={{ 
+            textTransform: 'none',
+            minWidth: '160px',
+            borderRadius: '20px',
+            backgroundColor: isDisabled ? undefined : 'rgb(0, 150, 136)',
+            '&:hover': {
+              backgroundColor: isDisabled ? undefined : 'rgb(0, 121, 107)',
+            },
+          }}
+        >
+          {loading ? 'Generando...' : progreso < 70 ? `Progreso: ${progreso}%` : 'Generar Quiz del Módulo'}
+        </Button>
+      </span>
+    </Tooltip>
   );
 }
 

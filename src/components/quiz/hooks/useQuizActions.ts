@@ -30,6 +30,7 @@ export interface UseQuizActionsReturn {
   timeLeft: number;
   showResults: boolean;
   quizAnalysis: QuizAnalysis | null;
+  completedProgresoCuestionarioId: string | null;
   reviewAttempt: QuizAttemptWithAnswers | null;
   reviewAnswers: Record<string, number>;
 
@@ -77,6 +78,7 @@ export const useQuizActions = ({
   const [timeLeft, setTimeLeft] = useState(0);
   const [showResults, setShowResults] = useState(false);
   const [quizAnalysis, setQuizAnalysis] = useState<QuizAnalysis | null>(null);
+  const [completedProgresoCuestionarioId, setCompletedProgresoCuestionarioId] = useState<string | null>(null);
   const [reviewAttempt, setReviewAttempt] =
     useState<QuizAttemptWithAnswers | null>(null);
   const [reviewAnswers, setReviewAnswers] = useState<Record<string, number>>(
@@ -121,12 +123,19 @@ export const useQuizActions = ({
         passingScore: quiz.porcentaje_aprobacion || 70,
       };
 
+      // Guardar el progresoCuestionarioId antes de que se pierda
+      const currentProgresoId = quizAttempts.currentProgresoCuestionarioId;
+      if (currentProgresoId) {
+        setCompletedProgresoCuestionarioId(currentProgresoId);
+      }
+
       // Submit quiz and get analysis
       const analysis = await quizAnswers.submitQuiz(
         selectedAnswers,
         quizDataView,
         quiz as unknown as Cuestionario, // Double cast to handle type incompatibility
-        quizAttempts.currentProgresoCuestionarioId
+        currentProgresoId,
+        usuarioId
       );
       setQuizAnalysis(analysis);
       setShowResults(true);
@@ -144,6 +153,7 @@ export const useQuizActions = ({
     quizAnswers,
     quizAttempts.currentProgresoCuestionarioId,
     refetch,
+    usuarioId,
   ]);
 
   // Timer effect
@@ -420,6 +430,7 @@ export const useQuizActions = ({
     timeLeft,
     showResults,
     quizAnalysis,
+    completedProgresoCuestionarioId,
     reviewAttempt,
     reviewAnswers,
 

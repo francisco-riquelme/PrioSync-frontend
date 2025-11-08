@@ -21,6 +21,19 @@ export const ResolverSchema = a
       })
       .returns(a.customType({ message: a.string().required() })),
 
+    crearMaterialResolver: a
+      .mutation()
+      .arguments({
+        moduloId: a.string().required(),
+        modoGeneracion: a.string(),
+      })
+      .returns(
+        a.customType({
+          materialId: a.string().required(),
+          message: a.string(),
+        })
+      ),
+
     crearQuestionarioFinalResolver: a
       .mutation()
       .arguments({
@@ -31,19 +44,21 @@ export const ResolverSchema = a
           message: a.string().required(),
           executionArn: a.string(),
           cursoId: a.string(),
+          cuestionarioId: a.string(),
           status: a.string(),
         })
       ),
 
-    crearMaterialResolver: a
+    generarRetroalimentacionQuizResolver: a
       .mutation()
       .arguments({
-        moduloId: a.string().required(),
-        modoGeneracion: a.string(),
+        progresoCuestionarioId: a.string().required(),
+        cuestionarioId: a.string().required(),
+        usuarioId: a.string().required(),
       })
       .returns(
         a.customType({
-          materialId: a.string().required(),
+          recomendaciones: a.string().required(),
           message: a.string(),
         })
       ),
