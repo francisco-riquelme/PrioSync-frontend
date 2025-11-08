@@ -39,7 +39,15 @@ export const ResolverSchema = a
       .arguments({
         cursoId: a.string().required(),
       })
-      .returns(a.customType({ message: a.string().required() })),
+      .returns(
+        a.customType({
+          message: a.string().required(),
+          executionArn: a.string(),
+          cursoId: a.string(),
+          cuestionarioId: a.string(),
+          status: a.string(),
+        })
+      ),
 
     generarRetroalimentacionQuizResolver: a
       .mutation()
