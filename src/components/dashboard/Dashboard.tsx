@@ -15,6 +15,8 @@ import {
   Chip,
   CircularProgress,
   Alert,
+  Dialog,
+  DialogContent,
 } from '@mui/material';
 import { Person as PersonIcon, CloudUpload as CloudUploadIcon } from '@mui/icons-material';
 import ImportCourseModal from './ImportCourseModal';
@@ -27,6 +29,7 @@ export default function Dashboard() {
   const [aiAdvice, setAiAdvice] = useState<string>('**Evalúa tu conocimiento activamente sin consultar tus apuntes para identificar lagunas y reforzar el aprendizaje.**');
   const [loadingAdvice, setLoadingAdvice] = useState(false);
   const [importModalOpen, setImportModalOpen] = useState(false);
+  const [isWaitingForWorkflow, setIsWaitingForWorkflow] = useState(false);
   
   // Generate AI advice function
   const generateAIAdvice = useCallback(async () => {
@@ -95,7 +98,52 @@ export default function Dashboard() {
         onClose={() => setImportModalOpen(false)}
         userId={userData?.usuarioId || ''}
         onSuccess={handleImportSuccess}
+        onWorkflowStatusChange={setIsWaitingForWorkflow}
       />
+
+      {/* Global blocking modal for workflow processing */}
+      <Dialog
+        open={isWaitingForWorkflow}
+        disableEscapeKeyDown
+        maxWidth="sm"
+        fullWidth
+        PaperProps={{
+          sx: {
+            bgcolor: 'rgba(255, 255, 255, 0.98)',
+            boxShadow: 24,
+          },
+        }}
+        BackdropProps={{
+          sx: {
+            backgroundColor: 'rgba(0, 0, 0, 0.5)',
+            backdropFilter: 'blur(4px)',
+          },
+        }}
+      >
+        <DialogContent>
+          <Box
+            sx={{
+              display: 'flex',
+              flexDirection: 'column',
+              alignItems: 'center',
+              justifyContent: 'center',
+              py: 4,
+              px: 2,
+            }}
+          >
+            <CircularProgress size={56} sx={{ mb: 3 }} />
+            <Typography variant="h5" sx={{ mb: 2, fontWeight: 600 }}>
+              Procesando Curso
+            </Typography>
+            <Typography variant="body1" color="text.secondary" align="center" sx={{ mb: 1 }}>
+              Estamos procesando tu curso y creando el contenido educativo.
+            </Typography>
+            <Typography variant="body2" color="text.secondary" align="center" sx={{ mb: 2 }}>
+              Esto puede tomar varios minutos. Por favor, no cierres esta ventana.
+            </Typography>
+          </Box>
+        </DialogContent>
+      </Dialog>
 
       {/* Primera fila */}
       <Box

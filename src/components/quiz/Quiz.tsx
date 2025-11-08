@@ -63,6 +63,7 @@ const QuizContent: React.FC<QuizContentProps> = ({ usuarioId, cuestionarioId, cu
     timeLeft,
     showResults,
     quizAnalysis,
+    completedProgresoCuestionarioId,
     reviewAttempt,
     reviewAnswers,
     handleStartQuiz,
@@ -148,6 +149,9 @@ const QuizContent: React.FC<QuizContentProps> = ({ usuarioId, cuestionarioId, cu
         analysis={quizAnalysis}
         onBackToResults={handleBackToResults}
         onActionClick={handleRecommendationAction}
+        progresoCuestionarioId={completedProgresoCuestionarioId || undefined}
+        cuestionarioId={cuestionarioId}
+        usuarioId={usuarioId}
       />
     );
   }

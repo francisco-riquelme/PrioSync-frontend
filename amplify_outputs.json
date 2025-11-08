@@ -75,6 +75,13 @@
               "isRequired": false,
               "attributes": []
             },
+            "foto_perfil": {
+              "name": "foto_perfil",
+              "isArray": false,
+              "type": "String",
+              "isRequired": false,
+              "attributes": []
+            },
             "ultimo_login": {
               "name": "ultimo_login",
               "isArray": false,
@@ -542,6 +549,15 @@
               "name": "progreso_estimado",
               "isArray": false,
               "type": "Int",
+              "isRequired": false,
+              "attributes": []
+            },
+            "workflow_status": {
+              "name": "workflow_status",
+              "isArray": false,
+              "type": {
+                "enum": "CursoWorkflow_status"
+              },
               "isRequired": false,
               "attributes": []
             },
@@ -2172,6 +2188,15 @@
               "name": "porcentaje_aprobacion",
               "isArray": false,
               "type": "Int",
+              "isRequired": false,
+              "attributes": []
+            },
+            "workflow_status": {
+              "name": "workflow_status",
+              "isArray": false,
+              "type": {
+                "enum": "CuestionarioWorkflow_status"
+              },
               "isRequired": false,
               "attributes": []
             },
@@ -4040,6 +4065,15 @@
             "inactivo"
           ]
         },
+        "CursoWorkflow_status": {
+          "name": "CursoWorkflow_status",
+          "values": [
+            "pending",
+            "in_progress",
+            "completed",
+            "failed"
+          ]
+        },
         "CursoCompartidoEstado": {
           "name": "CursoCompartidoEstado",
           "values": [
@@ -4103,6 +4137,15 @@
           "values": [
             "autoevaluacion",
             "prueba_final"
+          ]
+        },
+        "CuestionarioWorkflow_status": {
+          "name": "CuestionarioWorkflow_status",
+          "values": [
+            "pending",
+            "in_progress",
+            "completed",
+            "failed"
           ]
         },
         "PreguntaTipo": {
@@ -4183,6 +4226,34 @@
               "type": "String",
               "isRequired": true,
               "attributes": []
+            },
+            "executionArn": {
+              "name": "executionArn",
+              "isArray": false,
+              "type": "String",
+              "isRequired": false,
+              "attributes": []
+            },
+            "cursoId": {
+              "name": "cursoId",
+              "isArray": false,
+              "type": "String",
+              "isRequired": false,
+              "attributes": []
+            },
+            "cuestionarioId": {
+              "name": "cuestionarioId",
+              "isArray": false,
+              "type": "String",
+              "isRequired": false,
+              "attributes": []
+            },
+            "status": {
+              "name": "status",
+              "isArray": false,
+              "type": "String",
+              "isRequired": false,
+              "attributes": []
             }
           }
         },
@@ -4257,6 +4328,25 @@
             },
             "status": {
               "name": "status",
+              "isArray": false,
+              "type": "String",
+              "isRequired": false,
+              "attributes": []
+            }
+          }
+        },
+        "GenerarRetroalimentacionQuizResolverReturnType": {
+          "name": "GenerarRetroalimentacionQuizResolverReturnType",
+          "fields": {
+            "recomendaciones": {
+              "name": "recomendaciones",
+              "isArray": false,
+              "type": "String",
+              "isRequired": true,
+              "attributes": []
+            },
+            "message": {
+              "name": "message",
               "isArray": false,
               "type": "String",
               "isRequired": false,
@@ -4374,6 +4464,34 @@
           "arguments": {
             "playlistId": {
               "name": "playlistId",
+              "isArray": false,
+              "type": "String",
+              "isRequired": true
+            },
+            "usuarioId": {
+              "name": "usuarioId",
+              "isArray": false,
+              "type": "String",
+              "isRequired": true
+            }
+          }
+        },
+        "generarRetroalimentacionQuizResolver": {
+          "name": "generarRetroalimentacionQuizResolver",
+          "isArray": false,
+          "type": {
+            "nonModel": "GenerarRetroalimentacionQuizResolverReturnType"
+          },
+          "isRequired": false,
+          "arguments": {
+            "progresoCuestionarioId": {
+              "name": "progresoCuestionarioId",
+              "isArray": false,
+              "type": "String",
+              "isRequired": true
+            },
+            "cuestionarioId": {
+              "name": "cuestionarioId",
               "isArray": false,
               "type": "String",
               "isRequired": true

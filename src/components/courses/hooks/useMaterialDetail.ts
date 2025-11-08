@@ -143,10 +143,10 @@ export const useMaterialDetail = (
             setContenidoParsed(null);
           } else {
             let parsed: unknown = rawContent as unknown;
-            if (typeof rawContent === 'string') {
+            if (typeof rawContent === "string") {
               // Try JSON parse, handle double-encoded strings
               parsed = JSON.parse(rawContent as string);
-              if (typeof parsed === 'string') {
+              if (typeof parsed === "string") {
                 try {
                   parsed = JSON.parse(parsed as string);
                 } catch {

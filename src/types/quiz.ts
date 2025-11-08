@@ -60,4 +60,7 @@ export interface QuizAnalysis {
   strengths: string[];
   weaknesses: string[];
   recommendations: StudyRecommendation[];
+  llmFeedback?: string; // Retroalimentación personalizada generada por LLM
+  llmLoading?: boolean; // Estado de carga de la retroalimentación
+  llmError?: string; // Error al generar retroalimentación
 }

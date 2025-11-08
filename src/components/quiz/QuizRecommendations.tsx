@@ -1,6 +1,6 @@
 'use client';
 
-import React from 'react';
+import React, { useState, useEffect } from 'react';
 import {
   Box,
   Card,
@@ -10,7 +10,9 @@ import {
   Stack,
   Chip,
   Avatar,
-  Divider
+  Divider,
+  CircularProgress,
+  Alert
 } from '@mui/material';
 import {
   TrendingUp,
@@ -24,18 +26,103 @@ import {
   CheckCircle
 } from '@mui/icons-material';
 import { StudyRecommendation, QuizAnalysis } from '@/types/quiz';
+import { useGenerarRetroalimentacion } from './hooks/useGenerarRetroalimentacion';
 
 interface QuizRecommendationsProps {
   analysis: QuizAnalysis;
   onBackToResults: () => void;
   onActionClick: (recommendation: StudyRecommendation) => void;
+  progresoCuestionarioId?: string;
+  cuestionarioId?: string;
+  usuarioId?: string;
 }
 
 const QuizRecommendations: React.FC<QuizRecommendationsProps> = ({
   analysis,
   onBackToResults,
-  onActionClick
+  onActionClick,
+  progresoCuestionarioId,
+  cuestionarioId,
+  usuarioId,
 }) => {
+  const [llmFeedback, setLlmFeedback] = useState<string | null>(analysis.llmFeedback || null);
+  const [feedbackLoading, setFeedbackLoading] = useState(false);
+  const [feedbackError, setFeedbackError] = useState<string | null>(analysis.llmError || null);
+
+  const { generar } = useGenerarRetroalimentacion({
+    onSuccess: (feedback) => {
+      console.log('[QuizRecommendations] Retroalimentación recibida:', feedback);
+      setLlmFeedback(feedback);
+      setFeedbackLoading(false);
+    },
+    onError: (error) => {
+      console.error('[QuizRecommendations] Error recibido:', error);
+      setFeedbackError(error);
+      setFeedbackLoading(false);
+    },
+  });
+
+  // Generar retroalimentación si no está disponible y tenemos los IDs necesarios
+  useEffect(() => {
+    let isMounted = true;
+    let timeoutId: NodeJS.Timeout;
+
+    const generarRetroalimentacion = async () => {
+      if (llmFeedback || feedbackLoading || feedbackError) {
+        return;
+      }
+
+      if (!progresoCuestionarioId || !cuestionarioId || !usuarioId) {
+        console.warn('[QuizRecommendations] Faltan IDs necesarios:', {
+          progresoCuestionarioId,
+          cuestionarioId,
+          usuarioId,
+        });
+        return;
+      }
+
+      console.log('[QuizRecommendations] Iniciando generación de retroalimentación...');
+      setFeedbackLoading(true);
+
+      // Timeout de seguridad de 30 segundos
+      timeoutId = setTimeout(() => {
+        if (isMounted && feedbackLoading) {
+          console.error('[QuizRecommendations] Timeout: La generación tardó más de 30 segundos');
+          setFeedbackError('La generación de retroalimentación está tardando más de lo esperado');
+          setFeedbackLoading(false);
+        }
+      }, 30000);
+
+      try {
+        await generar(progresoCuestionarioId, cuestionarioId, usuarioId);
+      } catch (err) {
+        console.error('[QuizRecommendations] Error al generar:', err);
+        if (isMounted) {
+          setFeedbackError('Error al generar retroalimentación');
+          setFeedbackLoading(false);
+        }
+      }
+    };
+
+    generarRetroalimentacion();
+
+    return () => {
+      isMounted = false;
+      if (timeoutId) {
+        clearTimeout(timeoutId);
+      }
+    };
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [progresoCuestionarioId, cuestionarioId, usuarioId]); // Solo queremos ejecutar cuando cambien los IDs
+
+  // Sincronizar estado con props si cambia
+  useEffect(() => {
+    if (analysis.llmFeedback && analysis.llmFeedback !== llmFeedback) {
+      setLlmFeedback(analysis.llmFeedback);
+      setFeedbackLoading(false);
+    }
+  }, [analysis.llmFeedback, llmFeedback]);
+
   const getIconComponent = (iconName: string) => {
     const iconMap: Record<string, React.ReactElement> = {
       TrendingUp: <TrendingUp />,
@@ -105,12 +192,46 @@ const QuizRecommendations: React.FC<QuizRecommendationsProps> = ({
             <Typography variant="h4" gutterBottom sx={{ fontWeight: 'bold' }}>
               Recomendaciones Personalizadas
             </Typography>
-            <Typography variant="h6" sx={{ mb: 2, opacity: 0.9 }}>
-              {levelInfo.title}
-            </Typography>
-            <Typography variant="body1" sx={{ mb: 3, opacity: 0.8, maxWidth: 600, mx: 'auto' }}>
-              {levelInfo.message}
-            </Typography>
+
+            {/* Mostrar retroalimentación del LLM, loading o fallback */}
+            {feedbackLoading ? (
+              <Box sx={{ display: 'flex', flexDirection: 'column', alignItems: 'center', gap: 2, my: 3 }}>
+                <CircularProgress size={40} sx={{ color: 'white' }} />
+                <Typography variant="body1" sx={{ opacity: 0.8 }}>
+                  Generando retroalimentación personalizada...
+                </Typography>
+              </Box>
+            ) : feedbackError ? (
+              <Box sx={{ my: 2 }}>
+                <Typography variant="h6" sx={{ mb: 2, opacity: 0.9 }}>
+                  {levelInfo.title}
+                </Typography>
+                <Typography variant="body1" sx={{ mb: 2, opacity: 0.8, maxWidth: 600, mx: 'auto' }}>
+                  {levelInfo.message}
+                </Typography>
+                <Alert severity="warning" sx={{ maxWidth: 600, mx: 'auto', mt: 2 }}>
+                  No se pudo generar retroalimentación personalizada
+                </Alert>
+              </Box>
+            ) : llmFeedback ? (
+              <Box sx={{ my: 2 }}>
+                <Typography variant="h6" sx={{ mb: 2, opacity: 0.9 }}>
+                  {levelInfo.title}
+                </Typography>
+                <Typography variant="body1" sx={{ mb: 3, opacity: 0.9, maxWidth: 700, mx: 'auto', lineHeight: 1.8 }}>
+                  {llmFeedback}
+                </Typography>
+              </Box>
+            ) : (
+              <Box sx={{ my: 2 }}>
+                <Typography variant="h6" sx={{ mb: 2, opacity: 0.9 }}>
+                  {levelInfo.title}
+                </Typography>
+                <Typography variant="body1" sx={{ mb: 3, opacity: 0.8, maxWidth: 600, mx: 'auto' }}>
+                  {levelInfo.message}
+                </Typography>
+              </Box>
+            )}
             
             {/* Estadísticas rápidas */}
             <Stack direction="row" spacing={4} justifyContent="center" sx={{ mt: 3 }}>
