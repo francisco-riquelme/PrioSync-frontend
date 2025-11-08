@@ -30,6 +30,12 @@ const DiaSemana = a.enum([
   "Sabado",
   "Domingo",
 ]);
+const WorkflowStatus = a.enum([
+  "pending",
+  "in_progress",
+  "completed",
+  "failed",
+]);
 export const MainSchema = a.schema({
   Usuario: a
     .model({
@@ -38,6 +44,7 @@ export const MainSchema = a.schema({
       nombre: a.string(),
       apellido: a.string(),
       area_interes: a.string().default(""),
+      foto_perfil: a.string(),
       ultimo_login: a.datetime(),
       isValid: a.boolean().default(false),
       createdAt: a.datetime(),
@@ -91,6 +98,7 @@ export const MainSchema = a.schema({
       nivel_dificultad: NivelDificultad,
       estado: EstadoCurso,
       progreso_estimado: a.integer(),
+      workflow_status: WorkflowStatus,
 
       //metadata
       playlistId: a.string().required(),
@@ -264,6 +272,7 @@ export const MainSchema = a.schema({
       intentos_permitidos: a.integer().default(1),
       preguntas_aleatorias: a.boolean().default(false), // If true, randomize question order
       porcentaje_aprobacion: a.integer().default(70), // Minimum percentage to pass the quiz
+      workflow_status: WorkflowStatus,
 
       // Relationships
       Preguntas: a.hasMany("Pregunta", "cuestionarioId"),
