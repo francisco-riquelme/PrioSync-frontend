@@ -51,6 +51,7 @@ export const ResolverSchema = a
       .returns(
         a.customType({
           recomendaciones: a.string().required(),
+          leccionesRecomendadas: a.string(), // JSON string con array de lecciones recomendadas
           message: a.string(),
         })
       ),

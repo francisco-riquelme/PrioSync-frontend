@@ -49,13 +49,18 @@ const QuizRecommendations: React.FC<QuizRecommendationsProps> = ({
   usuarioId,
 }) => {
   const [llmFeedback, setLlmFeedback] = useState<string | null>(analysis.llmFeedback || null);
+  const [recommendedLessons, setRecommendedLessons] = useState<typeof analysis.recommendedLessons>(analysis.recommendedLessons || []);
   const [feedbackLoading, setFeedbackLoading] = useState(false);
   const [feedbackError, setFeedbackError] = useState<string | null>(analysis.llmError || null);
 
   const { generar } = useGenerarRetroalimentacion({
-    onSuccess: (feedback) => {
+    onSuccess: (feedback, lessons) => {
       console.log('[QuizRecommendations] Retroalimentación recibida:', feedback);
+      console.log('[QuizRecommendations] Lecciones recomendadas:', lessons);
       setLlmFeedback(feedback);
+      if (lessons) {
+        setRecommendedLessons(lessons);
+      }
       setFeedbackLoading(false);
     },
     onError: (error) => {
@@ -402,6 +407,94 @@ const QuizRecommendations: React.FC<QuizRecommendationsProps> = ({
               </CardContent>
             </Card>
           )}
+        </Box>
+      )}
+
+      {/* Lecciones Recomendadas por el LLM */}
+      {recommendedLessons && recommendedLessons.length > 0 && (
+        <Box sx={{ mb: 4 }}>
+          <Typography variant="h5" gutterBottom sx={{ fontWeight: 'bold', mb: 3 }}>
+            Lecciones Recomendadas para Repasar
+          </Typography>
+          
+          <Stack spacing={2}>
+            {recommendedLessons.map((lesson, index) => (
+              <Card 
+                key={lesson.leccionId}
+                sx={{
+                  transition: 'all 0.3s ease',
+                  '&:hover': {
+                    transform: 'translateY(-2px)',
+                    boxShadow: 4
+                  }
+                }}
+              >
+                <CardContent sx={{ p: 3 }}>
+                  <Box sx={{ display: 'flex', alignItems: 'flex-start', gap: 2 }}>
+                    <Avatar
+                      sx={{
+                        bgcolor: 'primary.main',
+                        width: 40,
+                        height: 40,
+                        fontSize: '1rem',
+                        fontWeight: 'bold'
+                      }}
+                    >
+                      {index + 1}
+                    </Avatar>
+                    
+                    <Box sx={{ flex: 1 }}>
+                      <Typography variant="h6" sx={{ fontWeight: 'bold', mb: 0.5 }}>
+                        {lesson.titulo}
+                      </Typography>
+                      
+                      {lesson.moduloTitulo && (
+                        <Chip
+                          label={lesson.moduloTitulo}
+                          size="small"
+                          variant="outlined"
+                          sx={{ mb: 1.5 }}
+                        />
+                      )}
+                      
+                      {lesson.descripcion && (
+                        <Typography variant="body2" color="text.secondary" sx={{ mb: 1.5 }}>
+                          {lesson.descripcion}
+                        </Typography>
+                      )}
+                      
+                      <Box 
+                        sx={{ 
+                          backgroundColor: 'info.lighter', 
+                          borderLeft: '4px solid',
+                          borderColor: 'info.main',
+                          p: 1.5,
+                          borderRadius: 1,
+                          mb: 2
+                        }}
+                      >
+                        <Typography variant="body2" sx={{ fontStyle: 'italic', color: 'info.dark' }}>
+                          💡 {lesson.razon}
+                        </Typography>
+                      </Box>
+                      
+                      {lesson.url_contenido && (
+                        <Button
+                          variant="contained"
+                          size="small"
+                          endIcon={<ArrowForward />}
+                          onClick={() => window.open(lesson.url_contenido, '_blank')}
+                          sx={{ mt: 1 }}
+                        >
+                          Ver Lección
+                        </Button>
+                      )}
+                    </Box>
+                  </Box>
+                </CardContent>
+              </Card>
+            ))}
+          </Stack>
         </Box>
       )}
 

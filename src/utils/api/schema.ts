@@ -290,6 +290,8 @@ export const MainSchema = a.schema({
       // Relationships
       cuestionarioId: a.id().required(),
       Cuestionario: a.belongsTo("Cuestionario", "cuestionarioId"),
+      leccionId: a.id(),
+      Leccion: a.belongsTo("Leccion", "leccionId"),
       Opciones: a.hasMany("OpcionPregunta", "preguntaId"),
       Respuestas: a.hasMany("Respuesta", "preguntaId"),
     })
@@ -373,7 +375,8 @@ export const MainSchema = a.schema({
       fecha_completado: a.datetime(),
       intento_numero: a.integer().required(), // Which attempt is this (1st, 2nd, 3rd, etc.)
       ultima_pregunta_respondida: a.integer(), // Index of last answered question (0-based)
-      recomendaciones: a.string(), // AI-generated recommendations based on quiz results
+      recomendaciones: a.string(), // AI-generated recommendations paragraph based on quiz results
+      leccionesRecomendadas: a.string(), // JSON string with recommended lessons: [{ leccionId, titulo, razon }]
 
       // Relationships
       usuarioId: a.id().required(),

@@ -58,6 +58,16 @@ export interface QuestionDetail {
   correctAnswer?: string;
 }
 
+// Lección recomendada por el LLM
+export interface RecommendedLesson {
+  leccionId: string;
+  titulo: string;
+  descripcion?: string;
+  url_contenido?: string;
+  razon: string; // Por qué se recomienda esta lección
+  moduloTitulo?: string;
+}
+
 // Pure UI type (quiz result analysis)
 export interface QuizAnalysis {
   score: number; // Puntos obtenidos (earnedPoints)
@@ -75,4 +85,5 @@ export interface QuizAnalysis {
   llmFeedback?: string; // Retroalimentación personalizada generada por LLM
   llmLoading?: boolean; // Estado de carga de la retroalimentación
   llmError?: string; // Error al generar retroalimentación
+  recommendedLessons?: RecommendedLesson[]; // Lecciones recomendadas por el LLM
 }
