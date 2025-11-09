@@ -9,23 +9,13 @@ import {
   Button,
   Typography,
   Box,
-  TextField,
   Alert,
-  Snackbar,
   IconButton,
-  InputAdornment,
-  Card,
-  CardContent,
-  Divider,
-  Chip,
 } from '@mui/material';
 import {
   Share as ShareIcon,
-  ContentCopy as CopyIcon,
-  Link as LinkIcon,
-  QrCode as QrCodeIcon,
   Close as CloseIcon,
-  CheckCircle as CheckIcon,
+  WhatsApp as WhatsAppIcon,
 } from '@mui/icons-material';
 import { useCompartirCurso } from './hooks/useCompartirCurso';
 import { useUser } from '@/contexts/UserContext';
@@ -44,13 +34,12 @@ export default function ShareCourseModal({
   courseTitle 
 }: ShareCourseModalProps) {
   const { userData } = useUser();
-  const { crearCursoCompartido, loading, error } = useCompartirCurso();
+  const { crearCursoCompartido, generateWhatsAppUrl, loading, error } = useCompartirCurso();
   
   const [shareData, setShareData] = useState<{
     shareUrl: string;
     shareCode: string;
   } | null>(null);
-  const [copySuccess, setCopySuccess] = useState(false);
   const [isGenerating, setIsGenerating] = useState(false);
 
   // Generar enlace de compartir cuando se abre el modal
@@ -86,31 +75,20 @@ export default function ShareCourseModal({
   useEffect(() => {
     if (!open) {
       setShareData(null);
-      setCopySuccess(false);
       setIsGenerating(false);
     }
   }, [open]);
 
-
-
-  const handleCopyToClipboard = async (text: string) => {
-    try {
-      await navigator.clipboard.writeText(text);
-      setCopySuccess(true);
-      
-      // Auto-ocultar el mensaje después de 2 segundos
-      setTimeout(() => {
-        setCopySuccess(false);
-      }, 2000);
-    } catch (err) {
-      console.error('Error copiando al portapapeles:', err);
-    }
-  };
-
   const handleClose = () => {
     setShareData(null);
-    setCopySuccess(false);
     onClose();
+  };
+
+  const handleWhatsAppShare = () => {
+    if (!shareData) return;
+    
+    const whatsappUrl = generateWhatsAppUrl(courseTitle, shareData.shareUrl, shareData.shareCode);
+    window.open(whatsappUrl, '_blank');
   };
 
   return (
@@ -174,108 +152,65 @@ export default function ShareCourseModal({
             </Box>
           )}
 
-          {/* Enlace generado */}
-          {shareData && !loading && (
-            <Box>
+          {/* Contenido para WhatsApp */}
+          {shareData && !loading && !isGenerating && (
+            <Box sx={{ textAlign: 'center', py: 2 }}>
               <Typography variant="h6" gutterBottom sx={{ color: 'primary.main', mb: 3 }}>
-                ¡Enlace listo para compartir! 🚀
+                ¡Listo para compartir! 📱
+              </Typography>
+              
+              <Typography variant="body1" color="text.secondary" sx={{ mb: 4 }}>
+                Comparte <strong>{courseTitle}</strong> directamente por WhatsApp
               </Typography>
 
-              {/* Tarjeta con enlace */}
-              <Card sx={{ mb: 3, border: '2px solid', borderColor: 'primary.light' }}>
-                <CardContent>
-                  <Box sx={{ display: 'flex', alignItems: 'center', gap: 1, mb: 2 }}>
-                    <LinkIcon color="primary" />
-                    <Typography variant="subtitle1" sx={{ fontWeight: 500 }}>
-                      Enlace del curso
-                    </Typography>
-                  </Box>
-                  
-                  <TextField
-                    fullWidth
-                    value={shareData.shareUrl}
-                    InputProps={{
-                      readOnly: true,
-                      endAdornment: (
-                        <InputAdornment position="end">
-                          <IconButton
-                            onClick={() => handleCopyToClipboard(shareData.shareUrl)}
-                            edge="end"
-                            color="primary"
-                          >
-                            <CopyIcon />
-                          </IconButton>
-                        </InputAdornment>
-                      ),
-                    }}
-                    sx={{
-                      '& .MuiOutlinedInput-root': {
-                        borderRadius: 2,
-                        backgroundColor: '#f8f9fa',
-                      },
-                    }}
-                  />
-                </CardContent>
-              </Card>
+              {/* Botón principal de WhatsApp */}
+              <Button
+                variant="contained"
+                size="large"
+                fullWidth
+                onClick={handleWhatsAppShare}
+                startIcon={<WhatsAppIcon />}
+                sx={{
+                  mb: 3,
+                  py: 2,
+                  borderRadius: 3,
+                  backgroundColor: '#25D366',
+                  color: 'white',
+                  fontSize: '1.1rem',
+                  fontWeight: 600,
+                  '&:hover': {
+                    backgroundColor: '#1da851',
+                  },
+                  '&:active': {
+                    backgroundColor: '#128c3e',
+                  }
+                }}
+              >
+                Compartir por WhatsApp
+              </Button>
 
-              {/* Tarjeta con código */}
-              <Card sx={{ mb: 3 }}>
-                <CardContent>
-                  <Box sx={{ display: 'flex', alignItems: 'center', gap: 1, mb: 2 }}>
-                    <QrCodeIcon color="primary" />
-                    <Typography variant="subtitle1" sx={{ fontWeight: 500 }}>
-                      Código de acceso
-                    </Typography>
-                  </Box>
-                  
-                  <Box sx={{ display: 'flex', alignItems: 'center', gap: 2 }}>
-                    <Chip
-                      label={shareData.shareCode}
-                      variant="outlined"
-                      color="primary"
-                      sx={{ 
-                        fontSize: '1rem',
-                        fontFamily: 'monospace',
-                        px: 2,
-                        py: 1,
-                        height: 'auto'
-                      }}
-                    />
-                    <IconButton
-                      onClick={() => handleCopyToClipboard(shareData.shareCode)}
-                      color="primary"
-                    >
-                      <CopyIcon />
-                    </IconButton>
-                  </Box>
-                </CardContent>
-              </Card>
-
-              <Divider sx={{ my: 3 }} />
-
-              {/* Instrucciones */}
-              <Box sx={{ p: 2, backgroundColor: 'grey.50', borderRadius: 2 }}>
-                <Typography variant="h6" gutterBottom sx={{ color: 'text.primary' }}>
-                  ¿Cómo funciona?
+              {/* Preview del mensaje */}
+              <Box sx={{ p: 3, backgroundColor: 'grey.50', borderRadius: 2, textAlign: 'left' }}>
+                <Typography variant="body2" color="text.secondary" sx={{ mb: 1, fontWeight: 600 }}>
+                  Vista previa del mensaje:
                 </Typography>
-                <Box component="ol" sx={{ pl: 2, '& li': { mb: 1 } }}>
-                  <li>
-                    <Typography variant="body2">
-                      Comparte el enlace o código con las personas que quieras
-                    </Typography>
-                  </li>
-                  <li>
-                    <Typography variant="body2">
-                      Ellos podrán acceder al curso desde su cuenta
-                    </Typography>
-                  </li>
-                  <li>
-                    <Typography variant="body2">
-                      Verán todo el contenido y podrán seguir su propio progreso
-                    </Typography>
-                  </li>
-                </Box>
+                <Typography variant="body2" sx={{ fontFamily: 'monospace', whiteSpace: 'pre-line' }}>
+                  🎓 ¡Te han compartido un curso!{'\n\n'}
+                  📚 {courseTitle}{'\n\n'}
+                  🔗 {shareData.shareUrl}{'\n\n'}
+                  📋 Código: {shareData.shareCode}{'\n\n'}
+                  ¡Aprende algo nuevo hoy! 🚀
+                </Typography>
               </Box>
+            </Box>
+          )}
+
+          {/* Estado inicial - sin datos generados */}
+          {!shareData && !loading && !isGenerating && (
+            <Box sx={{ textAlign: 'center', py: 4 }}>
+              <Typography variant="body1" color="text.secondary">
+                Preparando el enlace para compartir...
+              </Typography>
             </Box>
           )}
         </DialogContent>
@@ -288,43 +223,8 @@ export default function ShareCourseModal({
           >
             Cerrar
           </Button>
-          
-          {shareData && (
-            <Button
-              onClick={() => handleCopyToClipboard(shareData.shareUrl)}
-              variant="contained"
-              startIcon={<ShareIcon />}
-              sx={{
-                borderRadius: 2,
-                background: (theme) =>
-                  `linear-gradient(135deg, ${theme.palette.primary.main} 0%, ${theme.palette.primary.dark} 100%)`,
-              }}
-            >
-              Copiar Enlace
-            </Button>
-          )}
         </DialogActions>
       </Dialog>
-
-      {/* Snackbar de confirmación */}
-      <Snackbar
-        open={copySuccess}
-        autoHideDuration={2000}
-        onClose={() => setCopySuccess(false)}
-        anchorOrigin={{ vertical: 'bottom', horizontal: 'center' }}
-      >
-        <Alert 
-          onClose={() => setCopySuccess(false)} 
-          severity="success" 
-          icon={<CheckIcon />}
-          sx={{ 
-            borderRadius: 2,
-            boxShadow: '0 4px 12px rgba(0,0,0,0.15)'
-          }}
-        >
-          ¡Copiado al portapapeles!
-        </Alert>
-      </Snackbar>
     </>
   );
 }

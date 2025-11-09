@@ -47,6 +47,35 @@ export function useCompartirCurso() {
     }
   };
 
+  const generateWhatsAppUrl = useCallback((courseTitle: string, shareUrl: string, shareCode: string) => {
+    const message = `🎓 ¡Te han compartido un curso!
+
+📚 ${courseTitle}
+
+🔗 ${shareUrl}
+
+📋 Código: ${shareCode}
+
+¡Aprende algo nuevo hoy! 🚀`;
+
+    // Codificación manual específica para WhatsApp (más compatible que encodeURIComponent)
+    const encodedMessage = message
+      .replace(/ /g, '%20')           // Espacios
+      .replace(/!/g, '%21')           // Exclamación
+      .replace(/,/g, '%2C')           // Comas
+      .replace(/:/g, '%3A')           // Dos puntos
+      .replace(/\?/g, '%3F')          // Interrogación
+      .replace(/@/g, '%40')           // Arroba
+      .replace(/&/g, '%26')           // Ampersand
+      .replace(/\//g, '%2F')          // Slash (solo después de http:)
+      .replace(/\n/g, '%0A')          // Saltos de línea
+      .replace(/\*/g, '%2A')          // Asteriscos
+      .replace(/#/g, '%23')           // Hash
+      .replace(/\+/g, '%2B');         // Plus
+
+    return `https://api.whatsapp.com/send?text=${encodedMessage}`;
+  }, []);
+
   const obtenerCursoCompartido = useCallback(async (shareCode: string) => {
     setLoading(true);
     setError(null);
@@ -147,6 +176,7 @@ export function useCompartirCurso() {
     obtenerCursoCompartido,
     inscribirseACursoCompartido,
     listarCursosCompartidos,
+    generateWhatsAppUrl,
     loading,
     error,
     clearError: () => setError(null)
