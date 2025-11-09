@@ -20,6 +20,9 @@
 # production
 /build
 
+# Auto-generated metadata files
+**/metadata.ts
+
 # misc
 .DS_Store
 *.pem
