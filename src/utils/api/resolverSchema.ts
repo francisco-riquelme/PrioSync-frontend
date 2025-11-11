@@ -59,20 +59,6 @@ export const ResolverSchema = a
       .returns(
         a.customType({
           recomendaciones: a.string().required(),
-          message: a.string(),
-        })
-      ),
-
-    generarRetroalimentacionQuizResolver: a
-      .mutation()
-      .arguments({
-        progresoCuestionarioId: a.string().required(),
-        cuestionarioId: a.string().required(),
-        usuarioId: a.string().required(),
-      })
-      .returns(
-        a.customType({
-          recomendaciones: a.string().required(),
           leccionesRecomendadas: a.string().required().array(), // Array of JSON strings with { leccionId, titulo, razon }
           message: a.string(),
         })
