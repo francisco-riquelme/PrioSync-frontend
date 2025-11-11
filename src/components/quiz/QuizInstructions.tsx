@@ -186,22 +186,22 @@ const QuizInstructions: React.FC<QuizInstructionsProps> = ({
             >
               Iniciar Quiz
             </Button>
-            
-            {/* Return to Course Button */}
-            <Box sx={{ mt: 2 }}>
-              <Button
-                variant="outlined"
-                size="medium"
-                onClick={onReturnToCourse}
-                startIcon={<ArrowBack />}
-                sx={{ px: 2, py: 0.5, fontSize: '0.9rem' }}
-              >
-                Volver al Curso
-              </Button>
-            </Box>
           </Box>
         </CardContent>
       </Card>
+
+      {/* Return to Course Button - Outside Card */}
+      <Box sx={{ textAlign: 'center', mt: 3 }}>
+        <Button
+          variant="outlined"
+          size="medium"
+          onClick={onReturnToCourse}
+          startIcon={<ArrowBack />}
+          sx={{ px: 2, py: 0.5, fontSize: '0.9rem' }}
+        >
+          Volver al Curso
+        </Button>
+      </Box>
     </Box>
   );
 };
