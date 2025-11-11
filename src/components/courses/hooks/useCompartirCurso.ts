@@ -63,6 +63,9 @@ ${shareUrl}
 
 #PrioSync #Aprendizaje #CursoGratis`;
 
+    console.log('🔍 DEBUG - Original message:', message);
+    console.log('🔍 DEBUG - Original shareUrl:', shareUrl);
+
     // Codificación manual específica para WhatsApp (más compatible que encodeURIComponent)
     const encodedMessage = message
       .replace(/ /g, '%20')           // Espacios
@@ -78,7 +81,10 @@ ${shareUrl}
       .replace(/#/g, '%23')           // Hash
       .replace(/\+/g, '%2B');         // Plus
 
-    return `https://api.whatsapp.com/send?text=${encodedMessage}`;
+    const finalUrl = `https://api.whatsapp.com/send?text=${encodedMessage}`;
+    console.log('🔍 DEBUG - Final WhatsApp URL:', finalUrl);
+
+    return finalUrl;
   }, []);
 
   const obtenerCursoCompartido = useCallback(async (shareCode: string) => {
