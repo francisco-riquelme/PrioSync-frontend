@@ -83,7 +83,6 @@ export default function SharedCourseClient({ params }: SharedCourseClientProps) 
       const success = await inscribirseACursoCompartido({
         usuarioId: userData.usuarioId,
         cursoId: courseData.curso.cursoId,
-        codigoCompartido: shareCode,
       });
 
       if (success) {

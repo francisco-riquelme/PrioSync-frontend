@@ -108,8 +108,7 @@ export default function CourseDetail({ courseId }: CourseDetailProps) {
         // Generar URL de WhatsApp y abrir
         const whatsappUrl = generateWhatsAppUrl(
           course.titulo,
-          shareData.shareUrl,
-          shareData.shareCode
+          shareData.shareUrl
         );
         
         // Abrir WhatsApp
