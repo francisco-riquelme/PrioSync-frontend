@@ -1,9 +1,5 @@
 import { useState, useCallback } from 'react';
-
-// TODO: Reactivar cuando se solucionen los tipos complejos de Amplify
-// import { generateClient } from 'aws-amplify/data';
-// import type { MainTypes } from '@/utils/api/schema';
-// const client = generateClient<MainTypes>();
+import type { MainTypes } from '@/utils/api/schema';
 
 interface CompartirCursoInput {
   usuarioId: string;
@@ -99,31 +95,61 @@ ${shareUrl}
       // shareCode ahora es directamente el cursoId
       const cursoId = shareCode;
       
-      // Por ahora, creamos datos de mock para evitar errores de tipos complejos
-      // En producción, aquí irían las llamadas reales a Amplify
+      console.log('🔍 Obteniendo curso compartido:', cursoId);
       
-      const mockCurso = {
-        cursoId,
-        titulo: 'Curso de Ejemplo',
-        descripcion: 'Descripción del curso compartido',
-        imagen_portada: null,
-        nivel_dificultad: 'Intermedio',
-        duracion_estimada: 120,
-        createdAt: new Date().toISOString(),
-        updatedAt: new Date().toISOString(),
-      };
-
-      const mockUsuario = {
-        usuarioId: 'mock-user-id',
-        nombre: 'Usuario Ejemplo',
-        email: 'usuario@ejemplo.com',
-        createdAt: new Date().toISOString(),
-        updatedAt: new Date().toISOString(),
-      };
+      // Importar dinámicamente las utilities de Amplify
+      const { getQueryFactories } = await import('@/utils/commons/queries');
+      
+      // Obtener la factory para Curso
+      const { Curso } = await getQueryFactories<
+        Pick<MainTypes, 'Curso'>,
+        'Curso'
+      >({
+        entities: ['Curso'],
+      });
+      
+      // Buscar el curso por ID
+      const cursoResult = await Curso.get({
+        input: { cursoId },
+        selectionSet: [
+          'cursoId',
+          'titulo', 
+          'descripcion',
+          'imagen_portada',
+          'nivel_dificultad',
+          'duracion_estimada',
+          'createdAt',
+          'updatedAt',
+          'usuarioId',
+          'Usuario.nombre',
+          'Usuario.email'
+        ]
+      });
+      
+      if (!cursoResult) {
+        throw new Error('Curso no encontrado');
+      }
+      
+      console.log('✅ Curso encontrado:', cursoResult);
 
       return {
-        curso: mockCurso,
-        compartidoPor: mockUsuario,
+        curso: {
+          cursoId: cursoResult.cursoId,
+          titulo: cursoResult.titulo,
+          descripcion: cursoResult.descripcion || null,
+          imagen_portada: cursoResult.imagen_portada || null,
+          nivel_dificultad: cursoResult.nivel_dificultad || null,
+          duracion_estimada: cursoResult.duracion_estimada || null,
+          createdAt: cursoResult.createdAt,
+          updatedAt: cursoResult.updatedAt,
+        },
+        compartidoPor: {
+          usuarioId: cursoResult.usuarioId,
+          nombre: (cursoResult.Usuario as { nombre?: string })?.nombre || 'Usuario desconocido',
+          email: (cursoResult.Usuario as { email?: string })?.email || null,
+          createdAt: new Date().toISOString(),
+          updatedAt: new Date().toISOString(),
+        },
         shareCode,
         shareUrl: `${typeof window !== 'undefined' ? window.location.origin : ''}/courses/shared/${shareCode}`,
         estado: 'inscrito' as const,
@@ -145,20 +171,36 @@ ${shareUrl}
     setError(null);
 
     try {
-      // Por ahora simulamos una inscripción exitosa
-      // En producción, aquí iría la lógica real de Amplify
+      console.log('🔄 Inscribiéndose al curso:', data);
       
-      console.log('Inscribiéndose al curso:', data);
+      // Importar dinámicamente las utilities de Amplify
+      const { getQueryFactories } = await import('@/utils/commons/queries');
       
-      // Simular delay
-      await new Promise(resolve => setTimeout(resolve, 1000));
+      // Obtener la factory para CursoCompartido
+      const { CursoCompartido } = await getQueryFactories<
+        Pick<MainTypes, 'CursoCompartido'>,
+        'CursoCompartido'
+      >({
+        entities: ['CursoCompartido'],
+      });
+      
+      // Crear el registro de curso compartido (inscripción)
+      const inscripcionResult = await CursoCompartido.create({
+        input: {
+          usuarioId: data.usuarioId,
+          cursoId: data.cursoId,
+          estado: 'inscrito' as const,
+        }
+      });
+      
+      console.log('✅ Inscripción exitosa:', inscripcionResult);
       
       return true;
 
     } catch (err) {
       const errorMessage = err instanceof Error ? err.message : 'Error al inscribirse al curso';
       setError(errorMessage);
-      console.error('Error inscribiéndose al curso:', err);
+      console.error('❌ Error inscribiéndose al curso:', err);
       return false;
     } finally {
       setLoading(false);
