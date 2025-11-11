@@ -49,11 +49,15 @@ export default function SharedCourseClient({ params }: SharedCourseClientProps) 
   const [alreadyEnrolled, setAlreadyEnrolled] = useState(false);
 
   useEffect(() => {
+    console.log('🔍 DEBUG SharedCourseClient - shareCode:', shareCode);
+    
     const loadData = async () => {
       if (!shareCode) return;
       
       try {
+        console.log('🔍 DEBUG - Llamando obtenerCursoCompartido con:', shareCode);
         const data = await obtenerCursoCompartido(shareCode);
+        console.log('🔍 DEBUG - Data recibida:', data);
         if (data) {
           setCourseData(data);
           
