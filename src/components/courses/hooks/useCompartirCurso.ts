@@ -26,8 +26,8 @@ export function useCompartirCurso() {
     setError(null);
 
     try {
-      // Generar URL y código de compartir (simplificado)
-      const shareCode = `${input.cursoId}-${input.usuarioId}`.slice(0, 12);
+      // Usar cursoId directamente como código compartido
+      const shareCode = input.cursoId;
       const baseUrl = typeof window !== 'undefined' ? window.location.origin : '';
       const shareUrl = `${baseUrl}/courses/shared/${shareCode}`;
 
@@ -47,16 +47,15 @@ export function useCompartirCurso() {
     }
   };
 
-  const generateWhatsAppUrl = useCallback((courseTitle: string, shareUrl: string, shareCode: string) => {
+  const generateWhatsAppUrl = useCallback((courseTitle: string, shareUrl: string) => {
     const message = `🎓 ¡Te han compartido un curso!
 
 📚 ${courseTitle}
 
-🔗 ${shareUrl}
+🚀 Únete gratis y comienza tu aprendizaje:
+${shareUrl}
 
-📋 Código: ${shareCode}
-
-¡Aprende algo nuevo hoy! 🚀`;
+#PrioSync #Aprendizaje #CursoGratis`;
 
     // Codificación manual específica para WhatsApp (más compatible que encodeURIComponent)
     const encodedMessage = message
@@ -81,8 +80,8 @@ export function useCompartirCurso() {
     setError(null);
 
     try {
-      // Extraer usuarioId y cursoId del shareCode
-      const [cursoId, usuarioId] = shareCode.split('-');
+      // shareCode ahora es directamente el cursoId
+      const cursoId = shareCode;
       
       // Por ahora, creamos datos de mock para evitar errores de tipos complejos
       // En producción, aquí irían las llamadas reales a Amplify
@@ -99,7 +98,7 @@ export function useCompartirCurso() {
       };
 
       const mockUsuario = {
-        usuarioId,
+        usuarioId: 'mock-user-id',
         nombre: 'Usuario Ejemplo',
         email: 'usuario@ejemplo.com',
         createdAt: new Date().toISOString(),
@@ -125,7 +124,7 @@ export function useCompartirCurso() {
     }
   }, []);
 
-  const inscribirseACursoCompartido = useCallback(async (data: { usuarioId: string; cursoId: string; codigoCompartido: string }) => {
+  const inscribirseACursoCompartido = useCallback(async (data: { usuarioId: string; cursoId: string; codigoCompartido?: string }) => {
     setLoading(true);
     setError(null);
 
