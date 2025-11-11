@@ -52,7 +52,7 @@ export function useCompartirCurso() {
 
 📚 ${courseTitle}
 
-� Únete gratis y comienza tu aprendizaje:
+🚀 Únete gratis y comienza tu aprendizaje:
 ${shareUrl}
 
 #PrioSync #Aprendizaje #CursoGratis`;
