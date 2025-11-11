@@ -337,10 +337,11 @@ export const useQuizAnswers = (): UseQuizAnswersReturn => {
           percentage,
           level,
           incorrectQuestions,
-          strengths: strengths.slice(0, 5), // Top 5 strengths
-          weaknesses: weaknesses.slice(0, 5), // Top 5 weaknesses
-          strengthDetails: strengthDetails.slice(0, 5), // Top 5 con detalles
-          weaknessDetails: weaknessDetails.slice(0, 5), // Top 5 con detalles
+          // No limitar las listas aquí: mostrar todas las preguntas para cuestionarios largos
+          strengths,
+          weaknesses,
+          strengthDetails,
+          weaknessDetails,
           recommendations: [],
           llmLoading: true, // Indica que la retroalimentación está generándose
         };
