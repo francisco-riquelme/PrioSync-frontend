@@ -25,11 +25,17 @@ export function useCompartirCurso() {
     setLoading(true);
     setError(null);
 
+    console.log('🔍 DEBUG - crearCursoCompartido input:', input);
+
     try {
       // Usar cursoId directamente como código compartido
       const shareCode = input.cursoId;
       const baseUrl = typeof window !== 'undefined' ? window.location.origin : '';
       const shareUrl = `${baseUrl}/courses/shared/${shareCode}`;
+
+      console.log('🔍 DEBUG - shareCode:', shareCode);
+      console.log('🔍 DEBUG - baseUrl:', baseUrl);
+      console.log('🔍 DEBUG - shareUrl:', shareUrl);
 
       return {
         shareUrl,

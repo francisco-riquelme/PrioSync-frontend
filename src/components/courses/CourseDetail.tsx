@@ -97,6 +97,10 @@ export default function CourseDetail({ courseId }: CourseDetailProps) {
   const handleWhatsAppShare = async () => {
     if (!userData?.usuarioId || !course) return;
 
+    console.log('🔍 DEBUG - courseId:', courseId);
+    console.log('🔍 DEBUG - course:', course);
+    console.log('🔍 DEBUG - userData:', userData);
+
     try {
       // Crear el curso compartido
       const shareData = await crearCursoCompartido({
@@ -104,12 +108,17 @@ export default function CourseDetail({ courseId }: CourseDetailProps) {
         cursoId: courseId,
       });
 
+      console.log('🔍 DEBUG - shareData:', shareData);
+
       if (shareData) {
         // Generar URL de WhatsApp y abrir
         const whatsappUrl = generateWhatsAppUrl(
           course.titulo,
           shareData.shareUrl
         );
+        
+        console.log('🔍 DEBUG - whatsappUrl:', whatsappUrl);
+        console.log('🔍 DEBUG - shareUrl:', shareData.shareUrl);
         
         // Abrir WhatsApp
         window.open(whatsappUrl, '_blank');
