@@ -14,25 +14,17 @@ import {
   Alert
 } from '@mui/material';
 import {
-  TrendingUp,
-  Assignment,
-  Schedule,
-  Lightbulb,
-  Star,
-  BookmarkBorder,
   ArrowForward,
-  School,
   CheckCircle,
   Close,
   ArrowBack
 } from '@mui/icons-material';
-import { StudyRecommendation, QuizAnalysis } from '@/types/quiz';
+import { QuizAnalysis } from '@/types/quiz';
 import { useGenerarRetroalimentacion } from './hooks/useGenerarRetroalimentacion';
 
 interface QuizRecommendationsProps {
   analysis: QuizAnalysis;
   onBackToResults: () => void;
-  onActionClick: (recommendation: StudyRecommendation) => void;
   onReturnToCourse?: () => void;
   progresoCuestionarioId?: string;
   cuestionarioId?: string;
@@ -42,7 +34,6 @@ interface QuizRecommendationsProps {
 const QuizRecommendations: React.FC<QuizRecommendationsProps> = ({
   analysis,
   onBackToResults,
-  onActionClick,
   onReturnToCourse,
   progresoCuestionarioId,
   cuestionarioId,
@@ -130,29 +121,6 @@ const QuizRecommendations: React.FC<QuizRecommendationsProps> = ({
       setFeedbackLoading(false);
     }
   }, [analysis.llmFeedback, llmFeedback]);
-
-  const getIconComponent = (iconName: string) => {
-    const iconMap: Record<string, React.ReactElement> = {
-      TrendingUp: <TrendingUp />,
-      Assignment: <Assignment />,
-      Schedule: <Schedule />,
-      Lightbulb: <Lightbulb />,
-      Star: <Star />,
-      BookmarkBorder: <BookmarkBorder />,
-      School: <School />,
-      CheckCircle: <CheckCircle />
-    };
-    return iconMap[iconName] || <Lightbulb />;
-  };
-
-  const getPriorityColor = (priority: string) => {
-    switch (priority) {
-      case 'high': return 'error';
-      case 'medium': return 'warning';
-      case 'low': return 'info';
-      default: return 'info';
-    }
-  };
 
   const getLevelMessage = () => {
     switch (analysis.level) {
@@ -498,88 +466,6 @@ const QuizRecommendations: React.FC<QuizRecommendationsProps> = ({
         </Box>
       )}
 
-      {/* Recomendaciones */}
-      <Typography variant="h5" gutterBottom sx={{ fontWeight: 'bold', mb: 3 }}>
-        Recomendaciones de Estudio
-      </Typography>
-
-      <Box sx={{ display: 'grid', gridTemplateColumns: { xs: '1fr', md: 'repeat(2, 1fr)' }, gap: 3, mb: 4 }}>
-        {analysis.recommendations.map((recommendation) => (
-          <Box key={recommendation.id}>
-            <Card 
-              sx={{ 
-                height: '100%', 
-                transition: 'all 0.3s ease',
-                '&:hover': {
-                  transform: 'translateY(-4px)',
-                  boxShadow: 4
-                }
-              }}
-            >
-              <CardContent sx={{ p: 3 }}>
-                {/* Header de la recomendación */}
-                <Box sx={{ display: 'flex', alignItems: 'flex-start', gap: 2, mb: 2 }}>
-                  <Avatar
-                    sx={{
-                      bgcolor: `${getPriorityColor(recommendation.priority)}.main`,
-                      width: 48,
-                      height: 48
-                    }}
-                  >
-                    {getIconComponent(recommendation.icon)}
-                  </Avatar>
-                  
-                  <Box sx={{ flex: 1 }}>
-                    <Box sx={{ display: 'flex', alignItems: 'center', gap: 1, mb: 1 }}>
-                      <Typography variant="h6" sx={{ fontWeight: 'bold' }}>
-                        {recommendation.title}
-                      </Typography>
-                      <Chip
-                        label={recommendation.priority.toUpperCase()}
-                        color={getPriorityColor(recommendation.priority) as 'error' | 'warning' | 'info'}
-                        size="small"
-                        variant="outlined"
-                      />
-                    </Box>
-                    
-                    <Chip
-                      label={recommendation.type.toUpperCase()}
-                      size="small"
-                      variant="filled"
-                      sx={{ mb: 1 }}
-                    />
-                  </Box>
-                </Box>
-
-                {/* Descripción */}
-                <Typography 
-                  variant="body2" 
-                  color="text.secondary" 
-                  sx={{ mb: 3, lineHeight: 1.6 }}
-                >
-                  {recommendation.description}
-                </Typography>
-
-                {/* Botón de acción */}
-                <Button
-                  variant="contained"
-                  endIcon={<ArrowForward />}
-                  onClick={() => onActionClick(recommendation)}
-                  fullWidth
-                  sx={{
-                    bgcolor: `${getPriorityColor(recommendation.priority)}.main`,
-                    '&:hover': {
-                      bgcolor: `${getPriorityColor(recommendation.priority)}.dark`,
-                    }
-                  }}
-                >
-                  {recommendation.action.label}
-                </Button>
-              </CardContent>
-            </Card>
-          </Box>
-        ))}
-      </Box>
     </Box>
   );
 };

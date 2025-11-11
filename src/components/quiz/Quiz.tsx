@@ -71,7 +71,6 @@ const QuizContent: React.FC<QuizContentProps> = ({ usuarioId, cuestionarioId, cu
     handleRetryQuiz,
     handleViewRecommendations,
     handleBackToResults,
-    handleRecommendationAction,
     handleContinueAttempt,
     handleReviewAttempt,
     handleReviewCurrentAttempt,
@@ -147,7 +146,6 @@ const QuizContent: React.FC<QuizContentProps> = ({ usuarioId, cuestionarioId, cu
       <QuizRecommendations
         analysis={quizAnalysis}
         onBackToResults={handleBackToResults}
-        onActionClick={handleRecommendationAction}
         onReturnToCourse={handleReturnToCourse}
         progresoCuestionarioId={completedProgresoCuestionarioId || undefined}
         cuestionarioId={cuestionarioId}

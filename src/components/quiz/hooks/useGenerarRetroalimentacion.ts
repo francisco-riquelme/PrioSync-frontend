@@ -59,13 +59,21 @@ export const useGenerarRetroalimentacion = (params?: UseGenerarRetroalimentacion
 
         // Parsear lecciones recomendadas si existen
         let recommendedLessons: RecommendedLesson[] | undefined;
-        if (response.data.leccionesRecomendadas) {
+        if (response.data.leccionesRecomendadas && Array.isArray(response.data.leccionesRecomendadas)) {
           try {
-            const parsed = JSON.parse(response.data.leccionesRecomendadas);
-            if (Array.isArray(parsed)) {
-              recommendedLessons = parsed;
-              console.info('[useGenerarRetroalimentacion] Lecciones recomendadas parseadas:', recommendedLessons.length);
-            }
+            // leccionesRecomendadas es un array de strings (o nulos), cada uno es JSON
+            recommendedLessons = response.data.leccionesRecomendadas
+              .map((item: string | null | undefined) => {
+                if (typeof item !== 'string') return null;
+                try {
+                  return JSON.parse(item) as RecommendedLesson;
+                } catch {
+                  return null;
+                }
+              })
+              .filter((item): item is RecommendedLesson => item !== null);
+            
+            console.info('[useGenerarRetroalimentacion] Lecciones recomendadas parseadas:', recommendedLessons.length);
           } catch (parseError) {
             console.warn('[useGenerarRetroalimentacion] Error al parsear lecciones recomendadas:', parseError);
           }
