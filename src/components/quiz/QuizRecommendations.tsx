@@ -243,7 +243,7 @@ const QuizRecommendations: React.FC<QuizRecommendationsProps> = ({
               </Box>
               <Box>
                 <Typography variant="h3" sx={{ fontWeight: 'bold' }}>
-                  {analysis.recommendations.length}
+                  {recommendedLessons?.length || 0}
                 </Typography>
                 <Typography variant="caption" sx={{ opacity: 0.7 }}>
                   Recomendaciones
