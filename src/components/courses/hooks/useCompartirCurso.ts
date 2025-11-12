@@ -71,7 +71,7 @@ export function useCompartirCurso() {
             expiresAt: undefined,
           };
         }
-      } catch (getError) {
+      } catch {
         // Si no existe, continuar con la creación
         // El error puede ser porque no existe el registro, lo cual es esperado
         console.log(
@@ -282,7 +282,7 @@ ${shareUrl}
             // Si ya existe, retornar éxito sin crear duplicado
             return true;
           }
-        } catch (getError) {
+        } catch {
           // Si no existe, continuar con la creación
           // El error puede ser porque no existe el registro, lo cual es esperado
           console.log(

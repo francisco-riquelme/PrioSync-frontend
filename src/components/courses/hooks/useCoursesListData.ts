@@ -70,6 +70,13 @@ export type CourseListItem = {
   readonly usuarioId: string;
 };
 
+// Type for CursoCompartido item with Curso relation
+type CursoCompartidoWithCurso = {
+  usuarioId: string;
+  cursoId: string;
+  Curso: CourseListItem | null;
+};
+
 export interface UseCoursesListDataParams {
   searchTerm?: string;
   levelFilter?: string;
@@ -252,10 +259,12 @@ export const useCoursesListData = (
       if (sharedCoursesRes.status === "fulfilled" && params?.usuarioId) {
         const sharedRes = sharedCoursesRes.value;
         // Extract Curso objects from CursoCompartido results
-        const extractedCourses = (sharedRes.items || [])
-          .filter((cc: any) => cc.Curso) // Filter out null Curso
-          .map((cc: any) => {
-            const curso = cc.Curso;
+        const extractedCourses = (
+          (sharedRes.items || []) as unknown as CursoCompartidoWithCurso[]
+        )
+          .filter((cc) => cc.Curso) // Filter out null Curso
+          .map((cc) => {
+            const curso = cc.Curso!; // Non-null assertion since we filtered above
             // Transform to CourseListItem format
             return {
               cursoId: curso.cursoId,
@@ -316,6 +325,7 @@ export const useCoursesListData = (
     params?.levelFilter,
     params?.durationFilter,
     params?.searchTerm,
+    params,
   ]);
 
   // Load courses on mount and when params change
