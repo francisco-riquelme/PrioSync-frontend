@@ -14,7 +14,6 @@ import QuizAttemptsTable from './QuizAttemptsTable';
 import QuizReview from './QuizReview';
 import { useQuizDetailData } from './hooks/useQuizDetailData';
 import { useQuizActions } from './hooks/useQuizActions';
-import { useQuizAttempts } from './hooks/useQuizAttempts';
 import { useUser } from '@/contexts/UserContext';
 
 export interface QuizProps {
@@ -54,8 +53,6 @@ const QuizContent: React.FC<QuizContentProps> = ({ usuarioId, cuestionarioId, cu
     usuarioId,
   });
 
-  const quizAttempts = useQuizAttempts();
-
   const {
     currentScreen,
     currentQuestionIndex,
@@ -74,9 +71,10 @@ const QuizContent: React.FC<QuizContentProps> = ({ usuarioId, cuestionarioId, cu
     handleRetryQuiz,
     handleViewRecommendations,
     handleBackToResults,
-    handleRecommendationAction,
     handleContinueAttempt,
     handleReviewAttempt,
+    handleReviewCurrentAttempt,
+    handleViewRecommendationsFromAttempt,
     handleBackFromReview,
     handleReturnToCourse,
     setTimeLeft,
@@ -121,9 +119,9 @@ const QuizContent: React.FC<QuizContentProps> = ({ usuarioId, cuestionarioId, cu
           <Box sx={{ flex: { xs: '1 1 100%', md: '1 1 34%' } }}>
             <QuizAttemptsTable
               attempts={attempts}
-              currentAttemptNumber={quizAttempts.currentAttemptNumber}
               onContinueAttempt={handleContinueAttempt}
               onReviewAttempt={handleReviewAttempt}
+              onViewRecommendations={handleViewRecommendationsFromAttempt}
             />
           </Box>
         </Stack>
@@ -148,7 +146,7 @@ const QuizContent: React.FC<QuizContentProps> = ({ usuarioId, cuestionarioId, cu
       <QuizRecommendations
         analysis={quizAnalysis}
         onBackToResults={handleBackToResults}
-        onActionClick={handleRecommendationAction}
+        onReturnToCourse={handleReturnToCourse}
         progresoCuestionarioId={completedProgresoCuestionarioId || undefined}
         cuestionarioId={cuestionarioId}
         usuarioId={usuarioId}
@@ -163,22 +161,24 @@ const QuizContent: React.FC<QuizContentProps> = ({ usuarioId, cuestionarioId, cu
           <Box sx={{ flex: { xs: '1 1 100%', md: '1 1 66%' } }}>
             <QuizResults
               score={quizAnalysis.score}
-              totalQuestions={preguntas.length}
+              totalQuestions={quizAnalysis.totalQuestions}
+              totalPoints={quizAnalysis.totalPoints}
+              correctCount={quizAnalysis.correctCount}
               percentage={quizAnalysis.percentage}
               passed={quizAnalysis.percentage >= (quiz?.porcentaje_aprobacion || 70)}
               passingScore={quiz?.porcentaje_aprobacion || 70}
               onRetry={handleRetryQuiz}
+              onReviewAnswers={handleReviewCurrentAttempt}
               onViewRecommendations={handleViewRecommendations}
               onReturnToCourse={handleReturnToCourse}
-              showRecommendationsButton={quizAnalysis.percentage < 75 || quizAnalysis.recommendations.length > 0}
             />
           </Box>
           <Box sx={{ flex: { xs: '1 1 100%', md: '1 1 34%' } }}>
             <QuizAttemptsTable
               attempts={attempts}
-              currentAttemptNumber={quizAttempts.currentAttemptNumber}
               onContinueAttempt={handleContinueAttempt}
               onReviewAttempt={handleReviewAttempt}
+              onViewRecommendations={handleViewRecommendationsFromAttempt}
             />
           </Box>
         </Stack>
