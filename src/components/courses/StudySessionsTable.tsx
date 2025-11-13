@@ -20,7 +20,6 @@ import {
 import {
   Schedule as ScheduleIcon,
   Event as EventIcon,
-  VideoCall as VideoCallIcon,
 } from '@mui/icons-material';
 import type { MainTypes } from '@/utils/api/schema';
 
@@ -115,7 +114,6 @@ export default function StudySessionsTable({ sessions, loading }: StudySessionsT
                 <TableCell>Tipo</TableCell>
                 <TableCell>Estado</TableCell>
                 <TableCell>Recordatorios</TableCell>
-                <TableCell align="center">Google Meet</TableCell>
               </TableRow>
             </TableHead>
             <TableBody>
@@ -160,25 +158,6 @@ export default function StudySessionsTable({ sessions, loading }: StudySessionsT
                   </TableCell>
                   <TableCell>
                     {session.recordatorios || '-'}
-                  </TableCell>
-                  <TableCell align="center">
-                    {session.google_event_id ? (
-                      <IconButton
-                        component="a"
-                        href={`https://${session.google_event_id}`}
-                        target="_blank"
-                        rel="noopener noreferrer"
-                        size="small"
-                        color="primary"
-                        title="Unirse a Google Meet"
-                      >
-                        <VideoCallIcon />
-                      </IconButton>
-                    ) : (
-                      <Typography variant="body2" color="text.disabled">
-                        -
-                      </Typography>
-                    )}
                   </TableCell>
                 </TableRow>
               ))}
