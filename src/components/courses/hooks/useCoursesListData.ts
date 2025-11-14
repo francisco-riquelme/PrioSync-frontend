@@ -119,11 +119,11 @@ export const useCoursesListData = (
           const duration = course.duracion_estimada || 0;
           switch (params.durationFilter) {
             case "corto":
-              return duration <= 30;
+              return duration < 30; // Menos de 30 minutos
             case "medio":
-              return duration > 30 && duration <= 120;
+              return duration >= 30 && duration <= 120; // 30 minutos a 2 horas (120 minutos)
             case "largo":
-              return duration > 120;
+              return duration > 120; // Más de 2 horas (120 minutos)
             default:
               return true;
           }
