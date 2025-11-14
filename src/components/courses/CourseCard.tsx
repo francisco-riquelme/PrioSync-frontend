@@ -11,6 +11,7 @@ import {
 import { School as SchoolIcon } from '@mui/icons-material';
 import { useState } from 'react';
 import { CourseListItem } from '@/components/courses/hooks/useCoursesListData';
+import { formatDifficultyLevel, getLevelColor } from './courseUtils';
 
 // Type for courses from UserContext
 interface CursoFromUsuario {
@@ -34,15 +35,6 @@ interface CourseCardProps {
 const formatDuration = (minutes: number) => {
   const hours = Math.floor(minutes / 60);
   return `${hours} horas`;
-};
-
-const getLevelColor = (level: string) => {
-  switch (level) {
-    case 'basico': return 'success';
-    case 'intermedio': return 'warning';
-    case 'avanzado': return 'error';
-    default: return 'default';
-  }
 };
 
 export const CourseCard = ({ course, onCourseClick, progreso }: CourseCardProps) => {
@@ -116,12 +108,14 @@ export const CourseCard = ({ course, onCourseClick, progreso }: CourseCardProps)
       >
         {/* Chips de nivel y duración */}
         <Box sx={{ display: 'flex', gap: 1 }}>
-          <Chip 
-            label={course.nivel_dificultad} 
-            size="small" 
-            color={getLevelColor(course.nivel_dificultad || '')}
-            variant="outlined"
-          />
+          {course.nivel_dificultad && (
+            <Chip 
+              label={formatDifficultyLevel(course.nivel_dificultad)} 
+              size="small" 
+              color={getLevelColor(course.nivel_dificultad)}
+              variant="outlined"
+            />
+          )}
           <Chip 
             label={formatDuration(course.duracion_estimada || 0)} 
             size="small" 
