@@ -325,7 +325,6 @@ export const useCoursesListData = (
     params?.levelFilter,
     params?.durationFilter,
     params?.searchTerm,
-    params,
   ]);
 
   // Load courses on mount and when params change
