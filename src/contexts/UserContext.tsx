@@ -20,6 +20,14 @@ interface CursoFromUsuario {
   readonly updatedAt: string;
 }
 
+interface CursoCompartidoWithCurso {
+  usuarioId: string;
+  cursoId: string;
+  estado?: 'inscrito' | 'en_progreso' | 'completado' | 'abandonado' | null;
+  createdAt?: string | null;
+  Curso?: CursoFromUsuario | null;
+}
+
 interface UsuarioWithRelations {
   usuarioId: string;
   email: string;
@@ -30,6 +38,7 @@ interface UsuarioWithRelations {
   createdAt?: string | null;
   updatedAt?: string | null;
   Cursos?: CursoFromUsuario[];
+  CursoCompartido?: CursoCompartidoWithCurso[];
 }
 
 // Simplified InscripcionCurso for client-side (without lazy loaders)
@@ -115,6 +124,19 @@ const userSelectionSet = [
   'Cursos.estado',
   'Cursos.createdAt',
   'Cursos.updatedAt',
+  'CursoCompartido.usuarioId',
+  'CursoCompartido.cursoId',
+  'CursoCompartido.estado',
+  'CursoCompartido.createdAt',
+  'CursoCompartido.Curso.cursoId',
+  'CursoCompartido.Curso.titulo',
+  'CursoCompartido.Curso.descripcion',
+  'CursoCompartido.Curso.imagen_portada',
+  'CursoCompartido.Curso.duracion_estimada',
+  'CursoCompartido.Curso.nivel_dificultad',
+  'CursoCompartido.Curso.estado',
+  'CursoCompartido.Curso.createdAt',
+  'CursoCompartido.Curso.updatedAt',
 ] as const;
 
 // UsuarioWithRelations type is defined above
@@ -138,6 +160,32 @@ const fetchUserFromDatabase = async (usuarioId: string): Promise<UserData | null
       return null;
     }
 
+    // Combine own courses and shared courses
+    const cursosCreados = userRes.Cursos || [];
+    const cursosCompartidos = (userRes.CursoCompartido || [])
+      .filter(compartido => compartido.Curso) // Solo incluir si tiene datos del curso
+      .map(compartido => compartido.Curso as CursoFromUsuario);
+    
+    // Combinar todos los cursos (evitar duplicados por cursoId)
+    const todosCursos: CursoFromUsuario[] = [];
+    const cursosVistos = new Set<string>();
+    
+    // Agregar cursos creados
+    for (const curso of cursosCreados) {
+      if (!cursosVistos.has(curso.cursoId)) {
+        todosCursos.push(curso);
+        cursosVistos.add(curso.cursoId);
+      }
+    }
+    
+    // Agregar cursos compartidos (solo si no están ya incluidos)
+    for (const curso of cursosCompartidos) {
+      if (!cursosVistos.has(curso.cursoId)) {
+        todosCursos.push(curso);
+        cursosVistos.add(curso.cursoId);
+      }
+    }
+
     // Transform database response to UserData format
     const userData: UserData = {
       usuarioId: userRes.usuarioId,
@@ -150,8 +198,8 @@ const fetchUserFromDatabase = async (usuarioId: string): Promise<UserData | null
       updatedAt: userRes.updatedAt,
       avatar: userRes.nombre ? userRes.nombre.charAt(0).toUpperCase() : 'U',
       
-      // Map courses from database response
-      Cursos: userRes.Cursos || [],
+      // Map all courses (created + shared)
+      Cursos: todosCursos,
       
       // TODO: Load courses separately - LazyLoader needs special handling
       InscripcionesCurso: [],

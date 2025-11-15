@@ -34,7 +34,7 @@ interface SharedCourseClientProps {
 
 export default function SharedCourseClient({ params }: SharedCourseClientProps) {
   const router = useRouter();
-  const { userData } = useUser();
+  const { userData, refreshUser } = useUser();
   const { shareCode } = use(params);
   
   const { 
@@ -92,6 +92,10 @@ export default function SharedCourseClient({ params }: SharedCourseClientProps) 
 
       if (success) {
         setEnrollmentSuccess(true);
+        
+        // Refrescar los datos del usuario para incluir el nuevo curso
+        console.log('🔄 Refrescando datos del usuario después de inscripción...');
+        await refreshUser();
         
         // Redirigir al curso después de unos segundos
         setTimeout(() => {
