@@ -10,28 +10,22 @@ import {
   Stack,
   Chip,
   Avatar,
-  Divider,
   CircularProgress,
   Alert
 } from '@mui/material';
 import {
-  TrendingUp,
-  Assignment,
-  Schedule,
-  Lightbulb,
-  Star,
-  BookmarkBorder,
   ArrowForward,
-  School,
-  CheckCircle
+  CheckCircle,
+  Close,
+  ArrowBack
 } from '@mui/icons-material';
-import { StudyRecommendation, QuizAnalysis } from '@/types/quiz';
+import { QuizAnalysis } from '@/types/quiz';
 import { useGenerarRetroalimentacion } from './hooks/useGenerarRetroalimentacion';
 
 interface QuizRecommendationsProps {
   analysis: QuizAnalysis;
   onBackToResults: () => void;
-  onActionClick: (recommendation: StudyRecommendation) => void;
+  onReturnToCourse?: () => void;
   progresoCuestionarioId?: string;
   cuestionarioId?: string;
   usuarioId?: string;
@@ -40,19 +34,24 @@ interface QuizRecommendationsProps {
 const QuizRecommendations: React.FC<QuizRecommendationsProps> = ({
   analysis,
   onBackToResults,
-  onActionClick,
+  onReturnToCourse,
   progresoCuestionarioId,
   cuestionarioId,
   usuarioId,
 }) => {
   const [llmFeedback, setLlmFeedback] = useState<string | null>(analysis.llmFeedback || null);
+  const [recommendedLessons, setRecommendedLessons] = useState<typeof analysis.recommendedLessons>(analysis.recommendedLessons || []);
   const [feedbackLoading, setFeedbackLoading] = useState(false);
   const [feedbackError, setFeedbackError] = useState<string | null>(analysis.llmError || null);
 
   const { generar } = useGenerarRetroalimentacion({
-    onSuccess: (feedback) => {
+    onSuccess: (feedback, lessons) => {
       console.log('[QuizRecommendations] Retroalimentación recibida:', feedback);
+      console.log('[QuizRecommendations] Lecciones recomendadas:', lessons);
       setLlmFeedback(feedback);
+      if (lessons) {
+        setRecommendedLessons(lessons);
+      }
       setFeedbackLoading(false);
     },
     onError: (error) => {
@@ -123,29 +122,6 @@ const QuizRecommendations: React.FC<QuizRecommendationsProps> = ({
     }
   }, [analysis.llmFeedback, llmFeedback]);
 
-  const getIconComponent = (iconName: string) => {
-    const iconMap: Record<string, React.ReactElement> = {
-      TrendingUp: <TrendingUp />,
-      Assignment: <Assignment />,
-      Schedule: <Schedule />,
-      Lightbulb: <Lightbulb />,
-      Star: <Star />,
-      BookmarkBorder: <BookmarkBorder />,
-      School: <School />,
-      CheckCircle: <CheckCircle />
-    };
-    return iconMap[iconName] || <Lightbulb />;
-  };
-
-  const getPriorityColor = (priority: string) => {
-    switch (priority) {
-      case 'high': return 'error';
-      case 'medium': return 'warning';
-      case 'low': return 'info';
-      default: return 'info';
-    }
-  };
-
   const getLevelMessage = () => {
     switch (analysis.level) {
       case 'excellent':
@@ -185,6 +161,28 @@ const QuizRecommendations: React.FC<QuizRecommendationsProps> = ({
 
   return (
     <Box sx={{ maxWidth: 900, mx: 'auto', p: 3 }}>
+      {/* Botones de navegación superior */}
+      <Stack direction="row" spacing={2} sx={{ mb: 3 }}>
+        <Button 
+          variant="outlined" 
+          onClick={onBackToResults}
+          startIcon={<ArrowBack />}
+          size="medium"
+        >
+          Volver
+        </Button>
+        
+        {onReturnToCourse && (
+          <Button 
+            variant="outlined" 
+            onClick={onReturnToCourse}
+            size="medium"
+          >
+            Volver al Curso
+          </Button>
+        )}
+      </Stack>
+
       {/* Header con análisis general */}
       <Card elevation={3} sx={{ mb: 4, background: 'linear-gradient(135deg, #667eea 0%, #764ba2 100%)', color: 'white' }}>
         <CardContent sx={{ p: 4 }}>
@@ -245,7 +243,7 @@ const QuizRecommendations: React.FC<QuizRecommendationsProps> = ({
               </Box>
               <Box>
                 <Typography variant="h3" sx={{ fontWeight: 'bold' }}>
-                  {analysis.recommendations.length}
+                  {recommendedLessons?.length || 0}
                 </Typography>
                 <Typography variant="caption" sx={{ opacity: 0.7 }}>
                   Recomendaciones
@@ -256,171 +254,218 @@ const QuizRecommendations: React.FC<QuizRecommendationsProps> = ({
         </CardContent>
       </Card>
 
-      {/* Fortalezas y Debilidades */}
-      {(analysis.strengths.length > 0 || analysis.weaknesses.length > 0) && (
-        <Box sx={{ display: 'flex', gap: 3, mb: 4, flexDirection: { xs: 'column', md: 'row' } }}>
-          {/* Fortalezas */}
-          {analysis.strengths.length > 0 && (
-            <Box sx={{ flex: 1 }}>
-              <Card sx={{ height: '100%', border: '2px solid', borderColor: 'success.main' }}>
-                <CardContent>
-                  <Box sx={{ display: 'flex', alignItems: 'center', gap: 1, mb: 2 }}>
-                    <CheckCircle sx={{ color: 'success.main' }} />
-                    <Typography variant="h6" color="success.main" sx={{ fontWeight: 'bold' }}>
-                      Fortalezas
-                    </Typography>
-                  </Box>
-                  <Stack spacing={1}>
-                    {analysis.strengths.map((strength) => (
-                      <Chip
-                        key={strength}
-                        label={strength}
-                        color="success"
-                        variant="outlined"
-                        size="small"
-                      />
-                    ))}
-                  </Stack>
-                </CardContent>
-              </Card>
-            </Box>
-          )}
-
-          {/* Debilidades */}
-          {analysis.weaknesses.length > 0 && (
-            <Box sx={{ flex: 1 }}>
-              <Card sx={{ height: '100%', border: '2px solid', borderColor: 'warning.main' }}>
-                <CardContent>
-                  <Box sx={{ display: 'flex', alignItems: 'center', gap: 1, mb: 2 }}>
-                    <Lightbulb sx={{ color: 'warning.main' }} />
-                    <Typography variant="h6" color="warning.main" sx={{ fontWeight: 'bold' }}>
-                      Áreas a Mejorar
-                    </Typography>
-                  </Box>
-                  <Stack spacing={1}>
-                    {analysis.weaknesses.map((weakness) => (
-                      <Chip
-                        key={weakness}
-                        label={weakness}
-                        color="warning"
-                        variant="outlined"
-                        size="small"
-                      />
-                    ))}
-                  </Stack>
-                </CardContent>
-              </Card>
-            </Box>
-          )}
-        </Box>
-      )}
-
-      {/* Recomendaciones */}
-      <Typography variant="h5" gutterBottom sx={{ fontWeight: 'bold', mb: 3 }}>
-        Recomendaciones de Estudio
-      </Typography>
-
-      <Box sx={{ display: 'grid', gridTemplateColumns: { xs: '1fr', md: 'repeat(2, 1fr)' }, gap: 3, mb: 4 }}>
-        {analysis.recommendations.map((recommendation) => (
-          <Box key={recommendation.id}>
+      {/* Preguntas correctas e incorrectas */}
+      {((analysis.strengthDetails && analysis.strengthDetails.length > 0) || 
+        (analysis.weaknessDetails && analysis.weaknessDetails.length > 0)) && (
+        <Box sx={{ display: 'grid', gridTemplateColumns: { xs: '1fr', md: 'repeat(2, 1fr)' }, gap: 4, mb: 4 }}>
+          {/* Preguntas respondidas correctamente */}
+          {analysis.strengthDetails && analysis.strengthDetails.length > 0 && (
             <Card 
+              elevation={3}
               sx={{ 
-                height: '100%', 
-                transition: 'all 0.3s ease',
+                border: '2px solid', 
+                borderColor: 'success.main',
+                transition: 'transform 0.2s',
                 '&:hover': {
-                  transform: 'translateY(-4px)',
-                  boxShadow: 4
+                  transform: 'translateY(-2px)',
+                  boxShadow: 6
                 }
               }}
             >
               <CardContent sx={{ p: 3 }}>
-                {/* Header de la recomendación */}
-                <Box sx={{ display: 'flex', alignItems: 'flex-start', gap: 2, mb: 2 }}>
-                  <Avatar
-                    sx={{
-                      bgcolor: `${getPriorityColor(recommendation.priority)}.main`,
-                      width: 48,
-                      height: 48
-                    }}
-                  >
-                    {getIconComponent(recommendation.icon)}
-                  </Avatar>
-                  
-                  <Box sx={{ flex: 1 }}>
-                    <Box sx={{ display: 'flex', alignItems: 'center', gap: 1, mb: 1 }}>
-                      <Typography variant="h6" sx={{ fontWeight: 'bold' }}>
-                        {recommendation.title}
-                      </Typography>
-                      <Chip
-                        label={recommendation.priority.toUpperCase()}
-                        color={getPriorityColor(recommendation.priority) as 'error' | 'warning' | 'info'}
-                        size="small"
-                        variant="outlined"
-                      />
-                    </Box>
-                    
-                    <Chip
-                      label={recommendation.type.toUpperCase()}
-                      size="small"
-                      variant="filled"
-                      sx={{ mb: 1 }}
-                    />
-                  </Box>
+                <Box sx={{ display: 'flex', alignItems: 'center', gap: 1.5, mb: 3 }}>
+                  <CheckCircle sx={{ color: 'success.main', fontSize: 28 }} />
+                  <Typography variant="h6" color="success.main" sx={{ fontWeight: 'bold', fontSize: '1.1rem' }}>
+                    Preguntas respondidas correctamente
+                  </Typography>
                 </Box>
-
-                {/* Descripción */}
-                <Typography 
-                  variant="body2" 
-                  color="text.secondary" 
-                  sx={{ mb: 3, lineHeight: 1.6 }}
-                >
-                  {recommendation.description}
-                </Typography>
-
-                {/* Botón de acción */}
-                <Button
-                  variant="contained"
-                  endIcon={<ArrowForward />}
-                  onClick={() => onActionClick(recommendation)}
-                  fullWidth
-                  sx={{
-                    bgcolor: `${getPriorityColor(recommendation.priority)}.main`,
-                    '&:hover': {
-                      bgcolor: `${getPriorityColor(recommendation.priority)}.dark`,
-                    }
-                  }}
-                >
-                  {recommendation.action.label}
-                </Button>
+                <Stack spacing={2}>
+                  {analysis.strengthDetails.map((detail, index) => (
+                    <Box key={index}>
+                      <Box
+                        sx={{ 
+                          border: '1px solid',
+                          borderColor: 'success.light',
+                          borderRadius: 2,
+                          p: 2,
+                          backgroundColor: 'success.lighter',
+                          transition: 'all 0.2s',
+                          '&:hover': {
+                            backgroundColor: 'success.light',
+                            boxShadow: 1
+                          }
+                        }}
+                      >
+                        <Typography variant="body2" sx={{ fontWeight: 600, mb: 1.5, color: 'text.primary' }}>
+                          {index + 1}. {detail.question}
+                        </Typography>
+                        <Box sx={{ display: 'flex', alignItems: 'center', gap: 1, pl: 2 }}>
+                          <CheckCircle sx={{ color: 'success.main', fontSize: 18 }} />
+                          <Typography variant="body2" sx={{ color: 'success.dark', fontStyle: 'italic' }}>
+                            Tu respuesta: {detail.userAnswer}
+                          </Typography>
+                        </Box>
+                      </Box>
+                    </Box>
+                  ))}
+                </Stack>
               </CardContent>
             </Card>
-          </Box>
-        ))}
-      </Box>
+          )}
 
-      {/* Divider */}
-      <Divider sx={{ my: 4 }} />
+          {/* Preguntas con respuestas incorrectas */}
+          {analysis.weaknessDetails && analysis.weaknessDetails.length > 0 && (
+            <Card 
+              elevation={3}
+              sx={{ 
+                border: '2px solid', 
+                borderColor: 'error.main',
+                transition: 'transform 0.2s',
+                '&:hover': {
+                  transform: 'translateY(-2px)',
+                  boxShadow: 6
+                }
+              }}
+            >
+              <CardContent sx={{ p: 3 }}>
+                <Box sx={{ display: 'flex', alignItems: 'center', gap: 1.5, mb: 3 }}>
+                  <Close sx={{ color: 'error.main', fontSize: 28 }} />
+                  <Typography variant="h6" color="error.main" sx={{ fontWeight: 'bold', fontSize: '1.1rem' }}>
+                    Preguntas con respuestas incorrectas
+                  </Typography>
+                </Box>
+                <Stack spacing={2}>
+                  {analysis.weaknessDetails.map((detail, index) => (
+                    <Box key={index}>
+                      <Box
+                        sx={{ 
+                          border: '1px solid',
+                          borderColor: 'error.light',
+                          borderRadius: 2,
+                          p: 2,
+                          backgroundColor: 'error.lighter',
+                          transition: 'all 0.2s',
+                          '&:hover': {
+                            backgroundColor: 'error.light',
+                            boxShadow: 1
+                          }
+                        }}
+                      >
+                        <Typography variant="body2" sx={{ fontWeight: 600, mb: 1.5, color: 'text.primary' }}>
+                          {index + 1}. {detail.question}
+                        </Typography>
+                        <Box sx={{ display: 'flex', alignItems: 'center', gap: 1, pl: 2, mb: 1 }}>
+                          <Close sx={{ color: 'error.main', fontSize: 18 }} />
+                          <Typography variant="body2" sx={{ color: 'error.dark', fontStyle: 'italic' }}>
+                            Tu respuesta: {detail.userAnswer}
+                          </Typography>
+                        </Box>
+                        {detail.correctAnswer && (
+                          <Box sx={{ display: 'flex', alignItems: 'center', gap: 1, pl: 2 }}>
+                            <CheckCircle sx={{ color: 'success.main', fontSize: 18 }} />
+                            <Typography variant="body2" sx={{ color: 'success.dark', fontWeight: 500 }}>
+                              Respuesta correcta: {detail.correctAnswer}
+                            </Typography>
+                          </Box>
+                        )}
+                      </Box>
+                    </Box>
+                  ))}
+                </Stack>
+              </CardContent>
+            </Card>
+          )}
+        </Box>
+      )}
 
-      {/* Botones de navegación */}
-      <Stack direction="row" spacing={2} justifyContent="center">
-        <Button 
-          variant="outlined" 
-          onClick={onBackToResults}
-          size="large"
-        >
-          Ver Resultados
-        </Button>
-        
-        <Button 
-          variant="contained" 
-          color="primary"
-          startIcon={<School />}
-          href="/courses"
-          size="large"
-        >
-          Explorar Cursos
-        </Button>
-      </Stack>
+      {/* Lecciones Recomendadas por el LLM */}
+      {recommendedLessons && recommendedLessons.length > 0 && (
+        <Box sx={{ mb: 4 }}>
+          <Typography variant="h5" gutterBottom sx={{ fontWeight: 'bold', mb: 3 }}>
+            Lecciones Recomendadas para Repasar
+          </Typography>
+          
+          <Stack spacing={2}>
+            {recommendedLessons.map((lesson, index) => (
+              <Card 
+                key={lesson.leccionId}
+                sx={{
+                  transition: 'all 0.3s ease',
+                  '&:hover': {
+                    transform: 'translateY(-2px)',
+                    boxShadow: 4
+                  }
+                }}
+              >
+                <CardContent sx={{ p: 3 }}>
+                  <Box sx={{ display: 'flex', alignItems: 'flex-start', gap: 2 }}>
+                    <Avatar
+                      sx={{
+                        bgcolor: 'primary.main',
+                        width: 40,
+                        height: 40,
+                        fontSize: '1rem',
+                        fontWeight: 'bold'
+                      }}
+                    >
+                      {index + 1}
+                    </Avatar>
+                    
+                    <Box sx={{ flex: 1 }}>
+                      <Typography variant="h6" sx={{ fontWeight: 'bold', mb: 0.5 }}>
+                        {lesson.titulo}
+                      </Typography>
+                      
+                      {lesson.moduloTitulo && (
+                        <Chip
+                          label={lesson.moduloTitulo}
+                          size="small"
+                          variant="outlined"
+                          sx={{ mb: 1.5 }}
+                        />
+                      )}
+                      
+                      {lesson.descripcion && (
+                        <Typography variant="body2" color="text.secondary" sx={{ mb: 1.5 }}>
+                          {lesson.descripcion}
+                        </Typography>
+                      )}
+                      
+                      <Box 
+                        sx={{ 
+                          backgroundColor: 'info.lighter', 
+                          borderLeft: '4px solid',
+                          borderColor: 'info.main',
+                          p: 1.5,
+                          borderRadius: 1,
+                          mb: 2
+                        }}
+                      >
+                        <Typography variant="body2" sx={{ fontStyle: 'italic', color: 'info.dark' }}>
+                          💡 {lesson.razon}
+                        </Typography>
+                      </Box>
+                      
+                      {lesson.url_contenido && (
+                        <Button
+                          variant="contained"
+                          size="small"
+                          endIcon={<ArrowForward />}
+                          onClick={() => window.open(lesson.url_contenido, '_blank')}
+                          sx={{ mt: 1 }}
+                        >
+                          Ver Lección
+                        </Button>
+                      )}
+                    </Box>
+                  </Box>
+                </CardContent>
+              </Card>
+            ))}
+          </Stack>
+        </Box>
+      )}
+
     </Box>
   );
 };

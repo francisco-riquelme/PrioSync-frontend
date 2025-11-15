@@ -35,6 +35,7 @@ import StudySessionsTable from './StudySessionsTable';
 import CourseContent from './CourseContent';
 import CourseFeedbackModal from './CourseFeedbackModal';
 import { useCompartirCurso } from './hooks/useCompartirCurso';
+import { formatDifficultyLevel, getLevelColor } from './courseUtils';
 
 interface CourseDetailProps {
   courseId: string;
@@ -120,8 +121,8 @@ export default function CourseDetail({ courseId }: CourseDetailProps) {
         console.log('🔍 DEBUG - whatsappUrl:', whatsappUrl);
         console.log('🔍 DEBUG - shareUrl:', shareData.shareUrl);
         
-       // Mostrar alert con la URL para debugging
-       // alert(`URL generada: ${shareData.shareUrl}\nWhatsApp URL: ${whatsappUrl.substring(0, 200)}...`);
+        // Mostrar alert con la URL para debugging
+        // alert(`URL generada: ${shareData.shareUrl}\nWhatsApp URL: ${whatsappUrl.substring(0, 200)}...`);
         
         // Abrir WhatsApp
         window.open(whatsappUrl, '_blank');
@@ -236,9 +237,17 @@ export default function CourseDetail({ courseId }: CourseDetailProps) {
             <strong>Duración:</strong> {formatDuration(course.duracion_estimada || 0)}
           </Typography>
 
-          <Typography variant="body2" color="text.secondary" sx={{ mb: 2 }}>
-            <strong>Nivel:</strong> {course.nivel_dificultad}
-          </Typography>
+          <Box sx={{ mb: 2, display: 'flex', alignItems: 'center', gap: 1 }}>
+            <Typography variant="body2" color="text.secondary" component="span">
+              <strong>Nivel:</strong>
+            </Typography>
+            <Chip
+              label={formatDifficultyLevel(course.nivel_dificultad)}
+              size="small"
+              color={getLevelColor(course.nivel_dificultad)}
+              variant="outlined"
+            />
+          </Box>
 
           {/* Progreso del curso */}
           <Box sx={{ mb: 2 }} key={`progress-${actualProgress}-${leccionesCompletadas}-${totalLecciones}`}>

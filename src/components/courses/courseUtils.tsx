@@ -105,3 +105,37 @@ export const formatDuration = (minutos: number | null | undefined): string => {
   const mins = minutos % 60;
   return mins > 0 ? `${horas}h ${mins}min` : `${horas}h`;
 };
+
+/**
+ * Get chip color for course difficulty level
+ */
+export const getLevelColor = (level: string | null | undefined): ChipColor => {
+  switch (level) {
+    case 'basico':
+      return 'success';
+    case 'intermedio':
+      return 'warning';
+    case 'avanzado':
+      return 'error';
+    default:
+      return 'default';
+  }
+};
+
+/**
+ * Format difficulty level to human-readable string with capitalized first letter
+ * Examples: "basico" -> "Básico", "intermedio" -> "Intermedio", "avanzado" -> "Avanzado"
+ */
+export const formatDifficultyLevel = (level: string | null | undefined): string => {
+  if (!level) return 'No especificado';
+  switch (level) {
+    case 'basico':
+      return 'Básico';
+    case 'intermedio':
+      return 'Intermedio';
+    case 'avanzado':
+      return 'Avanzado';
+    default:
+      return level.charAt(0).toUpperCase() + level.slice(1);
+  }
+};

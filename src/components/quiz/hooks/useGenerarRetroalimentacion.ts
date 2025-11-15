@@ -1,16 +1,18 @@
 import { useState, useCallback } from 'react';
 import { generateClient } from 'aws-amplify/api';
 import type { ResolversTypes } from '@/utils/api/resolverSchema';
+import type { RecommendedLesson } from '@/types/quiz';
 
 const client = generateClient<ResolversTypes>();
 
 interface UseGenerarRetroalimentacionParams {
-  onSuccess?: (feedback: string) => void;
+  onSuccess?: (feedback: string, recommendedLessons?: RecommendedLesson[]) => void;
   onError?: (error: string) => void;
 }
 
 interface GenerarRetroalimentacionResponse {
   feedback: string;
+  recommendedLessons?: RecommendedLesson[];
   message?: string;
 }
 
@@ -55,15 +57,38 @@ export const useGenerarRetroalimentacion = (params?: UseGenerarRetroalimentacion
           throw new Error('La respuesta del servidor no contiene el campo "recomendaciones"');
         }
 
+        // Parsear lecciones recomendadas si existen
+        let recommendedLessons: RecommendedLesson[] | undefined;
+        if (response.data.leccionesRecomendadas && Array.isArray(response.data.leccionesRecomendadas)) {
+          try {
+            // leccionesRecomendadas es un array de strings (o nulos), cada uno es JSON
+            recommendedLessons = response.data.leccionesRecomendadas
+              .map((item: string | null | undefined) => {
+                if (typeof item !== 'string') return null;
+                try {
+                  return JSON.parse(item) as RecommendedLesson;
+                } catch {
+                  return null;
+                }
+              })
+              .filter((item): item is RecommendedLesson => item !== null);
+            
+            console.info('[useGenerarRetroalimentacion] Lecciones recomendadas parseadas:', recommendedLessons.length);
+          } catch (parseError) {
+            console.warn('[useGenerarRetroalimentacion] Error al parsear lecciones recomendadas:', parseError);
+          }
+        }
+
         const result: GenerarRetroalimentacionResponse = {
           feedback: response.data.recomendaciones,
+          recommendedLessons,
           message: response.data.message || undefined,
         };
 
         console.info('[useGenerarRetroalimentacion] Retroalimentación generada exitosamente:', result.feedback.substring(0, 100) + '...');
 
         if (params?.onSuccess) {
-          params.onSuccess(result.feedback);
+          params.onSuccess(result.feedback, result.recommendedLessons);
         }
 
         return result;

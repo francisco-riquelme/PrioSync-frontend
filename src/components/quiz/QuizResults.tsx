@@ -16,34 +16,42 @@ import {
   Cancel,
   Refresh,
   Lightbulb,
-  TrendingUp,
-  School,
-  ArrowBack
+  ArrowBack,
+  Visibility
 } from '@mui/icons-material';
 
 interface QuizResultsProps {
-  score: number;
-  totalQuestions: number;
+  score: number; // Puntos obtenidos
+  totalQuestions: number; // Total de preguntas
+  totalPoints?: number; // Puntos máximos (opcional para compatibilidad)
+  correctCount?: number; // Respuestas correctas (opcional para compatibilidad)
   percentage: number;
   passed: boolean;
   passingScore: number;
   onRetry: () => void;
+  onReviewAnswers?: () => void;
   onViewRecommendations?: () => void;
   onReturnToCourse?: () => void;
-  showRecommendationsButton?: boolean;
 }
 
 const QuizResults: React.FC<QuizResultsProps> = ({
   score,
   totalQuestions,
+  totalPoints,
+  correctCount,
   percentage,
   passed,
   passingScore,
   onRetry,
+  onReviewAnswers,
   onViewRecommendations,
   onReturnToCourse,
-  showRecommendationsButton = true
 }) => {
+  // Usar los valores correctos: score es puntos, correctCount es respuestas
+  const displayScore = totalPoints !== undefined ? score : correctCount || score;
+  const displayTotal = totalPoints !== undefined ? totalPoints : totalQuestions;
+  const displayCorrect = correctCount !== undefined ? correctCount : score;
+  const displayIncorrect = totalQuestions - displayCorrect;
   const getResultIcon = () => {
     if (passed) {
       return <CheckCircle sx={{ fontSize: 80, color: 'success.main', mb: 2 }} />;
@@ -125,7 +133,7 @@ const QuizResults: React.FC<QuizResultsProps> = ({
                 flexDirection: 'column'
               }}
             >
-              <Typography variant="h3" sx={{ fontWeight: 'bold', color: passed ? 'success.main' : 'error.main' }}>
+              <Typography variant="h3" sx={{ fontWeight: 'bold', color: passed ? 'success.main' : 'error.main', fontSize: '2.5rem' }}>
                 {percentage}%
               </Typography>
             </Box>
@@ -133,7 +141,10 @@ const QuizResults: React.FC<QuizResultsProps> = ({
 
           {/* Detalles de puntuación */}
           <Typography variant="h6" sx={{ mb: 1 }}>
-            {score} de {totalQuestions} respuestas correctas
+            {displayScore} de {displayTotal} puntos
+          </Typography>
+          <Typography variant="body2" color="text.secondary" sx={{ mb: 2 }}>
+            {displayCorrect} de {totalQuestions} respuestas correctas
           </Typography>
           
           {/* Chip de estado */}
@@ -170,8 +181,17 @@ const QuizResults: React.FC<QuizResultsProps> = ({
             borderRadius: 2
           }}>
             <Box>
+              <Typography variant="h6" color="success.main">
+                {displayScore}
+              </Typography>
+              <Typography variant="caption" color="text.secondary">
+                Puntos Obtenidos
+              </Typography>
+            </Box>
+            
+            <Box>
               <Typography variant="h6" color="primary.main">
-                {score}
+                {displayCorrect}
               </Typography>
               <Typography variant="caption" color="text.secondary">
                 Correctas
@@ -180,7 +200,7 @@ const QuizResults: React.FC<QuizResultsProps> = ({
             
             <Box>
               <Typography variant="h6" color="error.main">
-                {totalQuestions - score}
+                {displayIncorrect}
               </Typography>
               <Typography variant="caption" color="text.secondary">
                 Incorrectas
@@ -196,56 +216,64 @@ const QuizResults: React.FC<QuizResultsProps> = ({
               </Typography>
             </Box>
           </Box>
+
+          {/* Botones de acción */}
+          <Stack direction="row" spacing={2} justifyContent="center" flexWrap="wrap" gap={1} sx={{ mt: 3 }}>
+            <Button 
+              variant="outlined" 
+              onClick={onRetry}
+              startIcon={<Refresh />}
+              size="medium"
+            >
+              Reintentar Quiz
+            </Button>
+            
+            {onReviewAnswers && (
+              <Button 
+                variant="outlined" 
+                color="info"
+                startIcon={<Visibility />}
+                onClick={onReviewAnswers}
+                size="medium"
+              >
+                Revisar Respuestas
+              </Button>
+            )}
+            
+            {onViewRecommendations && (
+              <Button 
+                variant="contained" 
+                startIcon={<Lightbulb />}
+                onClick={onViewRecommendations}
+                size="medium"
+                sx={{
+                  background: 'linear-gradient(135deg, #667eea 0%, #764ba2 100%)',
+                  '&:hover': {
+                    background: 'linear-gradient(135deg, #5568d3 0%, #633d8a 100%)',
+                  }
+                }}
+              >
+                Recomendaciones
+              </Button>
+            )}
+          </Stack>
         </CardContent>
       </Card>
 
-      {/* Botones de acción */}
-      <Stack direction="row" spacing={2} justifyContent="center">
-        <Button 
-          variant="outlined" 
-          onClick={onRetry}
-          startIcon={<Refresh />}
-          size="large"
-        >
-          Reintentar Quiz
-        </Button>
-        
-        {showRecommendationsButton && onViewRecommendations && (
-          <Button 
-            variant="contained" 
-            color="primary"
-            startIcon={percentage >= 75 ? <TrendingUp /> : <Lightbulb />}
-            onClick={onViewRecommendations}
-            size="large"
-          >
-            {percentage >= 75 ? 'Siguiente Nivel' : 'Ver Recomendaciones'}
-          </Button>
-        )}
-        
-        {!showRecommendationsButton && (
-          <Button 
-            variant="contained" 
-            color="primary"
-            startIcon={<School />}
-            href="/courses"
-            size="large"
-          >
-            Explorar Cursos
-          </Button>
-        )}
-        
-        {onReturnToCourse && (
+      {/* Botón Volver al Curso fuera del Card */}
+      {onReturnToCourse && (
+        <Box sx={{ mt: 2, textAlign: 'center' }}>
           <Button 
             variant="outlined" 
             color="secondary"
             onClick={onReturnToCourse}
             startIcon={<ArrowBack />}
-            size="large"
+            size="medium"
           >
             Volver al Curso
           </Button>
-        )}
-      </Stack>
+        </Box>
+      )}
     </Box>
   );
 };

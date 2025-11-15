@@ -24,6 +24,7 @@ import {
 import { useCompartirCurso } from '@/components/courses/hooks/useCompartirCurso';
 import { useUser } from '@/contexts/UserContext';
 import { CursoCompartidoData } from '@/types/share';
+import { formatDifficultyLevel, getLevelColor } from '@/components/courses/courseUtils';
 
 interface SharedCourseClientProps {
   params: Promise<{
@@ -243,12 +244,14 @@ export default function SharedCourseClient({ params }: SharedCourseClientProps) 
                 <Typography variant="h5" sx={{ fontWeight: 600, mb: 1 }}>
                   {curso.titulo}
                 </Typography>
-                <Chip
-                  label={curso.nivel_dificultad}
-                  color="primary"
-                  variant="outlined"
-                  size="small"
-                />
+                {curso.nivel_dificultad && (
+                  <Chip
+                    label={formatDifficultyLevel(curso.nivel_dificultad)}
+                    color={getLevelColor(curso.nivel_dificultad)}
+                    variant="outlined"
+                    size="small"
+                  />
+                )}
               </Box>
             </Box>
 

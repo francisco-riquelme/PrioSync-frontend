@@ -15,6 +15,9 @@ import {
   Chip,
   Button,
   Paper,
+  IconButton,
+  Tooltip,
+  Stack,
 } from '@mui/material';
 import {
   CheckCircle,
@@ -22,21 +25,22 @@ import {
   HourglassEmpty,
   Replay,
   Visibility,
+  Lightbulb,
 } from '@mui/icons-material';
 import { QuizAttemptWithAnswers } from './hooks/useQuizDetailData';
 
 interface QuizAttemptsTableProps {
   attempts: QuizAttemptWithAnswers[];
-  currentAttemptNumber: number;
   onContinueAttempt?: (attempt: QuizAttemptWithAnswers) => void;
   onReviewAttempt?: (attempt: QuizAttemptWithAnswers) => void;
+  onViewRecommendations?: (attempt: QuizAttemptWithAnswers) => void;
 }
 
 const QuizAttemptsTable: React.FC<QuizAttemptsTableProps> = ({
   attempts,
-  currentAttemptNumber,
   onContinueAttempt,
   onReviewAttempt,
+  onViewRecommendations,
 }) => {
   const getStatusIcon = (estado?: string) => {
     switch (estado) {
@@ -79,16 +83,9 @@ const QuizAttemptsTable: React.FC<QuizAttemptsTableProps> = ({
   return (
     <Card sx={{ height: '100%' }}>
       <CardContent>
-        <Box sx={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', mb: 2 }}>
-          <Typography variant="h6" component="h2">
-            Historial de Intentos
-          </Typography>
-          <Chip
-            label={`Intento #${currentAttemptNumber}`}
-            color="primary"
-            size="small"
-          />
-        </Box>
+        <Typography variant="h6" component="h2" sx={{ mb: 2 }}>
+          Historial de Intentos
+        </Typography>
 
         {attempts.length === 0 ? (
           <Box sx={{ textAlign: 'center', py: 4 }}>
@@ -112,9 +109,33 @@ const QuizAttemptsTable: React.FC<QuizAttemptsTableProps> = ({
                 </TableRow>
               </TableHead>
               <TableBody>
-                {[...attempts]
-                  .sort((a, b) => (b.intento_numero || 0) - (a.intento_numero || 0))
-                  .map((attempt) => (
+                {(() => {
+                  // Ordenar intentos por fecha (más reciente primero) para asignar números correctos
+                  const sortedAttempts = [...attempts].sort((a, b) => {
+                    const dateA = new Date(a.fecha_completado || 0).getTime();
+                    const dateB = new Date(b.fecha_completado || 0).getTime();
+                    return dateB - dateA;
+                  });
+
+                  // Asignar números de intento secuenciales si están duplicados
+                  const attemptsWithNumbers = sortedAttempts.map((attempt, index) => {
+                    // Si todos tienen intento_numero 1 o indefinido, usar índice inverso
+                    const hasDuplicates = sortedAttempts.every(a => 
+                      !a.intento_numero || a.intento_numero === 1
+                    );
+                    
+                    return {
+                      ...attempt,
+                      displayNumber: hasDuplicates 
+                        ? sortedAttempts.length - index 
+                        : (attempt.intento_numero || 1)
+                    };
+                  });
+
+                  // Ordenar por displayNumber descendente para mostrar
+                  return attemptsWithNumbers
+                    .sort((a, b) => b.displayNumber - a.displayNumber)
+                    .map((attempt) => (
                     <TableRow
                       key={attempt.progresoCuestionarioId}
                       hover
@@ -126,7 +147,7 @@ const QuizAttemptsTable: React.FC<QuizAttemptsTableProps> = ({
                     >
                       <TableCell>
                         <Typography variant="body2" fontWeight="bold">
-                          {attempt.intento_numero}
+                          {attempt.displayNumber}
                         </Typography>
                       </TableCell>
                       <TableCell>
@@ -170,33 +191,78 @@ const QuizAttemptsTable: React.FC<QuizAttemptsTableProps> = ({
                         </Typography>
                       </TableCell>
                       <TableCell align="center">
-                        <Box sx={{ display: 'flex', gap: 1, justifyContent: 'center' }}>
+                        <Stack direction="row" spacing={0.5} justifyContent="center" alignItems="center">
                           {attempt.estado === 'en_proceso' && onContinueAttempt && (
-                            <Button
-                              size="small"
-                              startIcon={<Replay />}
-                              onClick={() => onContinueAttempt(attempt)}
-                              color="primary"
-                              variant="outlined"
-                            >
-                              Continuar
-                            </Button>
+                            <Tooltip title="Continuar intento" arrow>
+                              <IconButton
+                                size="small"
+                                onClick={() => onContinueAttempt(attempt)}
+                                color="primary"
+                                sx={{
+                                  border: '1px solid',
+                                  borderColor: 'primary.main',
+                                  '&:hover': {
+                                    backgroundColor: 'primary.light',
+                                    borderColor: 'primary.dark',
+                                  }
+                                }}
+                              >
+                                <Replay fontSize="small" />
+                              </IconButton>
+                            </Tooltip>
                           )}
                           {attempt.estado === 'completado' && onReviewAttempt && (
-                            <Button
-                              size="small"
-                              startIcon={<Visibility />}
-                              onClick={() => onReviewAttempt(attempt)}
-                              color="secondary"
-                              variant="outlined"
-                            >
-                              Revisar
-                            </Button>
+                            <Tooltip title="Revisar respuestas" arrow>
+                              <IconButton
+                                size="small"
+                                onClick={() => onReviewAttempt(attempt)}
+                                sx={{
+                                  border: '1px solid',
+                                  borderColor: 'info.main',
+                                  color: 'info.main',
+                                  '&:hover': {
+                                    backgroundColor: 'info.light',
+                                    borderColor: 'info.dark',
+                                  }
+                                }}
+                              >
+                                <Visibility fontSize="small" />
+                              </IconButton>
+                            </Tooltip>
                           )}
-                        </Box>
+                          {attempt.estado === 'completado' && onViewRecommendations && (
+                            <Tooltip title="Ver recomendaciones personalizadas" arrow>
+                              <Button
+                                size="small"
+                                startIcon={<Lightbulb />}
+                                onClick={() => onViewRecommendations(attempt)}
+                                variant="contained"
+                                sx={{
+                                  minWidth: 'auto',
+                                  px: 1.5,
+                                  py: 0.5,
+                                  fontSize: '0.75rem',
+                                  fontWeight: 600,
+                                  textTransform: 'none',
+                                  background: 'linear-gradient(135deg, #667eea 0%, #764ba2 100%)',
+                                  boxShadow: 1,
+                                  '&:hover': {
+                                    background: 'linear-gradient(135deg, #5568d3 0%, #633d8a 100%)',
+                                    boxShadow: 2,
+                                    transform: 'translateY(-1px)',
+                                  },
+                                  transition: 'all 0.2s ease-in-out',
+                                }}
+                              >
+                                Recomendaciones
+                              </Button>
+                            </Tooltip>
+                          )}
+                        </Stack>
                       </TableCell>
                     </TableRow>
-                  ))}
+                  ));
+                })()}
               </TableBody>
             </Table>
           </TableContainer>
