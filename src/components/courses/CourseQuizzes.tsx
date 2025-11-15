@@ -170,9 +170,6 @@ export default function CourseQuizzes({ cuestionarios, loading }: CourseQuizzesP
                     Tiempo límite
                   </TableCell>
                   <TableCell sx={{ fontWeight: 600 }} align="center">
-                    Intentos
-                  </TableCell>
-                  <TableCell sx={{ fontWeight: 600 }} align="center">
                     Puntos
                   </TableCell>
                   <TableCell sx={{ fontWeight: 600 }} align="right">
@@ -249,12 +246,6 @@ export default function CourseQuizzes({ cuestionarios, loading }: CourseQuizzesP
                             {formatDuration(cuestionario.duracion_minutos)}
                           </Typography>
                         </Box>
-                      </TableCell>
-
-                      <TableCell align="center">
-                        <Typography variant="body2">
-                          {cuestionario.intentos_permitidos || 'Ilimitado'}
-                        </Typography>
                       </TableCell>
 
                       <TableCell align="center">
