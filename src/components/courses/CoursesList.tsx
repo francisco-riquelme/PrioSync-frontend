@@ -124,9 +124,9 @@ export default function CoursesList() {
             onChange={(e) => setDurationFilter(e.target.value)}
           >
             <MenuItem value="todos">Todos</MenuItem>
-            <MenuItem value="corto">Corto (&lt;30h)</MenuItem>
-            <MenuItem value="medio">Medio (30-120h)</MenuItem>
-            <MenuItem value="largo">Largo (&gt;120h)</MenuItem>
+            <MenuItem value="corto">Corto (&lt;30 mins)</MenuItem>
+            <MenuItem value="medio">Medio (30 mins - 2 hrs)</MenuItem>
+            <MenuItem value="largo">Largo (&gt;2 hrs)</MenuItem>
           </Select>
         </FormControl>
 
