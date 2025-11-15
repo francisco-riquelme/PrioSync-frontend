@@ -120,8 +120,8 @@ export default function CourseDetail({ courseId }: CourseDetailProps) {
         console.log('🔍 DEBUG - whatsappUrl:', whatsappUrl);
         console.log('🔍 DEBUG - shareUrl:', shareData.shareUrl);
         
-        // Mostrar alert con la URL para debugging
-        alert(`URL generada: ${shareData.shareUrl}\nWhatsApp URL: ${whatsappUrl.substring(0, 200)}...`);
+       // Mostrar alert con la URL para debugging
+       // alert(`URL generada: ${shareData.shareUrl}\nWhatsApp URL: ${whatsappUrl.substring(0, 200)}...`);
         
         // Abrir WhatsApp
         window.open(whatsappUrl, '_blank');
