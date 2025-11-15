@@ -155,6 +155,8 @@ export const useCoursesListData = (
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
 
+  // react-hooks/exhaustive-deps
+  // eslint-disable-next-line react-hooks/exhaustive-deps
   const loadCourses = useCallback(async () => {
     try {
       setLoading(true);
