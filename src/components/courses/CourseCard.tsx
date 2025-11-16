@@ -89,10 +89,23 @@ export const CourseCard = ({ course, onCourseClick, progreso }: CourseCardProps)
             color: 'primary.main',
             borderBottom: '1px solid',
             borderColor: 'divider',
+            px: 2, // Padding horizontal para evitar que el texto esté pegado a los bordes
           }}
         >
           <SchoolIcon sx={{ fontSize: 48, mb: 1 }} />
-          <Typography variant="body2" color="primary.main" sx={{ fontWeight: 500 }}>
+          <Typography 
+            variant="body2" 
+            color="primary.main" 
+            sx={{ 
+              fontWeight: 500,
+              textAlign: 'center',
+              px: 1, // Padding horizontal adicional en el texto
+              wordBreak: 'break-word',
+              overflowWrap: 'break-word',
+              hyphens: 'auto',
+              maxWidth: '100%', // Asegurar que no exceda el ancho del contenedor
+            }}
+          >
             {course.titulo}
           </Typography>
         </Box>
@@ -104,10 +117,11 @@ export const CourseCard = ({ course, onCourseClick, progreso }: CourseCardProps)
           gridTemplateRows: progreso !== undefined ? 'auto auto 1fr auto auto' : 'auto auto 1fr auto',
           gap: 1,
           alignContent: 'start',
+          p: 2.5, // Padding explícito para evitar que el texto esté pegado al borde
         }}
       >
         {/* Chips de nivel y duración */}
-        <Box sx={{ display: 'flex', gap: 1 }}>
+        <Box sx={{ display: 'flex', gap: 1, flexWrap: 'wrap' }}>
           {course.nivel_dificultad && (
             <Chip 
               label={formatDifficultyLevel(course.nivel_dificultad)} 
@@ -124,7 +138,16 @@ export const CourseCard = ({ course, onCourseClick, progreso }: CourseCardProps)
         </Box>
         
         {/* Título del curso */}
-        <Typography variant="h6" sx={{ fontWeight: 600 }}>
+        <Typography 
+          variant="h6" 
+          sx={{ 
+            fontWeight: 600,
+            wordBreak: 'break-word',
+            overflowWrap: 'break-word',
+            hyphens: 'auto',
+            lineHeight: 1.3,
+          }}
+        >
           {course.titulo}
         </Typography>
         
@@ -139,6 +162,8 @@ export const CourseCard = ({ course, onCourseClick, progreso }: CourseCardProps)
             WebkitBoxOrient: 'vertical',
             lineHeight: 1.4,
             alignSelf: 'start',
+            wordBreak: 'break-word',
+            overflowWrap: 'break-word',
           }}
         >
           {course.descripcion}
