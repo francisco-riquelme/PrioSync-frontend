@@ -6,6 +6,7 @@ import { useUser } from '@/contexts/UserContext';
 import ProfileHeader from './ProfileHeader';
 import PasswordChangeCard from './PasswordChangeCard';
 import ActivityHistory from './ActivityHistory';
+import QuizAchievements from './QuizAchievements';
 
 interface TabPanelProps {
   children?: React.ReactNode;
@@ -70,6 +71,7 @@ export default function UserProfile() {
         <Tabs value={tabValue} onChange={handleTabChange}>
           <Tab label="Información Personal" />
           <Tab label="Historial de Actividad" />
+          <Tab label="Logros de Cuestionarios" />
         </Tabs>
       </Box>
 
@@ -93,6 +95,11 @@ export default function UserProfile() {
       {/* Tab Panel 2: Historial de Actividad */}
       <TabPanel value={tabValue} index={1}>
         <ActivityHistory />
+      </TabPanel>
+
+      {/* Tab Panel 3: Logros de Cuestionarios */}
+      <TabPanel value={tabValue} index={2}>
+        <QuizAchievements />
       </TabPanel>
     </Box>
   );
