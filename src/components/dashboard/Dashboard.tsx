@@ -1,9 +1,10 @@
 'use client';
 
-import React, { useState, useCallback } from 'react';
+import React, { useState, useMemo } from 'react';
 import { useRouter } from 'next/navigation';
 import { useUser } from '@/contexts/UserContext';
 import { useCursosConProgreso } from '@/hooks/useCursosConProgreso';
+import { useActividadUsuario } from '@/hooks/useActividadUsuario';
 import {
   Box,
   Card,
@@ -17,40 +18,50 @@ import {
   Alert,
   Dialog,
   DialogContent,
+  List,
+  ListItem,
+  ListItemText,
+  Divider,
 } from '@mui/material';
-import { Person as PersonIcon, CloudUpload as CloudUploadIcon } from '@mui/icons-material';
+import { Person as PersonIcon, CloudUpload as CloudUploadIcon, School as SchoolIcon } from '@mui/icons-material';
 import ImportCourseModal from './ImportCourseModal';
+import { getActividadIcon } from '@/components/profile/profileUtils';
+import { formatearFechaAbsoluta } from '@/utils/dateHelpers';
 
 export default function Dashboard() {
   const router = useRouter();
   const { userData, loading, refreshUser } = useUser();
   const { cursos, loading: cursosLoading, error: cursosError, recargar } = useCursosConProgreso();
+  const { actividades, loading: actividadesLoading, error: actividadesError } = useActividadUsuario();
   
-  const [aiAdvice, setAiAdvice] = useState<string>('**Evalúa tu conocimiento activamente sin consultar tus apuntes para identificar lagunas y reforzar el aprendizaje.**');
-  const [loadingAdvice, setLoadingAdvice] = useState(false);
   const [importModalOpen, setImportModalOpen] = useState(false);
   const [isWaitingForWorkflow, setIsWaitingForWorkflow] = useState(false);
   
-  // Generate AI advice function
-  const generateAIAdvice = useCallback(async () => {
-    const advices = [
-      "Evalúa tu conocimiento activamente sin consultar tus apuntes para identificar lagunas y reforzar el aprendizaje.",
-      "Dedica 25 minutos de estudio concentrado seguidos de 5 minutos de descanso (Técnica Pomodoro).",
-      "Enseña lo que has aprendido a alguien más. Es una excelente forma de consolidar conocimientos.",
-      "Revisa tus notas al final del día para reforzar la memoria a largo plazo.",
-      "Establece metas de estudio pequeñas y alcanzables para mantener la motivación alta.",
-    ];
+  // Obtener cursos activos con progreso, ordenados de mayor a menor progreso
+  const cursosActivosConProgreso = useMemo(() => {
+    if (!userData?.Cursos || !cursos) return [];
+    
+    // Filtrar cursos activos
+    const cursosActivos = userData.Cursos.filter(curso => curso.estado === 'activo');
+    
+    // Combinar con datos de progreso
+    const cursosConProgreso = cursosActivos.map(curso => {
+      const progresoData = cursos.find(c => c.cursoId === curso.cursoId);
+      return {
+        ...curso,
+        progreso: progresoData?.progreso || 0,
+      };
+    });
+    
+    // Ordenar de mayor a menor progreso
+    return cursosConProgreso.sort((a, b) => b.progreso - a.progreso);
+  }, [userData?.Cursos, cursos]);
 
-    // Simular procesamiento de IA
-    await new Promise((resolve) => setTimeout(resolve, 800));
-
-    // Usar Math.random solo en el cliente
-    let randomAdvice = advices[0];
-    if (typeof window !== 'undefined') {
-      randomAdvice = advices[Math.floor(Math.random() * advices.length)];
-    }
-    return randomAdvice;
-  }, []);
+  // Obtener las 5 actividades más recientes
+  const actividadesRecientes = useMemo(() => {
+    if (!actividades || actividades.length === 0) return [];
+    return actividades.slice(0, 5);
+  }, [actividades]);
   
   // Guard: loading/auth
   if (loading) {
@@ -63,20 +74,12 @@ export default function Dashboard() {
 
   const displayName = userData?.nombre || 'Usuario';
 
-  const handleGenerateAdvice = async () => {
-    setLoadingAdvice(true);
-    try {
-      const advice = await generateAIAdvice();
-      setAiAdvice(`**${advice}**`);
-    } catch (error) {
-      console.error('Error generating advice:', error);
-    } finally {
-      setLoadingAdvice(false);
-    }
-  };
-
   const navigateToProfile = () => {
     router.push('/profile');
+  };
+
+  const navigateToCourse = (cursoId: string) => {
+    router.push(`/courses/${cursoId}`);
   };
 
   const handleImportSuccess = async () => {
@@ -207,24 +210,32 @@ export default function Dashboard() {
           </CardContent>
         </Card>
 
-        {/* Progreso de cursos */}
+        {/* Progreso de Cursos (fusionado con Cursos Activos) */}
         <Card>
           <CardContent>
             <Box sx={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', mb: 2 }}>
               <Typography variant="h6" sx={{ fontWeight: 600 }}>
                 Progreso de Cursos
               </Typography>
-              <Button
-                variant="outlined"
-                size="small"
-                startIcon={<CloudUploadIcon />}
-                onClick={() => setImportModalOpen(true)}
-              >
-                Importar Curso
-              </Button>
+              <Box sx={{ display: 'flex', alignItems: 'center', gap: 1 }}>
+                <Chip
+                  label={`${cursosActivosConProgreso.length} ${cursosActivosConProgreso.length === 1 ? 'curso' : 'cursos'}`}
+                  size="small"
+                  color="primary"
+                  variant="outlined"
+                />
+                <Button
+                  variant="outlined"
+                  size="small"
+                  startIcon={<CloudUploadIcon />}
+                  onClick={() => setImportModalOpen(true)}
+                >
+                  Importar Curso
+                </Button>
+              </Box>
             </Box>
             <Box sx={{ mt: 2 }}>
-              {cursosLoading ? (
+              {cursosLoading || loading || !userData ? (
                 <Box sx={{ display: 'flex', justifyContent: 'center', py: 2 }}>
                   <CircularProgress size={24} />
                 </Box>
@@ -232,38 +243,68 @@ export default function Dashboard() {
                 <Alert severity="error" sx={{ mb: 2 }}>
                   {cursosError}
                 </Alert>
-              ) : cursos.length === 0 ? (
+              ) : cursosActivosConProgreso.length === 0 ? (
                 <Typography variant="body2" color="text.secondary">
-                  No tienes cursos inscritos aún.
+                  No tienes cursos activos actualmente.
                 </Typography>
               ) : (
-                cursos.map((curso) => {
-                  return (
-                    <Box key={curso.cursoId} sx={{ mb: 2 }}>
-                      <Box sx={{ display: 'flex', justifyContent: 'space-between', mb: 0.5 }}>
-                        <Typography variant="body2" color="text.secondary">
-                          {curso.titulo}
-                        </Typography>
-                        <Typography variant="body2" color="text.secondary">
-                          {curso.progreso}%
-                        </Typography>
-                      </Box>
-                      <LinearProgress
-                        variant="determinate"
-                        value={curso.progreso}
+                cursosActivosConProgreso.map((curso, index) => (
+                  <Box
+                    key={curso.cursoId}
+                    sx={{
+                      mb: 2,
+                      p: 1.5,
+                      borderRadius: 1,
+                      cursor: 'pointer',
+                      '&:hover': {
+                        backgroundColor: 'action.hover',
+                      },
+                    }}
+                    onClick={() => navigateToCourse(curso.cursoId)}
+                  >
+                    <Box sx={{ display: 'flex', alignItems: 'center', mb: 1 }}>
+                      <Avatar
                         sx={{
-                          height: 8,
-                          borderRadius: 3,
-                          backgroundColor: 'grey.200',
-                          '& .MuiLinearProgress-bar': {
-                            borderRadius: 3,
-                            backgroundColor: 'success.main',
-                          },
+                          width: 40,
+                          height: 40,
+                          backgroundColor: 'primary.main',
+                          mr: 2,
                         }}
-                      />
+                      >
+                        <SchoolIcon />
+                      </Avatar>
+                      <Box sx={{ flex: 1 }}>
+                        <Box sx={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', mb: 0.5 }}>
+                          <Typography variant="body2" sx={{ fontWeight: 500 }}>
+                            {curso.titulo}
+                          </Typography>
+                          <Typography variant="body2" color="text.secondary" sx={{ fontWeight: 600 }}>
+                            {curso.progreso}%
+                          </Typography>
+                        </Box>
+                        {curso.nivel_dificultad && (
+                          <Typography variant="caption" color="text.secondary" sx={{ display: 'block', mb: 1 }}>
+                            {curso.nivel_dificultad.charAt(0).toUpperCase() + curso.nivel_dificultad.slice(1)}
+                          </Typography>
+                        )}
+                        <LinearProgress
+                          variant="determinate"
+                          value={curso.progreso}
+                          sx={{
+                            height: 8,
+                            borderRadius: 3,
+                            backgroundColor: 'grey.200',
+                            '& .MuiLinearProgress-bar': {
+                              borderRadius: 3,
+                              backgroundColor: 'success.main',
+                            },
+                          }}
+                        />
+                      </Box>
                     </Box>
-                  );
-                })
+                    {index < cursosActivosConProgreso.length - 1 && <Divider sx={{ mt: 2 }} />}
+                  </Box>
+                ))
               )}
             </Box>
           </CardContent>
@@ -274,75 +315,61 @@ export default function Dashboard() {
       <Box
         sx={{
           display: 'grid',
-          gridTemplateColumns: { xs: '1fr', md: '1fr 1fr' },
+          gridTemplateColumns: { xs: '1fr', md: '1fr' },
           gap: 3,
         }}
       >
-        {/* Asistente de Estudio IA */}
+        {/* Historial de Actividades */}
         <Card>
           <CardContent>
-            <Typography variant="h6" gutterBottom sx={{ fontWeight: 600 }}>
-              Asistente de Estudio IA
+            <Typography variant="h6" gutterBottom sx={{ fontWeight: 600, mb: 2 }}>
+              Historial de Actividades
             </Typography>
-            
-            <Button
-              variant="contained"
-              fullWidth
-              onClick={handleGenerateAdvice}
-              disabled={loadingAdvice}
-              sx={{
-                mb: 2,
-                py: 1.5,
-                backgroundColor: 'primary.main',
-                '&:hover': {
-                  backgroundColor: 'primary.dark',
-                },
-              }}
-            >
-              {loadingAdvice ? (
-                <Box sx={{ display: 'flex', alignItems: 'center', gap: 1 }}>
-                  <CircularProgress size={16} color="inherit" />
-                  Generando...
-                </Box>
-              ) : (
-                'Dame un consejo'
-              )}
-            </Button>
-
-            <Box
-              sx={{
-                backgroundColor: 'primary.light',
-                color: 'primary.contrastText',
-                p: 2,
-                borderRadius: 2
-              }}
-            >
-              <Typography
-                variant="body2"
-                sx={{
-                  fontStyle: 'italic',
-                  lineHeight: 1.6,
-                }}
-              >
-                {aiAdvice}
+            {actividadesLoading ? (
+              <Box sx={{ display: 'flex', justifyContent: 'center', py: 2 }}>
+                <CircularProgress size={24} />
+              </Box>
+            ) : actividadesError ? (
+              <Alert severity="error" sx={{ mb: 2 }}>
+                {actividadesError}
+              </Alert>
+            ) : actividadesRecientes.length === 0 ? (
+              <Typography variant="body2" color="text.secondary" sx={{ py: 2 }}>
+                No hay actividades registradas todavía.
               </Typography>
-            </Box>
-          </CardContent>
-        </Card>
-
-        {/* Recomendaciones */}
-        <Card>
-          <CardContent>
-            <Typography variant="h6" gutterBottom sx={{ fontWeight: 600 }}>
-              Recomendaciones para ti
-            </Typography>
-            <Typography
-              variant="body2"
-              color="text.secondary"
-              sx={{ mt: 1 }}
-            >
-              ¡Completa más cursos para recibir recomendaciones!
-            </Typography>
+            ) : (
+              <List sx={{ pt: 0 }}>
+                {actividadesRecientes.map((actividad, index) => (
+                  <React.Fragment key={actividad.id}>
+                    <ListItem sx={{ px: 0, py: 1.5 }}>
+                      <Box sx={{ display: 'flex', alignItems: 'center', mr: 2 }}>
+                        {getActividadIcon(actividad.tipo)}
+                      </Box>
+                      <ListItemText
+                        primary={
+                          <Typography variant="body2" sx={{ fontWeight: 500 }}>
+                            {actividad.titulo}
+                          </Typography>
+                        }
+                        secondary={
+                          <Typography variant="caption" color="text.secondary">
+                            {actividad.subtitulo}
+                          </Typography>
+                        }
+                      />
+                      <Typography
+                        variant="caption"
+                        color="text.secondary"
+                        sx={{ minWidth: 100, textAlign: 'right', fontSize: '0.7rem' }}
+                      >
+                        {formatearFechaAbsoluta(actividad.fecha)}
+                      </Typography>
+                    </ListItem>
+                    {index < actividadesRecientes.length - 1 && <Divider />}
+                  </React.Fragment>
+                ))}
+              </List>
+            )}
           </CardContent>
         </Card>
       </Box>
