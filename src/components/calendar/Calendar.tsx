@@ -398,7 +398,7 @@ const Calendar: React.FC = () => {
               Mi Calendario Académico
             </Typography>
             <Typography variant="body2" color="text.secondary">
-              {userData?.nombre && `Calendario de ${userData.nombre.split(' ')[0]}`} • {userData?.InscripcionesCurso?.length || 0} cursos activos
+              {userData?.nombre && `Calendario de ${userData.nombre.split(' ')[0]}`} • {userData?.Cursos?.filter(curso => curso.estado === 'activo').length || 0} cursos activos
             </Typography>
           </Box>
           <Box sx={{ textAlign: 'right' }}>

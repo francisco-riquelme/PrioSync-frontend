@@ -14,11 +14,14 @@ export interface ActividadUsuario {
   cursoId?: string; // ID del curso asociado
   cursoNombre?: string; // Nombre del curso asociado
   metadata?: {
-    puntaje?: number;
+    puntaje?: number; // Porcentaje
+    puntajeReal?: number; // Puntaje real obtenido
+    puntosMaximos?: number; // Puntos máximos del cuestionario
     aprobado?: boolean;
     duracion?: number;
     progreso?: number;
     estado?: string;
+    tipoQuiz?: string; // Tipo de cuestionario (EVALUACION, PRACTICA, etc.)
   };
 }
 
@@ -156,6 +159,9 @@ export function useActividadUsuario() {
                 cursoNombre: tituloCurso,
                 metadata: {
                   puntaje: porcentaje,
+                  puntajeReal: puntaje, // Puntaje real obtenido
+                  puntosMaximos: puntajeMaximo, // Puntos máximos del cuestionario
+                  tipoQuiz: tipoQuiz, // Tipo de cuestionario
                   aprobado: progreso.aprobado || false,
                 },
               });

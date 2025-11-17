@@ -25,6 +25,7 @@ import { RegistrationFormData } from '../modals/registration/types';
 import MessageDialog from '../common/MessageDialog';
 import { generateRecurringStudySessions, createSessionsInBatch } from '@/utils/studySessionUtils';
 import { useStudySessions } from '@/components/courses/hooks/useStudySessions';
+import { ENABLE_REGISTRATION } from '@/config/registration';
 
 export default function LandingPage() {
   const router = useRouter();
@@ -53,6 +54,18 @@ export default function LandingPage() {
   });
 
   const handleWelcomeComplete = (data: WelcomeFormData) => {
+    // Solo abrir el modal de registro si está habilitado
+    if (!ENABLE_REGISTRATION) {
+      setMessageDialog({
+        open: true,
+        type: 'info',
+        title: 'Registro Deshabilitado',
+        message: 'El registro de nuevos usuarios está temporalmente deshabilitado. Por favor, contacta al administrador si necesitas acceso.',
+        onConfirm: () => setMessageDialog({ ...messageDialog, open: false }),
+      });
+      setWelcomeModalOpen(false);
+      return;
+    }
     setWelcomeData(data);
     setWelcomeModalOpen(false);
     setRegistrationModalOpen(true);

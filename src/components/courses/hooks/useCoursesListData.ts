@@ -155,8 +155,6 @@ export const useCoursesListData = (
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
 
-  // react-hooks/exhaustive-deps
-  // eslint-disable-next-line react-hooks/exhaustive-deps
   const loadCourses = useCallback(async () => {
     try {
       setLoading(true);
@@ -322,12 +320,7 @@ export const useCoursesListData = (
     } finally {
       setLoading(false);
     }
-  }, [
-    params?.usuarioId,
-    params?.levelFilter,
-    params?.durationFilter,
-    params?.searchTerm,
-  ]);
+  }, [params]);
 
   // Load courses on mount and when params change
   useEffect(() => {
