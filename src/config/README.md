@@ -1,8 +1,25 @@
-# Security Patterns Configuration
+# Configuración del Sistema
 
-Este directorio contiene la configuración de seguridad para prevenir inyección de prompts en el sistema de transcripción.
+Este directorio contiene las configuraciones del sistema, incluyendo seguridad y control de acceso.
 
 ## Archivos
+
+### `registration.ts`
+Configuración para controlar el registro de nuevos usuarios en la plataforma.
+
+**Propósito**: Permite deshabilitar el registro de nuevos usuarios para evitar que usuarios no autorizados se registren y agoten recursos (tokens LLM, etc.), especialmente útil cuando la aplicación está desplegada públicamente.
+
+**Uso**:
+- Para **deshabilitar** el registro: `export const ENABLE_REGISTRATION = false;`
+- Para **habilitar** el registro: `export const ENABLE_REGISTRATION = true;`
+
+**Efectos cuando está deshabilitado**:
+- La página `/auth/register` redirige automáticamente a `/auth/login`
+- Los enlaces de "Crear cuenta" se ocultan en el formulario de login
+- El modal de registro en la landing page muestra un mensaje informativo
+- Todos los intentos de registro son bloqueados con un mensaje apropiado
+
+**Mensaje personalizable**: El mensaje que se muestra cuando el registro está deshabilitado puede modificarse en `REGISTRATION_DISABLED_MESSAGE`.
 
 ### `security-patterns.json`
 Contiene los patrones de detección para diferentes tipos de ataques de inyección de prompts:

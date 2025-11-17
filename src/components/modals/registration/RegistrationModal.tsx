@@ -30,6 +30,7 @@ import {
 } from './types';
 import { WelcomeFormData } from '../welcome/types';
 import { authService } from '@/utils/services/auth';
+import { ENABLE_REGISTRATION, REGISTRATION_DISABLED_MESSAGE } from '@/config/registration';
 
 // Function to split name into nombre and apellido based on word count
 const splitName = (fullName: string): { nombre: string; apellido: string } => {
@@ -176,6 +177,12 @@ export default function RegistrationModal({ open, onClose, welcomeData }: Regist
       password: false, 
       confirmPassword: false 
     });
+
+    // Verificación de seguridad: si el registro está deshabilitado, no permitir el submit
+    if (!ENABLE_REGISTRATION) {
+      setLocalError(REGISTRATION_DISABLED_MESSAGE);
+      return;
+    }
 
     // Validar nombre
     if (!validateName(formData.nombre)) {

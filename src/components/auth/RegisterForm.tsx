@@ -26,6 +26,7 @@ import {
 import { useAuth } from './hooks/auth';
 import authService from '@/utils/services/auth';
 import Link from 'next/link';
+import { ENABLE_REGISTRATION, REGISTRATION_DISABLED_MESSAGE } from '@/config/registration';
 
 // Configuración de validación
 const VALIDATION_CONFIG = {
@@ -89,6 +90,12 @@ export default function RegisterForm() {
       return;
     }
 
+    // Verificación adicional de seguridad
+    if (!ENABLE_REGISTRATION) {
+      setLocalError(REGISTRATION_DISABLED_MESSAGE);
+      return;
+    }
+
     const result = await register({ email, password });
 
     if (result.success) {
@@ -124,6 +131,50 @@ export default function RegisterForm() {
 
   if (!mounted) {
     return null;
+  }
+
+  // Si el registro está deshabilitado, mostrar mensaje
+  if (!ENABLE_REGISTRATION) {
+    return (
+      <Box
+        sx={{
+          minHeight: '100vh',
+          display: 'flex',
+          alignItems: 'center',
+          justifyContent: 'center',
+          backgroundColor: '#f5f5f5',
+          padding: 2,
+        }}
+      >
+        <Container maxWidth="sm">
+          <Card
+            sx={{
+              borderRadius: 3,
+              boxShadow: '0 8px 32px rgba(0,0,0,0.1)',
+              overflow: 'hidden',
+            }}
+          >
+            <CardContent sx={{ p: 4, textAlign: 'center' }}>
+              <Error sx={{ fontSize: 64, color: 'error.main', mb: 2 }} />
+              <Typography variant="h5" sx={{ mb: 2, fontWeight: 600 }}>
+                Registro Deshabilitado
+              </Typography>
+              <Alert severity="info" sx={{ mb: 3 }}>
+                {REGISTRATION_DISABLED_MESSAGE}
+              </Alert>
+              <Button
+                variant="contained"
+                fullWidth
+                onClick={() => router.push('/auth/login')}
+                sx={{ mt: 2 }}
+              >
+                Ir a Iniciar Sesión
+              </Button>
+            </CardContent>
+          </Card>
+        </Container>
+      </Box>
+    );
   }
 
   const displayError = localError || registerState.error;
