@@ -1,6 +1,7 @@
 'use client';
 
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
+import { useSearchParams } from 'next/navigation';
 import { Box, Tabs, Tab, CircularProgress, Typography } from '@mui/material';
 import { useUser } from '@/contexts/UserContext';
 import ProfileHeader from './ProfileHeader';
@@ -32,7 +33,19 @@ function TabPanel(props: TabPanelProps) {
 
 export default function UserProfile() {
   const { userData, loading, updateUser } = useUser();
+  const searchParams = useSearchParams();
   const [tabValue, setTabValue] = useState(0);
+
+  // Leer el parámetro de query string 'tab' al montar el componente
+  useEffect(() => {
+    const tabParam = searchParams.get('tab');
+    if (tabParam) {
+      const tabIndex = parseInt(tabParam, 10);
+      if (!isNaN(tabIndex) && tabIndex >= 0 && tabIndex <= 2) {
+        setTabValue(tabIndex);
+      }
+    }
+  }, [searchParams]);
 
   const handleTabChange = (event: React.SyntheticEvent, newValue: number) => {
     setTabValue(newValue);
