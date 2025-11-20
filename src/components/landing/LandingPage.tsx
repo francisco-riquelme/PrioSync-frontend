@@ -326,7 +326,6 @@ export default function LandingPage() {
             backgroundRepeat: 'no-repeat',
             zIndex: 1,
           },
-
         }}
       >
         <Container maxWidth="lg" sx={{ position: 'relative', zIndex: 3 }}>
