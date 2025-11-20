@@ -39,18 +39,9 @@ function useIntersectionObserver(
   // Memorizar las opciones finales usando useMemo
   // Esto evita que se cree un nuevo objeto en cada render
   // Solo recreamos si las propiedades relevantes de options cambian
-  // eslint-disable-next-line react-hooks/exhaustive-deps
   const observerOptions = useMemo(() => {
     return { threshold: 0.1, ...options };
-  }, [
-    // Depender solo de las propiedades que realmente importan
-    // Si options es siempre el mismo objeto vacío {}, esto solo se calculará una vez
-    // No incluimos 'options' directamente para evitar recreaciones innecesarias
-    // cuando el objeto cambia por referencia pero no por valor
-    options.threshold,
-    options.root,
-    options.rootMargin,
-  ]);
+  }, [options]);
 
   useEffect(() => {
     const element = ref.current;
@@ -316,12 +307,12 @@ export default function LandingPage() {
       <Box 
         id="inicio"
         sx={{ 
-          background: (theme) => `linear-gradient(135deg, ${theme.palette.primary.main} 0%, ${theme.palette.primary.dark} 100%)`,
           py: { xs: 6, md: 10 },
           color: 'white',
           textAlign: 'center',
           position: 'relative',
           overflow: 'hidden',
+          backgroundColor: 'primary.main',
           '&::before': {
             content: '""',
             position: 'absolute',
@@ -329,12 +320,25 @@ export default function LandingPage() {
             left: 0,
             right: 0,
             bottom: 0,
-            background: 'radial-gradient(circle at 20% 50%, rgba(255,255,255,0.1) 0%, transparent 50%)',
-            pointerEvents: 'none',
+            backgroundImage: 'url(/images/image-pricipal.avif)',
+            backgroundSize: 'cover',
+            backgroundPosition: 'center',
+            backgroundRepeat: 'no-repeat',
+            zIndex: 1,
+          },
+          '&::after': {
+            content: '""',
+            position: 'absolute',
+            top: 0,
+            left: 0,
+            right: 0,
+            bottom: 0,
+            background: (theme) => `linear-gradient(135deg, ${theme.palette.primary.main}66 0%, ${theme.palette.primary.dark}88 100%)`,
+            zIndex: 2,
           }
         }}
       >
-        <Container maxWidth="lg" sx={{ position: 'relative', zIndex: 1 }}>
+        <Container maxWidth="lg" sx={{ position: 'relative', zIndex: 3 }}>
           <Fade in timeout={1000}>
             <Box>
               <Typography 
