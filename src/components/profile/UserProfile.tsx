@@ -98,7 +98,10 @@ export default function UserProfile() {
           }}
         >
           {/* Información del Usuario */}
-          <ProfileHeader userData={userData} onUpdateUser={handleUpdateUser} />
+          <ProfileHeader 
+            userData={userData ? { ...userData, usuarioId: userData.usuarioId } : null} 
+            onUpdateUser={handleUpdateUser} 
+          />
 
           {/* Cambiar Contraseña */}
           <PasswordChangeCard />
