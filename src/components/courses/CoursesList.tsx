@@ -54,13 +54,16 @@ export default function CoursesList() {
     return map;
   }, [cursosConProgreso]);
 
-  // Use optimized hook with filters
-  const { courses, loading, error } = useCoursesListData({
+  // Memoize params to avoid unnecessary re-renders
+  const coursesParams = useMemo(() => ({
     searchTerm: debouncedSearchTerm,
     levelFilter,
     durationFilter,
     usuarioId: userData?.usuarioId,
-  });
+  }), [debouncedSearchTerm, levelFilter, durationFilter, userData?.usuarioId]);
+
+  // Use optimized hook with filters
+  const { courses, loading, error } = useCoursesListData(coursesParams);
 
   const handleCourseClick = (courseId: number | string) => {
     router.push(`/courses/${courseId}`);
@@ -124,9 +127,9 @@ export default function CoursesList() {
             onChange={(e) => setDurationFilter(e.target.value)}
           >
             <MenuItem value="todos">Todos</MenuItem>
-            <MenuItem value="corto">Corto (&lt;30h)</MenuItem>
-            <MenuItem value="medio">Medio (30-120h)</MenuItem>
-            <MenuItem value="largo">Largo (&gt;120h)</MenuItem>
+            <MenuItem value="corto">Corto (&lt;30 mins)</MenuItem>
+            <MenuItem value="medio">Medio (30 mins - 2 hrs)</MenuItem>
+            <MenuItem value="largo">Largo (&gt;2 hrs)</MenuItem>
           </Select>
         </FormControl>
 
@@ -141,20 +144,18 @@ export default function CoursesList() {
       </Box>
 
       {/* Estados de loading y error */}
-      {loading && (
-        <Box sx={{ display: 'flex', justifyContent: 'center', py: 4 }}>
-          <CircularProgress />
-        </Box>
-      )}
-      
       {error && (
         <Alert severity="error" sx={{ mb: 3 }}>
           {error}
         </Alert>
       )}
 
-      {/* Renderizar contenido solo si no hay loading ni error */}
-      {!loading && !error && (
+      {/* Renderizar contenido - mantener layout durante loading */}
+      {loading ? (
+        <Box sx={{ display: 'flex', justifyContent: 'center', py: 8 }}>
+          <CircularProgress />
+        </Box>
+      ) : (
         <>
           {/* Lista de cursos */}
           {courses.length > 0 ? (

@@ -1,8 +1,9 @@
 'use client';
 
-import { useEffect } from 'react';
+import { useEffect, Suspense } from 'react';
 import { useRouter } from 'next/navigation';
 import { useUser } from '@/contexts/UserContext';
+import { CircularProgress, Box } from '@mui/material';
 import AppLayout from '../../components/layout/AppLayout';
 import UserProfile from '../../components/profile/UserProfile';
 
@@ -21,7 +22,13 @@ export default function ProfilePage() {
 
   return (
     <AppLayout>
-      <UserProfile />
+      <Suspense fallback={
+        <Box sx={{ display: 'flex', justifyContent: 'center', alignItems: 'center', minHeight: '50vh' }}>
+          <CircularProgress />
+        </Box>
+      }>
+        <UserProfile />
+      </Suspense>
     </AppLayout>
   );
 }

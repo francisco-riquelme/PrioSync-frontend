@@ -26,6 +26,7 @@ import { useAuth } from './hooks/auth';
 import authService from '@/utils/services/auth';
 import Link from 'next/link';
 import { useUser } from '@/contexts/UserContext';
+import { ENABLE_REGISTRATION } from '@/config/registration';
 
 // Configuración de validación
 const VALIDATION_CONFIG = {
@@ -349,26 +350,28 @@ export default function LoginForm() {
               </Button>
             </Box>
 
-            {/* Sign up link */}
-            <Box sx={{ textAlign: 'center', mt: 3 }}>
-              <Typography variant="body2" color="text.secondary">
-                ¿No tienes una cuenta?{' '}
-                <MuiLink
-                  component={Link}
-                  href="/auth/register"
-                  sx={{
-                    color: 'primary.main',
-                    textDecoration: 'none',
-                    fontWeight: 500,
-                    '&:hover': {
-                      textDecoration: 'underline',
-                    },
-                  }}
-                >
-                  Crear cuenta
-                </MuiLink>
-              </Typography>
-            </Box>
+            {/* Sign up link - Solo mostrar si el registro está habilitado */}
+            {ENABLE_REGISTRATION && (
+              <Box sx={{ textAlign: 'center', mt: 3 }}>
+                <Typography variant="body2" color="text.secondary">
+                  ¿No tienes una cuenta?{' '}
+                  <MuiLink
+                    component={Link}
+                    href="/auth/register"
+                    sx={{
+                      color: 'primary.main',
+                      textDecoration: 'none',
+                      fontWeight: 500,
+                      '&:hover': {
+                        textDecoration: 'underline',
+                      },
+                    }}
+                  >
+                    Crear cuenta
+                  </MuiLink>
+                </Typography>
+              </Box>
+            )}
           </CardContent>
         </Card>
       </Container>
