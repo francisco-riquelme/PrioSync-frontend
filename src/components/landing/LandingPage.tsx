@@ -1,6 +1,6 @@
 "use client";
 
-import React, { useState, useEffect, useRef } from 'react';
+import React, { useState, useEffect, useRef, useMemo } from 'react';
 import { useRouter } from 'next/navigation';
 import { useUser } from '@/contexts/UserContext';
 import { 
@@ -30,8 +30,27 @@ import { useStudySessions } from '@/components/courses/hooks/useStudySessions';
 import { ENABLE_REGISTRATION } from '@/config/registration';
 
 // Hook para detectar cuando un elemento entra en el viewport
-function useIntersectionObserver(ref: React.RefObject<HTMLElement | null>, options = {}) {
+function useIntersectionObserver(
+  ref: React.RefObject<HTMLElement | null>, 
+  options: IntersectionObserverInit = {}
+) {
   const [isVisible, setIsVisible] = useState(false);
+
+  // Memorizar las opciones finales usando useMemo
+  // Esto evita que se cree un nuevo objeto en cada render
+  // Solo recreamos si las propiedades relevantes de options cambian
+  // eslint-disable-next-line react-hooks/exhaustive-deps
+  const observerOptions = useMemo(() => {
+    return { threshold: 0.1, ...options };
+  }, [
+    // Depender solo de las propiedades que realmente importan
+    // Si options es siempre el mismo objeto vacío {}, esto solo se calculará una vez
+    // No incluimos 'options' directamente para evitar recreaciones innecesarias
+    // cuando el objeto cambia por referencia pero no por valor
+    options.threshold,
+    options.root,
+    options.rootMargin,
+  ]);
 
   useEffect(() => {
     const element = ref.current;
@@ -43,7 +62,7 @@ function useIntersectionObserver(ref: React.RefObject<HTMLElement | null>, optio
           setIsVisible(true);
         }
       },
-      { threshold: 0.1, ...options }
+      observerOptions
     );
 
     observer.observe(element);
@@ -53,7 +72,7 @@ function useIntersectionObserver(ref: React.RefObject<HTMLElement | null>, optio
         observer.unobserve(element);
       }
     };
-  }, [ref, options]);
+  }, [ref, observerOptions]);
 
   return isVisible;
 }
