@@ -326,16 +326,7 @@ export default function LandingPage() {
             backgroundRepeat: 'no-repeat',
             zIndex: 1,
           },
-          '&::after': {
-            content: '""',
-            position: 'absolute',
-            top: 0,
-            left: 0,
-            right: 0,
-            bottom: 0,
-            background: (theme) => `linear-gradient(135deg, ${theme.palette.primary.main}66 0%, ${theme.palette.primary.dark}88 100%)`,
-            zIndex: 2,
-          }
+
         }}
       >
         <Container maxWidth="lg" sx={{ position: 'relative', zIndex: 3 }}>
