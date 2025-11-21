@@ -18,6 +18,7 @@ interface CourseContentProps {
   onQuizCreated?: () => void;
   onMaterialCreated?: () => void;
   cursoId: string;
+  onWorkflowStatusChange?: (isWaiting: boolean) => void;
 }
 
 export default function CourseContent({ 
@@ -28,7 +29,8 @@ export default function CourseContent({
   quizzesLoading,
   onQuizCreated,
   onMaterialCreated,
-  cursoId
+  cursoId,
+  onWorkflowStatusChange
 }: CourseContentProps) {
   const { userData } = useUser();
   const [snackbar, setSnackbar] = useState<{ open: boolean; message: string; severity: 'success' | 'error' | 'info' }>({ 
@@ -65,6 +67,7 @@ export default function CourseContent({
             usuarioId={userData.usuarioId}
             onSuccess={onQuizCreated}
             onNotify={onNotify}
+            onWorkflowStatusChange={onWorkflowStatusChange}
           />
         </Box>
       )}

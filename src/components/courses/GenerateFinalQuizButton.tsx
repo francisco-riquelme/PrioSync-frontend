@@ -1,6 +1,6 @@
 "use client";
 
-import React, { useState } from 'react';
+import React, { useState, useEffect, useRef } from 'react';
 import { Box, Tooltip } from '@mui/material';
 import { useCrearQuestionarioFinal } from "../quiz/hooks/useCrearQuestionarioFinal";
 import { useProgresoCurso } from './hooks/useProgresoCurso';
@@ -12,6 +12,7 @@ interface GenerateFinalQuizButtonProps {
   usuarioId: string;
   onSuccess?: () => void;
   onNotify?: (msg: string, severity?: 'success' | 'error' | 'info') => void;
+  onWorkflowStatusChange?: (isWaiting: boolean) => void;
 }
 
 export default function GenerateFinalQuizButton({
@@ -20,10 +21,18 @@ export default function GenerateFinalQuizButton({
   usuarioId,
   onSuccess,
   onNotify,
+  onWorkflowStatusChange,
 }: GenerateFinalQuizButtonProps) {
   const [loading, setLoading] = useState(false);
+  const previousWorkflowStatusRef = useRef<boolean>(false);
+  
   const crearHook = useCrearQuestionarioFinal({ 
     onSuccess: () => {
+      // Explicitly notify parent that workflow is complete
+      if (onWorkflowStatusChange) {
+        console.log('🔄 GenerateFinalQuizButton - Notifying parent: workflow complete (false)');
+        onWorkflowStatusChange(false);
+      }
       if (onNotify) {
         onNotify('Cuestionario final generado correctamente (20 preguntas de todos los módulos)', 'success');
       }
@@ -33,6 +42,18 @@ export default function GenerateFinalQuizButton({
     }
   });
   const { progreso, leccionesCompletadas, totalLecciones, loading: progresoLoading } = useProgresoCurso({ modulos, usuarioId });
+
+  // Notify parent component of workflow status changes
+  useEffect(() => {
+    // Only notify if the status actually changed
+    if (previousWorkflowStatusRef.current !== crearHook.isWaitingForWorkflow) {
+      console.log(`🔄 GenerateFinalQuizButton - Workflow status changed: ${previousWorkflowStatusRef.current} -> ${crearHook.isWaitingForWorkflow}`);
+      previousWorkflowStatusRef.current = crearHook.isWaitingForWorkflow;
+      if (onWorkflowStatusChange) {
+        onWorkflowStatusChange(crearHook.isWaitingForWorkflow);
+      }
+    }
+  }, [crearHook.isWaitingForWorkflow, onWorkflowStatusChange]);
 
   const handleGenerate = async () => {
     try {
@@ -55,7 +76,7 @@ export default function GenerateFinalQuizButton({
     }
   };
 
-  const isDisabled = loading || progresoLoading || progreso < 70;
+  const isDisabled = loading || progresoLoading || progreso < 70 || crearHook.isWaitingForWorkflow;
 
   const handleClick = (event: React.MouseEvent) => {
     event.stopPropagation();
@@ -113,7 +134,7 @@ export default function GenerateFinalQuizButton({
           },
         }}
       >
-        {loading ? 'Generando...' : progreso < 70 ? `Progreso del curso: ${progreso}%` : '🎓 Generar Cuestionario Final'}
+        {loading || crearHook.isWaitingForWorkflow ? 'Generando...' : progreso < 70 ? `Progreso del curso: ${progreso}%` : '🎓 Generar Cuestionario Final'}
       </Box>
     </Tooltip>
   );

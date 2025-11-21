@@ -1808,6 +1808,18 @@
               }
             },
             {
+              "type": "key",
+              "properties": {
+                "name": "sesionEstudiosByUsuarioIdAndHora_inicioAndHora_fin",
+                "queryField": "SesionesByUsuarioAndHora",
+                "fields": [
+                  "usuarioId",
+                  "hora_inicio",
+                  "hora_fin"
+                ]
+              }
+            },
+            {
               "type": "auth",
               "properties": {
                 "rules": [
@@ -4273,32 +4285,25 @@
               "isRequired": true,
               "attributes": []
             },
-            "executionArn": {
-              "name": "executionArn",
+            "cuestionarioId": {
+              "name": "cuestionarioId",
               "isArray": false,
               "type": "String",
-              "isRequired": false,
+              "isRequired": true,
               "attributes": []
             },
             "cursoId": {
               "name": "cursoId",
               "isArray": false,
               "type": "String",
-              "isRequired": false,
-              "attributes": []
-            },
-            "cuestionarioId": {
-              "name": "cuestionarioId",
-              "isArray": false,
-              "type": "String",
-              "isRequired": false,
+              "isRequired": true,
               "attributes": []
             },
             "status": {
               "name": "status",
               "isArray": false,
               "type": "String",
-              "isRequired": false,
+              "isRequired": true,
               "attributes": []
             }
           }
