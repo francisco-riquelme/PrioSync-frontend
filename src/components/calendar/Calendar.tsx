@@ -12,6 +12,12 @@ import {
   Paper,
   Typography,
   useTheme,
+  List,
+  ListItem,
+  ListItemButton,
+  ListItemText,
+  Chip,
+  Divider,
 } from '@mui/material';
 import { useUser } from '@/contexts/UserContext';
 import { useCalendarData } from '@/hooks/useCalendarData';
@@ -64,6 +70,46 @@ const convertToStudySession = (sesion: SesionEstudio): StudySession => {
 // Configurar moment en español
 moment.locale('es');
 const localizer = momentLocalizer(moment as unknown as moment.Moment);
+
+// Predefined color palette for courses (good contrast colors)
+const COURSE_COLORS = [
+  '#1976d2', // Blue
+  '#388e3c', // Green
+  '#f57c00', // Orange
+  '#7b1fa2', // Purple
+  '#c2185b', // Pink
+  '#00796b', // Teal
+  '#d32f2f', // Red
+  '#5d4037', // Brown
+  '#0288d1', // Light Blue
+  '#689f38', // Light Green
+  '#e64a19', // Deep Orange
+  '#512da8', // Deep Purple
+  '#c2185b', // Pink
+  '#0097a7', // Cyan
+  '#455a64', // Blue Grey
+  '#fbc02d', // Yellow
+];
+
+// Hash function to convert string to number
+const hashString = (str: string): number => {
+  let hash = 0;
+  for (let i = 0; i < str.length; i++) {
+    const char = str.charCodeAt(i);
+    hash = ((hash << 5) - hash) + char;
+    hash = hash & hash; // Convert to 32bit integer
+  }
+  return Math.abs(hash);
+};
+
+// Generate consistent color from courseId
+const getColorForCourseId = (courseId: string | undefined): string => {
+  if (!courseId) {
+    return '#757575'; // Default gray for sessions without course
+  }
+  const hash = hashString(courseId);
+  return COURSE_COLORS[hash % COURSE_COLORS.length];
+};
 
 const Calendar: React.FC = () => {
   const theme = useTheme();
@@ -144,15 +190,34 @@ const Calendar: React.FC = () => {
 
   // Estilos personalizados para el calendario
   const calendarStyle = useMemo(() => ({
-    height: 700,
+    maxHeight: 'calc(100vh - 300px)',
+    minHeight: 500,
     fontFamily: "'Inter', 'Roboto', 'Arial', sans-serif",
     backgroundColor: theme.palette.background.paper,
     border: 'none',
     borderRadius: 4,
-    overflow: 'hidden',
+    overflowY: 'auto',
+    overflowX: 'hidden',
+    // Custom scrollbar styling
+    '&::-webkit-scrollbar': {
+      width: '8px',
+    },
+    '&::-webkit-scrollbar-track': {
+      background: theme.palette.background.default,
+      borderRadius: '4px',
+    },
+    '&::-webkit-scrollbar-thumb': {
+      background: theme.palette.action.disabled,
+      borderRadius: '4px',
+      '&:hover': {
+        background: theme.palette.action.disabledBackground,
+      },
+    },
     '& .rbc-calendar': {
       backgroundColor: theme.palette.background.paper,
       border: 'none',
+      height: 'auto',
+      minHeight: '100%',
     },
     '& .rbc-header': {
       backgroundColor: `${theme.palette.primary.main}`,
@@ -168,12 +233,12 @@ const Calendar: React.FC = () => {
     '& .rbc-month-view': {
       border: 'none',
       borderRadius: '0 0 4px 4px',
-      overflow: 'hidden',
+      overflow: 'visible',
     },
     '& .rbc-month-row': {
       border: 'none',
       borderTop: `1px solid ${theme.palette.divider}`,
-      minHeight: 120,
+      minHeight: 150,
       overflow: 'visible',
     },
     '& .rbc-month-row:first-of-type': {
@@ -221,15 +286,19 @@ const Calendar: React.FC = () => {
       fontSize: '0.95rem',
     },
     '& .rbc-event': {
-      borderRadius: 6,
+      borderRadius: 4,
       border: 'none',
-      fontSize: 13,
+      fontSize: 11,
       fontWeight: 500,
-      padding: '4px 8px',
+      padding: '2px 6px',
       boxShadow: 'none',
       backgroundColor: theme.palette.primary.main,
       color: theme.palette.primary.contrastText,
-      margin: '2px 4px',
+      margin: '1px 2px',
+      lineHeight: 1.3,
+      whiteSpace: 'nowrap',
+      overflow: 'hidden',
+      textOverflow: 'ellipsis',
     },
     '& .rbc-selected': {
       backgroundColor: theme.palette.primary.dark,
@@ -275,24 +344,53 @@ const Calendar: React.FC = () => {
       fontSize: '0.875rem',
       padding: '4px 8px',
     },
+    '& .rbc-row': {
+      display: 'flex',
+    },
     '& .rbc-row-segment': {
-      padding: '2px 4px',
+      padding: '1px 2px',
+      height: 'auto',
+    },
+    '& .rbc-event-content': {
+      overflow: 'hidden',
+      textOverflow: 'ellipsis',
+      whiteSpace: 'nowrap',
     },
   }), [theme]);
 
 
-  // Función para obtener el color de los eventos (simplificado - un solo estilo)
-  const getEventStyle = (): { style: CSSProperties } => {
+  // Función para obtener el color de los eventos basado en cursoId
+  const getEventStyle = (event: Event): { style: CSSProperties } => {
+    const calendarEvent = event as CalendarEvent;
+    const cursoId = calendarEvent.session?.cursoId;
+    const backgroundColor = getColorForCourseId(cursoId);
+    
+    // Determine text color based on background brightness
+    const getContrastColor = (bgColor: string): string => {
+      // Convert hex to RGB
+      const hex = bgColor.replace('#', '');
+      const r = parseInt(hex.substr(0, 2), 16);
+      const g = parseInt(hex.substr(2, 2), 16);
+      const b = parseInt(hex.substr(4, 2), 16);
+      // Calculate brightness
+      const brightness = (r * 299 + g * 587 + b * 114) / 1000;
+      return brightness > 128 ? '#000000' : '#ffffff';
+    };
+    
     return {
       style: {
-        backgroundColor: theme.palette.primary.main,
-        color: 'white',
-        borderRadius: 8,
+        backgroundColor,
+        color: getContrastColor(backgroundColor),
+        borderRadius: 4,
         border: 'none',
-        fontSize: 13,
+        fontSize: 11,
         fontWeight: 500,
-        padding: '4px 8px',
+        padding: '2px 6px',
         boxShadow: theme.shadows[1],
+        lineHeight: 1.3,
+        whiteSpace: 'nowrap',
+        overflow: 'hidden',
+        textOverflow: 'ellipsis',
       }
     };
   };
@@ -374,6 +472,30 @@ const Calendar: React.FC = () => {
     setSelectedSession(null);
   };
 
+  // Create memoized color mapping for courses
+  const courseColorMap = useMemo(() => {
+    const map = new Map<string, { color: string; name: string }>();
+    
+    // Get unique course IDs from sessions
+    const uniqueCourseIds = new Set<string>();
+    displaySessions.forEach(session => {
+      if (session.cursoId) {
+        uniqueCourseIds.add(session.cursoId);
+      }
+    });
+    
+    // Create mapping with colors and course names
+    uniqueCourseIds.forEach(courseId => {
+      const course = userData?.Cursos?.find(c => c.cursoId === courseId);
+      map.set(courseId, {
+        color: getColorForCourseId(courseId),
+        name: course?.titulo || 'Curso desconocido'
+      });
+    });
+    
+    return map;
+  }, [displaySessions, userData?.Cursos]);
+
   // Solo mostrar sesiones de estudio creadas por el usuario
   const events = useMemo(() => {
     const studySessionEvents: CalendarEvent[] = displaySessions.map(session => ({
@@ -388,6 +510,66 @@ const Calendar: React.FC = () => {
 
     return studySessionEvents;
   }, [displaySessions]);
+
+  // Filter events for the selected day and sort by time
+  const dayViewEvents = useMemo(() => {
+    if (view !== 'day') return [];
+    
+    const selectedDate = new Date(date);
+    selectedDate.setHours(0, 0, 0, 0);
+    
+    return events
+      .filter(event => {
+        const eventDate = new Date(event.start);
+        eventDate.setHours(0, 0, 0, 0);
+        return eventDate.getTime() === selectedDate.getTime();
+      })
+      .sort((a, b) => a.start.getTime() - b.start.getTime());
+  }, [events, view, date]);
+
+  // Create a memoized map of lesson IDs to lesson names for quick lookup
+  const lessonNameMap = useMemo(() => {
+    const map = new Map<string, string>();
+    
+    if (!userData?.Cursos) return map;
+    
+    for (const curso of userData.Cursos) {
+      if (curso.Modulos) {
+        for (const modulo of curso.Modulos) {
+          if (modulo.Lecciones) {
+            for (const leccion of modulo.Lecciones) {
+              if (leccion.leccionId && leccion.titulo) {
+                map.set(leccion.leccionId, leccion.titulo);
+              }
+            }
+          }
+        }
+      }
+    }
+    
+    // Debug: Log if we have lessons but map is empty (data structure might be different)
+    if (userData.Cursos.length > 0 && map.size === 0) {
+      console.log('No lessons found in userData.Cursos. First curso structure:', userData.Cursos[0]);
+    }
+    
+    return map;
+  }, [userData?.Cursos]);
+
+  // Helper function to find lesson name by leccionId
+  const getLessonName = useCallback((leccionId: string | undefined): string | null => {
+    if (!leccionId) return null;
+    return lessonNameMap.get(leccionId) || null;
+  }, [lessonNameMap]);
+
+  // Format time for display
+  const formatTime = (date: Date) => {
+    return moment(date).format('HH:mm');
+  };
+
+  // Format date for display
+  const formatDate = (date: Date) => {
+    return moment(date).format('dddd, D [de] MMMM [de] YYYY');
+  };
 
   return (
     <Box>
@@ -409,11 +591,12 @@ const Calendar: React.FC = () => {
         </Box>
 
         {/* Leyenda de colores */}
-        {preferences.length > 0 && (
+        {(preferences.length > 0 || courseColorMap.size > 0) && (
           <Box 
             sx={{ 
               display: 'flex', 
-              gap: 3, 
+              flexWrap: 'wrap',
+              gap: 2, 
               mb: 2, 
               p: 2, 
               bgcolor: 'background.default', 
@@ -424,85 +607,262 @@ const Calendar: React.FC = () => {
             <Typography variant="caption" color="text.secondary" sx={{ fontWeight: 600 }}>
               Leyenda:
             </Typography>
-            <Box sx={{ display: 'flex', alignItems: 'center', gap: 0.5 }}>
-              <Box 
-                sx={{ 
-                  width: 16, 
-                  height: 16, 
-                  bgcolor: '#e8f5e9', 
-                  border: '2px solid #4caf50',
-                  borderRadius: 0.5 
-                }} 
-              />
-              <Typography variant="caption" color="text.secondary">
-                Horarios preferidos
-              </Typography>
-            </Box>
-            <Box sx={{ display: 'flex', alignItems: 'center', gap: 0.5 }}>
-              <Box 
-                sx={{ 
-                  width: 16, 
-                  height: 16, 
-                  bgcolor: 'white', 
-                  border: '1px solid #e0e0e0',
-                  borderRadius: 0.5 
-                }} 
-              />
-              <Typography variant="caption" color="text.secondary">
-                Otros horarios
-              </Typography>
-            </Box>
+            
+            {/* Course colors legend */}
+            {courseColorMap.size > 0 && (
+              <>
+                {Array.from(courseColorMap.entries()).map(([courseId, { color, name }]) => (
+                  <Box key={courseId} sx={{ display: 'flex', alignItems: 'center', gap: 0.5 }}>
+                    <Box 
+                      sx={{ 
+                        width: 16, 
+                        height: 16, 
+                        bgcolor: color, 
+                        border: '1px solid rgba(0,0,0,0.1)',
+                        borderRadius: 0.5 
+                      }} 
+                    />
+                    <Typography variant="caption" color="text.secondary" sx={{ maxWidth: 200, overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>
+                      {name}
+                    </Typography>
+                  </Box>
+                ))}
+              </>
+            )}
+            
+            {/* Default color for sessions without course */}
+            {displaySessions.some(s => !s.cursoId) && (
+              <Box sx={{ display: 'flex', alignItems: 'center', gap: 0.5 }}>
+                <Box 
+                  sx={{ 
+                    width: 16, 
+                    height: 16, 
+                    bgcolor: getColorForCourseId(undefined), 
+                    border: '1px solid rgba(0,0,0,0.1)',
+                    borderRadius: 0.5 
+                  }} 
+                />
+                <Typography variant="caption" color="text.secondary">
+                  Sesión general
+                </Typography>
+              </Box>
+            )}
+            
+            {/* Study block preferences legend */}
+            {preferences.length > 0 && (
+              <>
+                <Box sx={{ display: 'flex', alignItems: 'center', gap: 0.5, ml: courseColorMap.size > 0 ? 1 : 0 }}>
+                  <Box 
+                    sx={{ 
+                      width: 16, 
+                      height: 16, 
+                      bgcolor: '#e8f5e9', 
+                      border: '2px solid #4caf50',
+                      borderRadius: 0.5 
+                    }} 
+                  />
+                  <Typography variant="caption" color="text.secondary">
+                    Horarios preferidos
+                  </Typography>
+                </Box>
+                <Box sx={{ display: 'flex', alignItems: 'center', gap: 0.5 }}>
+                  <Box 
+                    sx={{ 
+                      width: 16, 
+                      height: 16, 
+                      bgcolor: 'white', 
+                      border: '1px solid #e0e0e0',
+                      borderRadius: 0.5 
+                    }} 
+                  />
+                  <Typography variant="caption" color="text.secondary">
+                    Otros horarios
+                  </Typography>
+                </Box>
+              </>
+            )}
           </Box>
         )}
         
-        <Box sx={{ ...calendarStyle, height: 700 }}>
-          <BigCalendar
-            localizer={localizer}
-            events={events}
-            startAccessor="start"
-            endAccessor="end"
-            view={view}
-            onView={setView}
-            date={date}
-            onNavigate={setDate}
-            eventPropGetter={getEventStyle}
-            dayPropGetter={dayPropGetter}
-            components={{
-              toolbar: (props: { label: string; onNavigate: (navigate: NavigateAction, date?: Date) => void; onView: (view: View) => void }) => (
-                <CalendarToolbar
-                  label={props.label}
-                  onNavigate={(action: string) => props.onNavigate(action as NavigateAction)}
-                  onView={handleViewChange}
-                  currentView={view as 'month' | 'week' | 'day'}
-                  onAddSession={() => {
-                    setEditingSession(null);
-                    setSelectedSlot(null);
-                    setFormDialogOpen(true);
-                  }}
-                  onStudyHours={() => router.push('/study-hours')}
-                />
-              ),
-            }}
-            onSelectSlot={handleSelectSlot}
-            onSelectEvent={handleSelectEvent}
-            selectable
-            allDayMaxRows={3}
-            messages={{
-              next: 'Siguiente',
-              previous: 'Anterior',
-              today: 'Hoy',
-              month: 'Mes',
-              week: 'Semana',
-              day: 'Día',
-              agenda: 'Agenda',
-              date: 'Fecha',
-              time: 'Hora',
-              event: 'Evento',
-              noEventsInRange: 'No hay eventos en este rango',
-              showMore: (total: number) => `+${total} más`,
-            }}
-          />
-        </Box>
+        {view === 'day' ? (
+          <Box>
+            <CalendarToolbar
+              label={formatDate(date)}
+              onNavigate={(action: string) => {
+                const newDate = new Date(date);
+                if (action === 'PREV') {
+                  newDate.setDate(newDate.getDate() - 1);
+                } else if (action === 'NEXT') {
+                  newDate.setDate(newDate.getDate() + 1);
+                } else if (action === 'TODAY') {
+                  newDate.setTime(new Date().getTime());
+                }
+                setDate(newDate);
+              }}
+              onView={handleViewChange}
+              currentView={view as 'month' | 'week' | 'day'}
+              onAddSession={() => {
+                setEditingSession(null);
+                setSelectedSlot(null);
+                setFormDialogOpen(true);
+              }}
+              onStudyHours={() => router.push('/study-hours')}
+            />
+            <Paper 
+              elevation={0} 
+              sx={{ 
+                mt: 2, 
+                border: `1px solid ${theme.palette.divider}`,
+                borderRadius: 2,
+                overflow: 'hidden'
+              }}
+            >
+              {dayViewEvents.length === 0 ? (
+                <Box sx={{ p: 4, textAlign: 'center' }}>
+                  <Typography variant="body1" color="text.secondary">
+                    No hay eventos programados para este día
+                  </Typography>
+                </Box>
+              ) : (
+                <List sx={{ p: 0 }}>
+                  {dayViewEvents.map((event, index) => {
+                    const calendarEvent = event as CalendarEvent;
+                    const session = calendarEvent.session;
+                    const cursoId = session?.cursoId;
+                    const backgroundColor = getColorForCourseId(cursoId);
+                    const duration = Math.round((event.end.getTime() - event.start.getTime()) / 60000);
+                    
+                    return (
+                      <React.Fragment key={event.id}>
+                        <ListItem
+                          disablePadding
+                          sx={{
+                            '&:hover': {
+                              backgroundColor: theme.palette.action.hover,
+                            },
+                          }}
+                        >
+                          <ListItemButton
+                            onClick={() => handleSelectEvent(event)}
+                            sx={{ py: 2, px: 3 }}
+                          >
+                            <Box
+                              sx={{
+                                width: 4,
+                                height: '100%',
+                                backgroundColor,
+                                borderRadius: '2px',
+                                mr: 2,
+                                minHeight: 60,
+                              }}
+                            />
+                            <ListItemText
+                              primary={
+                                <Box sx={{ display: 'flex', alignItems: 'center', gap: 1, mb: 0.5 }}>
+                                  <Typography variant="h6" sx={{ fontWeight: 600 }}>
+                                    {event.title}
+                                  </Typography>
+                                  {cursoId && (
+                                    <Chip
+                                      label={courseColorMap.get(cursoId)?.name || 'Curso'}
+                                      size="small"
+                                      sx={{
+                                        height: 20,
+                                        fontSize: '0.7rem',
+                                        backgroundColor: backgroundColor + '20',
+                                        color: backgroundColor,
+                                        border: `1px solid ${backgroundColor}40`,
+                                      }}
+                                    />
+                                  )}
+                                </Box>
+                              }
+                              secondary={
+                                <Box>
+                                  <Typography variant="body2" color="text.secondary">
+                                    {formatTime(event.start)} - {formatTime(event.end)} • {duration} minutos
+                                  </Typography>
+                                  {session?.leccionId && (() => {
+                                    const lessonName = getLessonName(session.leccionId);
+                                    if (lessonName) {
+                                      return (
+                                        <Typography variant="body2" color="text.primary" sx={{ mt: 0.5, fontWeight: 500, display: 'block' }}>
+                                          {lessonName}
+                                        </Typography>
+                                      );
+                                    }
+                                    // If lesson name not found, it might not be loaded in userData yet
+                                    // This can happen if userData hasn't refreshed with the new selection set
+                                    return null;
+                                  })()}
+                                  {session?.subject && session.subject !== 'Estudio Personal' && !session?.leccionId && (
+                                    <Typography variant="caption" color="text.secondary" sx={{ mt: 0.5, display: 'block' }}>
+                                      {session.subject}
+                                    </Typography>
+                                  )}
+                                </Box>
+                              }
+                            />
+                          </ListItemButton>
+                        </ListItem>
+                        {index < dayViewEvents.length - 1 && <Divider />}
+                      </React.Fragment>
+                    );
+                  })}
+                </List>
+              )}
+            </Paper>
+          </Box>
+        ) : (
+          <Box sx={calendarStyle}>
+            <BigCalendar
+              localizer={localizer}
+              events={events}
+              startAccessor="start"
+              endAccessor="end"
+              view={view}
+              onView={setView}
+              date={date}
+              onNavigate={setDate}
+              eventPropGetter={getEventStyle}
+              dayPropGetter={dayPropGetter}
+              components={{
+                toolbar: (props: { label: string; onNavigate: (navigate: NavigateAction, date?: Date) => void; onView: (view: View) => void }) => (
+                  <CalendarToolbar
+                    label={props.label}
+                    onNavigate={(action: string) => props.onNavigate(action as NavigateAction)}
+                    onView={handleViewChange}
+                    currentView={view as 'month' | 'week' | 'day'}
+                    onAddSession={() => {
+                      setEditingSession(null);
+                      setSelectedSlot(null);
+                      setFormDialogOpen(true);
+                    }}
+                    onStudyHours={() => router.push('/study-hours')}
+                  />
+                ),
+              }}
+              onSelectSlot={handleSelectSlot}
+              onSelectEvent={handleSelectEvent}
+              selectable
+              allDayMaxRows={50}
+              messages={{
+                next: 'Siguiente',
+                previous: 'Anterior',
+                today: 'Hoy',
+                month: 'Mes',
+                week: 'Semana',
+                day: 'Día',
+                agenda: 'Agenda',
+                date: 'Fecha',
+                time: 'Hora',
+                event: 'Evento',
+                noEventsInRange: 'No hay eventos en este rango',
+                showMore: (total: number) => `+${total} más`,
+              }}
+            />
+          </Box>
+        )}
       </Paper>
 
       {/* Formulario para crear/editar sesiones de estudio */}

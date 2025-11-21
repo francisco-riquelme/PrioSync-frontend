@@ -1,6 +1,7 @@
 'use client';
 
 import React from 'react';
+import { useRouter } from 'next/navigation';
 import {
   Dialog,
   DialogTitle,
@@ -11,14 +12,20 @@ import {
   Box,
   IconButton,
   Divider,
+  Link,
 } from '@mui/material';
 import {
   Close as CloseIcon,
   Edit as EditIcon,
   Delete as DeleteIcon,
   AccessTime as TimeIcon,
+  School as SchoolIcon,
+  MenuBook as BookIcon,
+  VideoLibrary as VideoIcon,
+  OpenInNew as OpenInNewIcon,
 } from '@mui/icons-material';
 import { StudySessionDetailsProps } from './componentTypes';
+import { useLessonDetail } from '@/components/courses/hooks/useLessonDetail';
 
 const StudySessionDetails: React.FC<StudySessionDetailsProps> = ({
   open,
@@ -27,6 +34,14 @@ const StudySessionDetails: React.FC<StudySessionDetailsProps> = ({
   onDelete,
   session
 }) => {
+  const router = useRouter();
+  
+  // Fetch lesson data if leccionId exists
+  // Hook will handle empty string gracefully (will fail but error is caught)
+  const { leccion, loading: lessonLoading } = useLessonDetail({
+    leccionId: session?.leccionId || ''
+  });
+
   if (!session) return null;
 
   const formatDateTime = (date: Date) => {
@@ -49,6 +64,12 @@ const StudySessionDetails: React.FC<StudySessionDetailsProps> = ({
       return `${hours}h ${minutes > 0 ? `${minutes}m` : ''}`;
     }
     return `${minutes}m`;
+  };
+
+  const handleLessonClick = () => {
+    if (session.leccionId) {
+      router.push(`/courses/lecciones/${session.leccionId}`);
+    }
   };
 
   return (
@@ -107,7 +128,100 @@ const StudySessionDetails: React.FC<StudySessionDetailsProps> = ({
           </Typography>
         </Box>
 
+        {/* Información de Lección */}
+        {session.leccionId && (
+          <>
+            <Divider sx={{ my: 3 }} />
+            <Box sx={{ mb: 3 }}>
+              <Box sx={{ display: 'flex', alignItems: 'center', gap: 1, mb: 2 }}>
+                <BookIcon color="primary" />
+                <Typography variant="h6" sx={{ fontWeight: 600 }}>
+                  Lección Asociada
+                </Typography>
+              </Box>
+              {lessonLoading ? (
+                <Typography variant="body2" color="text.secondary">
+                  Cargando información de la lección...
+                </Typography>
+              ) : leccion ? (
+                <Box>
+                  <Typography variant="body1" gutterBottom sx={{ fontWeight: 500 }}>
+                    {leccion.titulo}
+                  </Typography>
+                  {leccion.descripcion && (
+                    <Typography variant="body2" color="text.secondary" sx={{ mb: 2 }}>
+                      {leccion.descripcion}
+                    </Typography>
+                  )}
+                  <Button
+                    variant="outlined"
+                    startIcon={<BookIcon />}
+                    endIcon={<OpenInNewIcon />}
+                    onClick={handleLessonClick}
+                    sx={{ mt: 1 }}
+                  >
+                    Ver Lección Completa
+                  </Button>
+                  {leccion.url_contenido && (
+                    <Box sx={{ mt: 2 }}>
+                      <Box sx={{ display: 'flex', alignItems: 'center', gap: 1, mb: 1 }}>
+                        <VideoIcon color="error" fontSize="small" />
+                        <Typography variant="subtitle2" sx={{ fontWeight: 600 }}>
+                          Video de YouTube
+                        </Typography>
+                      </Box>
+                      <Link
+                        href={leccion.url_contenido}
+                        target="_blank"
+                        rel="noopener noreferrer"
+                        sx={{
+                          display: 'flex',
+                          alignItems: 'center',
+                          gap: 0.5,
+                          wordBreak: 'break-all',
+                        }}
+                      >
+                        {leccion.url_contenido}
+                        <OpenInNewIcon fontSize="small" />
+                      </Link>
+                    </Box>
+                  )}
+                </Box>
+              ) : (
+                <Typography variant="body2" color="text.secondary">
+                  No se pudo cargar la información de la lección
+                </Typography>
+              )}
+            </Box>
+          </>
+        )}
+
+        {/* Información de Curso (si no hay lección) */}
+        {session.cursoId && !session.leccionId && (
+          <>
+            <Divider sx={{ my: 3 }} />
+            <Box sx={{ mb: 3 }}>
+              <Box sx={{ display: 'flex', alignItems: 'center', gap: 1, mb: 1 }}>
+                <SchoolIcon color="primary" />
+                <Typography variant="h6" sx={{ fontWeight: 600 }}>
+                  Curso Asociado
+                </Typography>
+              </Box>
+              <Button
+                variant="outlined"
+                startIcon={<SchoolIcon />}
+                endIcon={<OpenInNewIcon />}
+                onClick={() => router.push(`/courses/${session.cursoId}`)}
+                sx={{ mt: 1 }}
+              >
+                Ver Curso
+              </Button>
+            </Box>
+          </>
+        )}
+
         {/* Fechas de creación */}
+        <Divider sx={{ my: 3 }} />
         <Box sx={{ mb: 2 }}>
           <Typography variant="body2" color="text.secondary">
             Creado: {formatDateTime(session.createdAt)}

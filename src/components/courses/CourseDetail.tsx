@@ -13,6 +13,8 @@ import {
   CircularProgress,
   Alert,
   Chip,
+  Dialog,
+  DialogContent,
 } from '@mui/material';
 import {
   ArrowBack as ArrowBackIcon,
@@ -90,6 +92,13 @@ export default function CourseDetail({ courseId }: CourseDetailProps) {
 
   // Estado del modal de feedback
   const [feedbackModalOpen, setFeedbackModalOpen] = useState(false);
+  const [isWaitingForWorkflow, setIsWaitingForWorkflow] = useState(false);
+
+  // Handler for workflow status changes with debugging
+  const handleWorkflowStatusChange = (isWaiting: boolean) => {
+    console.log(`🔄 CourseDetail - Workflow status change received: ${isWaiting}`);
+    setIsWaitingForWorkflow(isWaiting);
+  };
 
   // Hook para compartir por WhatsApp
   const { crearCursoCompartido, generateWhatsAppUrl, loading: sharingLoading } = useCompartirCurso();
@@ -202,6 +211,50 @@ export default function CourseDetail({ courseId }: CourseDetailProps) {
 
   return (
     <Box>
+      {/* Global blocking modal for workflow processing */}
+      <Dialog
+        open={isWaitingForWorkflow}
+        disableEscapeKeyDown
+        maxWidth="sm"
+        fullWidth
+        PaperProps={{
+          sx: {
+            bgcolor: 'rgba(255, 255, 255, 0.98)',
+            boxShadow: 24,
+          },
+        }}
+        BackdropProps={{
+          sx: {
+            backgroundColor: 'rgba(0, 0, 0, 0.5)',
+            backdropFilter: 'blur(4px)',
+          },
+        }}
+      >
+        <DialogContent>
+          <Box
+            sx={{
+              display: 'flex',
+              flexDirection: 'column',
+              alignItems: 'center',
+              justifyContent: 'center',
+              py: 4,
+              px: 2,
+            }}
+          >
+            <CircularProgress size={56} sx={{ mb: 3 }} />
+            <Typography variant="h5" sx={{ mb: 2, fontWeight: 600 }}>
+              Procesando Cuestionario Final
+            </Typography>
+            <Typography variant="body1" color="text.secondary" align="center" sx={{ mb: 1 }}>
+              Estamos generando el cuestionario final del curso.
+            </Typography>
+            <Typography variant="body2" color="text.secondary" align="center" sx={{ mb: 2 }}>
+              Esto puede tomar varios minutos. Por favor, no cierres esta ventana.
+            </Typography>
+          </Box>
+        </DialogContent>
+      </Dialog>
+
       {/* Header con botón de regreso */}
       <Box sx={{ display: 'flex', alignItems: 'center', mb: 3 }}>
         <IconButton onClick={handleBackClick} sx={{ mr: 2 }}>
@@ -329,6 +382,7 @@ export default function CourseDetail({ courseId }: CourseDetailProps) {
         onQuizCreated={handleQuizCreated}
         onMaterialCreated={refreshCourseData}
         cursoId={courseId}
+        onWorkflowStatusChange={handleWorkflowStatusChange}
       />
 
       {/* Sesiones de Estudio */}
