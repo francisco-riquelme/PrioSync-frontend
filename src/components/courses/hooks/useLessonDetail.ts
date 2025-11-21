@@ -117,10 +117,23 @@ export const useLessonDetail = (
   const [leccion, setLeccion] = useState<Leccion | null>(null);
   const [modulo, setModulo] = useState<ModuloWithCurso | null>(null);
   const [curso, setCurso] = useState<CursoWithModulos | null>(null);
-  const [loading, setLoading] = useState(true);
+  // Only start with loading true if we have a valid leccionId
+  const [loading, setLoading] = useState(
+    () => !!(leccionId && leccionId.trim() !== "")
+  );
   const [error, setError] = useState<string | null>(null);
 
   const loadLessonDetail = useCallback(async () => {
+    // Skip fetch if leccionId is empty or invalid
+    if (!leccionId || leccionId.trim() === "") {
+      setLoading(false);
+      setError(null);
+      setLeccion(null);
+      setModulo(null);
+      setCurso(null);
+      return;
+    }
+
     try {
       setLoading(true);
       setError(null);

@@ -279,6 +279,7 @@ ${shareUrl}
         });
 
         // Sanity check: Verificar si ya existe un registro de CursoCompartido
+        let isNewEnrollment = false;
         try {
           const existingRecord = await CursoCompartido.get({
             input: {
@@ -289,15 +290,18 @@ ${shareUrl}
 
           if (existingRecord) {
             console.log("✅ Usuario ya está inscrito en este curso");
-            // Si ya existe, retornar éxito sin crear duplicado
+            // Si ya existe, retornar éxito sin crear duplicado ni generar citas
             return true;
           }
+          // Si no existe, es una nueva inscripción
+          isNewEnrollment = true;
         } catch {
           // Si no existe, continuar con la creación
           // El error puede ser porque no existe el registro, lo cual es esperado
           console.log(
             "ℹ️ No existe inscripción previa, procediendo a crear una nueva"
           );
+          isNewEnrollment = true;
         }
 
         // Crear el registro de curso compartido (inscripción)
@@ -311,42 +315,48 @@ ${shareUrl}
 
         console.log("✅ Inscripción exitosa:", inscripcionResult);
 
-        // Generar citas de Google Calendar para el curso
-        try {
-          const client = getClient();
-          console.log(
-            "📅 Generando citas de Google Calendar para el curso compartido"
-          );
-          const { data: citasData, errors: citasErrors } =
-            await client.mutations.generarCitasResolver({
-              cursoId: data.cursoId,
-              usuarioId: data.usuarioId,
-            });
+        // Generar citas de Google Calendar solo para nuevas inscripciones
+        if (isNewEnrollment) {
+          try {
+            const client = getClient();
+            console.log(
+              "📅 Generando citas de Google Calendar para el curso compartido"
+            );
+            const { data: citasData, errors: citasErrors } =
+              await client.mutations.generarCitasResolver({
+                cursoId: data.cursoId,
+                usuarioId: data.usuarioId,
+              });
 
-          if (citasErrors && citasErrors.length > 0) {
-            const errorMessage = citasErrors
-              .map((e: unknown) => {
-                if (e && typeof e === "object" && "message" in e) {
-                  return String((e as { message: unknown }).message);
-                }
-                return String(e);
-              })
-              .join("; ");
+            if (citasErrors && citasErrors.length > 0) {
+              const errorMessage = citasErrors
+                .map((e: unknown) => {
+                  if (e && typeof e === "object" && "message" in e) {
+                    return String((e as { message: unknown }).message);
+                  }
+                  return String(e);
+                })
+                .join("; ");
+              console.warn(
+                "⚠️ Error al generar citas de Google Calendar (inscripción exitosa):",
+                errorMessage
+              );
+            } else if (citasData) {
+              console.log(
+                "✅ Citas de Google Calendar generadas exitosamente:",
+                citasData
+              );
+            }
+          } catch (citasError) {
+            // Log error but don't fail enrollment since it was successful
             console.warn(
               "⚠️ Error al generar citas de Google Calendar (inscripción exitosa):",
-              errorMessage
-            );
-          } else if (citasData) {
-            console.log(
-              "✅ Citas de Google Calendar generadas exitosamente:",
-              citasData
+              citasError
             );
           }
-        } catch (citasError) {
-          // Log error but don't fail enrollment since it was successful
-          console.warn(
-            "⚠️ Error al generar citas de Google Calendar (inscripción exitosa):",
-            citasError
+        } else {
+          console.log(
+            "ℹ️ Usuario ya tenía el curso, omitiendo generación de citas de Google Calendar"
           );
         }
 
