@@ -1,5 +1,7 @@
 import { useState, useCallback } from "react";
+import { generateClient } from "aws-amplify/api";
 import type { MainTypes } from "@/utils/api/schema";
+import { ResolversTypes } from "@/utils/api/resolverSchema";
 
 interface CompartirCursoInput {
   usuarioId: string;
@@ -11,6 +13,14 @@ interface SharedCourseData {
   shareUrl: string;
   shareCode: string;
   expiresAt?: Date;
+}
+
+let _client: ReturnType<typeof generateClient<ResolversTypes>> | null = null;
+function getClient() {
+  if (!_client) {
+    _client = generateClient<ResolversTypes>();
+  }
+  return _client;
 }
 
 export function useCompartirCurso() {
@@ -300,6 +310,45 @@ ${shareUrl}
         });
 
         console.log("✅ Inscripción exitosa:", inscripcionResult);
+
+        // Generar citas de Google Calendar para el curso
+        try {
+          const client = getClient();
+          console.log(
+            "📅 Generando citas de Google Calendar para el curso compartido"
+          );
+          const { data: citasData, errors: citasErrors } =
+            await client.mutations.generarCitasResolver({
+              cursoId: data.cursoId,
+              usuarioId: data.usuarioId,
+            });
+
+          if (citasErrors && citasErrors.length > 0) {
+            const errorMessage = citasErrors
+              .map((e: unknown) => {
+                if (e && typeof e === "object" && "message" in e) {
+                  return String((e as { message: unknown }).message);
+                }
+                return String(e);
+              })
+              .join("; ");
+            console.warn(
+              "⚠️ Error al generar citas de Google Calendar (inscripción exitosa):",
+              errorMessage
+            );
+          } else if (citasData) {
+            console.log(
+              "✅ Citas de Google Calendar generadas exitosamente:",
+              citasData
+            );
+          }
+        } catch (citasError) {
+          // Log error but don't fail enrollment since it was successful
+          console.warn(
+            "⚠️ Error al generar citas de Google Calendar (inscripción exitosa):",
+            citasError
+          );
+        }
 
         return true;
       } catch (err) {
