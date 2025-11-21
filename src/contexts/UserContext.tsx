@@ -7,6 +7,32 @@ import type { MainTypes } from '@/utils/api/schema';
 import { useAmplify } from '@/components/providers/AmplifyProvider';
 
 
+// Define types for lesson
+interface LeccionFromCurso {
+  readonly leccionId: string;
+  readonly titulo: string;
+  readonly descripcion: string | null;
+  readonly duracion_minutos: number | null;
+  readonly tipo: "video" | "audio" | "archivo" | null;
+  readonly url_contenido: string;
+  readonly completada: boolean | null;
+  readonly orden: number | null;
+  readonly moduloId: string;
+}
+
+// Define types for module with lessons
+interface ModuloFromCurso {
+  readonly moduloId: string;
+  readonly titulo: string;
+  readonly descripcion: string | null;
+  readonly duracion_estimada: number | null;
+  readonly orden: number | null;
+  readonly imagen_portada: string | null;
+  readonly progreso_estimado: number | null;
+  readonly cursoId: string;
+  readonly Lecciones?: LeccionFromCurso[] | null;
+}
+
 // Define types for curso with relations (matching SelectionSet return types exactly)
 interface CursoFromUsuario {
   readonly cursoId: string;
@@ -18,6 +44,7 @@ interface CursoFromUsuario {
   readonly estado: "activo" | "inactivo" | null;
   readonly createdAt: string;
   readonly updatedAt: string;
+  readonly Modulos?: ModuloFromCurso[] | null;
 }
 
 interface CursoCompartidoWithCurso {
@@ -124,6 +151,23 @@ const userSelectionSet = [
   'Cursos.estado',
   'Cursos.createdAt',
   'Cursos.updatedAt',
+  'Cursos.Modulos.moduloId',
+  'Cursos.Modulos.titulo',
+  'Cursos.Modulos.descripcion',
+  'Cursos.Modulos.duracion_estimada',
+  'Cursos.Modulos.orden',
+  'Cursos.Modulos.imagen_portada',
+  'Cursos.Modulos.progreso_estimado',
+  'Cursos.Modulos.cursoId',
+  'Cursos.Modulos.Lecciones.leccionId',
+  'Cursos.Modulos.Lecciones.titulo',
+  'Cursos.Modulos.Lecciones.descripcion',
+  'Cursos.Modulos.Lecciones.duracion_minutos',
+  'Cursos.Modulos.Lecciones.tipo',
+  'Cursos.Modulos.Lecciones.url_contenido',
+  'Cursos.Modulos.Lecciones.completada',
+  'Cursos.Modulos.Lecciones.orden',
+  'Cursos.Modulos.Lecciones.moduloId',
   'CursoCompartido.usuarioId',
   'CursoCompartido.cursoId',
   'CursoCompartido.estado',
@@ -137,6 +181,23 @@ const userSelectionSet = [
   'CursoCompartido.Curso.estado',
   'CursoCompartido.Curso.createdAt',
   'CursoCompartido.Curso.updatedAt',
+  'CursoCompartido.Curso.Modulos.moduloId',
+  'CursoCompartido.Curso.Modulos.titulo',
+  'CursoCompartido.Curso.Modulos.descripcion',
+  'CursoCompartido.Curso.Modulos.duracion_estimada',
+  'CursoCompartido.Curso.Modulos.orden',
+  'CursoCompartido.Curso.Modulos.imagen_portada',
+  'CursoCompartido.Curso.Modulos.progreso_estimado',
+  'CursoCompartido.Curso.Modulos.cursoId',
+  'CursoCompartido.Curso.Modulos.Lecciones.leccionId',
+  'CursoCompartido.Curso.Modulos.Lecciones.titulo',
+  'CursoCompartido.Curso.Modulos.Lecciones.descripcion',
+  'CursoCompartido.Curso.Modulos.Lecciones.duracion_minutos',
+  'CursoCompartido.Curso.Modulos.Lecciones.tipo',
+  'CursoCompartido.Curso.Modulos.Lecciones.url_contenido',
+  'CursoCompartido.Curso.Modulos.Lecciones.completada',
+  'CursoCompartido.Curso.Modulos.Lecciones.orden',
+  'CursoCompartido.Curso.Modulos.Lecciones.moduloId',
 ] as const;
 
 // UsuarioWithRelations type is defined above
