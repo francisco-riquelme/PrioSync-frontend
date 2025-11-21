@@ -5,6 +5,7 @@ import { useRouter } from 'next/navigation';
 import { useUser } from '@/contexts/UserContext';
 import AppLayout from '../../components/layout/AppLayout';
 import Dashboard from '../../components/dashboard/Dashboard';
+import FullScreenLoader from '@/components/common/FullScreenLoader';
 
 export default function DashboardPage() {
   const { userData, loading } = useUser();
@@ -16,7 +17,7 @@ export default function DashboardPage() {
     }
   }, [userData, loading, router]);
 
-  if (loading) return <div>Cargando...</div>;
+  if (loading) return <FullScreenLoader />;
   if (!userData) return null;
 
   return (

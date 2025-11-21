@@ -6,6 +6,7 @@ import { useUser } from '@/contexts/UserContext';
 import { CircularProgress, Box } from '@mui/material';
 import AppLayout from '../../components/layout/AppLayout';
 import UserProfile from '../../components/profile/UserProfile';
+import FullScreenLoader from '@/components/common/FullScreenLoader';
 
 export default function ProfilePage() {
   const { userData, loading } = useUser();
@@ -17,7 +18,7 @@ export default function ProfilePage() {
     }
   }, [userData, loading, router]);
 
-  if (loading) return <div>Cargando...</div>;
+  if (loading) return <FullScreenLoader />;
   if (!userData) return null;
 
   return (

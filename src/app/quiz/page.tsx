@@ -6,6 +6,7 @@ import { useSearchParams } from 'next/navigation';
 import { useUser } from '@/contexts/UserContext';
 import AppLayout from '@/components/layout/AppLayout';
 import Quiz from '@/components/quiz/Quiz';
+import FullScreenLoader from '@/components/common/FullScreenLoader';
 
 export default function QuizPage() {
   const { userData, loading } = useUser();
@@ -20,7 +21,7 @@ export default function QuizPage() {
     }
   }, [userData, loading, router]);
 
-  if (loading) return <div>Cargando...</div>;
+  if (loading) return <FullScreenLoader />;
   if (!userData) return null;
 
   return (

@@ -76,9 +76,6 @@ export default function AmplifyProvider({ children }: AmplifyProviderProps) {
             thickness={4}
             sx={{ mb: 2 }}
           />
-          <Typography variant="body1" color="text.secondary">
-            Initializing database connection...
-          </Typography>
         </Box>
       </Box>
     );
