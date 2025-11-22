@@ -16,7 +16,6 @@ import {
   ListItemIcon,
   ListItemText,
   Avatar,
-  Badge,
 } from '@mui/material';
 import {
   Dashboard as DashboardIcon,
@@ -24,7 +23,6 @@ import {
   School as SchoolIcon,
   Person as PersonIcon,
   Logout as LogoutIcon,
-  Notifications as NotificationsIcon,
   Menu as MenuIcon,
 } from '@mui/icons-material';
 import { useAuth } from '@/components/auth/hooks/auth';
@@ -198,13 +196,6 @@ export default function AppLayout({ children }: LayoutProps) {
           </IconButton>
           
           <Box sx={{ flexGrow: 1 }} />
-
-          {/* Notificaciones */}
-          <IconButton color="inherit" sx={{ mr: 2 }}>
-            <Badge badgeContent={1} color="error">
-              <NotificationsIcon />
-            </Badge>
-          </IconButton>
 
           {/* Perfil de usuario */}
           <Box sx={{ display: 'flex', alignItems: 'center', gap: 1 }}>

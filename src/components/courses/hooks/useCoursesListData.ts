@@ -156,7 +156,6 @@ export const useCoursesListData = (
   const [error, setError] = useState<string | null>(null);
 
   // react-hooks/exhaustive-deps
-  // eslint-disable-next-line react-hooks/exhaustive-deps
   const loadCourses = useCallback(async () => {
     try {
       setLoading(true);
@@ -322,6 +321,7 @@ export const useCoursesListData = (
     } finally {
       setLoading(false);
     }
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [
     params?.usuarioId,
     params?.levelFilter,
